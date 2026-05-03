@@ -58,7 +58,7 @@ Component: KPP Motion Limiter and State Estimation
 	- estimated joint and leg kinematic state.
 
 Component: Robot Control (Actuation)
-- Files: `main/robot_control.c`, `main/robot_control.h`
+- Files: `components/hex_actuation/robot_control.c`, `components/hex_actuation/robot_control.h`
 - Consumes: whole-body joint command set.
 - Uses:
 	- `robot_config` calibration and mapping,
@@ -396,6 +396,7 @@ Progress note:
 - Step 2 is implemented as `components/hex_config_manager`.
 - Step 3 is implemented using merged controller core and interfaces in `components/hex_controller_core`, with controller drivers extracted as dedicated components.
 - Step 4 is implemented in `components/hex_locomotion`.
+- Step 5 is implemented in `components/hex_actuation`.
 - Foundational dependencies were extracted to support Step 4 include boundaries:
 	- `components/hex_kinematics`
 	- `components/hex_robot_config`

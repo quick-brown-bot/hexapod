@@ -1,7 +1,6 @@
 idf_component_register(
     SRCS
     "main.c"
-    "robot_control.c"
     "kpp_system.c"
     "kpp_forward_kin.c"
     "kpp_debug.c"
@@ -15,6 +14,7 @@ idf_component_register(
     hex_controller_driver_bt_classic
     hex_controller_core
     hex_locomotion
+    hex_actuation
     hex_robot_config
     hex_kinematics
     hex_config_manager
