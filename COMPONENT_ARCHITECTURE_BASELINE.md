@@ -108,7 +108,7 @@ Component: WiFi AP Service
 ### 1.4 RPC and Persistent Configuration
 
 Component: RPC Command Engine
-- Files: `main/rpc_commands.c`, `main/rpc_commands.h`
+- Files: `components/hex_rpc_core/rpc_commands.c`, `components/hex_rpc_core/rpc_commands.h`
 - Responsibilities:
 	- command parsing,
 	- command dispatch (`get`, `set`, `setpersist`, `list`, `save`, etc.),
@@ -137,7 +137,7 @@ Component: Shared Cross-Module Types
 	- prevent duplicate local header copies and include-path coupling.
 
 Important observation:
-- `main/rpc_system.h` exists but is currently empty. The functional RPC subsystem is in `rpc_commands` and `components/hex_rpc_transport/rpc_transport.*`.
+- `main/rpc_system.h` exists but is currently empty. The functional RPC subsystem is in `components/hex_rpc_core/rpc_commands.*` and `components/hex_rpc_transport/rpc_transport.*`.
 
 ## 2. Current Runtime Interaction Diagrams
 
@@ -373,6 +373,12 @@ flowchart LR
 5. Extract `robot_control` as actuation component.
 6. Extract KPP into `hex_motion_limits` with explicit dependency on kinematics and locomotion command types.
 7. Normalize include boundaries and move internal headers to private include paths.
+
+Progress note:
+- Step 1 is implemented:
+	- `rpc_transport` extracted to `components/hex_rpc_transport`
+	- `rpc_commands` extracted to `components/hex_rpc_core`
+- Step 2 is implemented as `components/hex_config_manager`.
 
 ## 5. Definition of Done for Architecture Refactor Base
 

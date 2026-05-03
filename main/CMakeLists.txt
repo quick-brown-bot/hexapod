@@ -9,13 +9,13 @@ idf_component_register(
     "robot_config.c"
     "user_command.c"
     "controller.c"
-    "rpc_commands.c"
     "kpp_system.c"
     "kpp_forward_kin.c"
     "kpp_debug.c"
     INCLUDE_DIRS "."
     REQUIRES
     hex_rpc_transport
+    hex_rpc_core
     hex_wifi_ap
     hex_controller_driver_flysky_ibus
     hex_controller_driver_wifi_tcp
