@@ -24,6 +24,8 @@ Configuration domain management, registry dispatch, migration, and NVS persisten
 
 ## Internal Modules
 - config_namespace_registry: runtime namespace descriptor registry.
+- config_ns_system: system namespace descriptor and callbacks.
+- config_ns_joint_calib: joint calibration namespace descriptor and callbacks.
 - config_registry: parameter metadata registry.
 - config_domain_defaults: default value seeding helpers.
 - config_domain_persistence_nvs: namespace load/write hooks.

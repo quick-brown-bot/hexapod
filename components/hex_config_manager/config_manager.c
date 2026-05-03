@@ -7,13 +7,10 @@
  */
 
 #include "config_manager.h"
-#include "config_domain_defaults.h"
-#include "config_domain_joint_access.h"
-#include "config_domain_persistence_nvs.h"
-#include "config_domain_system_access.h"
+#include "config_ns_joint_calib.h"
+#include "config_ns_system.h"
 #include "config_migration.h"
 #include "config_namespace_registry.h"
-#include "config_registry.h"
 #include "config_storage_nvs.h"
 #include "esp_log.h"
 #include <string.h>
@@ -41,6 +38,22 @@ static system_config_t g_system_config = {0};
 
 // Configuration cache - joint calibration namespace
 static joint_calib_config_t g_joint_calib_config = {0};
+
+static config_system_namespace_context_t g_system_namespace_ctx = {
+    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_SYSTEM],
+    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM],
+    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_SYSTEM],
+    .config = &g_system_config,
+    .schema_version = CONFIG_SCHEMA_VERSION,
+    .fallback_controller_type = CONTROLLER_DRIVER_FLYSKY_IBUS
+};
+
+static config_joint_calib_namespace_context_t g_joint_namespace_ctx = {
+    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_JOINT_CALIB],
+    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB],
+    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_JOINT_CALIB],
+    .config = &g_joint_calib_config
+};
 
 // =============================================================================
 // Migration System
@@ -101,274 +114,14 @@ static esp_err_t config_migrate_version(uint16_t from, uint16_t to) {
 // Helper Functions  
 // =============================================================================
 
-static esp_err_t load_system_config_from_nvs(void) {
-    esp_err_t err = config_domain_system_load_from_nvs(
-        g_manager_state.nvs_handles[CONFIG_NS_SYSTEM],
-        &g_system_config,
-        CONFIG_SCHEMA_VERSION,
-        CONTROLLER_DRIVER_FLYSKY_IBUS
-    );
-    if (err != ESP_OK) {
-        return err;
-    }
+typedef struct {
+    const config_namespace_descriptor_t* descriptor;
+    void* context;
+} namespace_registration_entry_t;
 
-    g_manager_state.namespace_loaded[CONFIG_NS_SYSTEM] = true;
-    g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM] = false;
-    
-    ESP_LOGI(TAG, "System config loaded - robot_id=%s, robot_name=%s, version=%d", 
-             g_system_config.robot_id, g_system_config.robot_name, g_system_config.config_version);
-    
-    return ESP_OK;
-}
-
-static esp_err_t load_joint_calib_config_from_nvs(void) {
-    esp_err_t err = config_domain_joint_cal_load_from_nvs(
-        g_manager_state.nvs_handles[CONFIG_NS_JOINT_CALIB],
-        &g_joint_calib_config
-    );
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    g_manager_state.namespace_loaded[CONFIG_NS_JOINT_CALIB] = true;
-    g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB] = false;
-    
-    ESP_LOGI(TAG, "Joint calibration config loaded");
-    
-    return ESP_OK;
-}
-
-static esp_err_t save_system_config_to_nvs(void) {
-    ESP_LOGI(TAG, "Saving system configuration to NVS");
-    esp_err_t err = config_domain_system_save_to_nvs(
-        g_manager_state.nvs_handles[CONFIG_NS_SYSTEM],
-        &g_system_config
-    );
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to commit system config to NVS: %s", esp_err_to_name(err));
-        return err;
-    }
-    
-    g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM] = false;
-    ESP_LOGI(TAG, "System configuration saved successfully");
-    
-    return ESP_OK;
-}
-
-static esp_err_t save_joint_calib_config_to_nvs(void) {
-    ESP_LOGI(TAG, "Saving joint calibration configuration to NVS");
-    esp_err_t err = config_domain_joint_cal_save_to_nvs(
-        g_manager_state.nvs_handles[CONFIG_NS_JOINT_CALIB],
-        &g_joint_calib_config
-    );
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to commit joint calibration config to NVS: %s", esp_err_to_name(err));
-        return err;
-    }
-    
-    g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB] = false;
-    ESP_LOGI(TAG, "Joint calibration configuration saved successfully");
-    
-    return ESP_OK;
-}
-
-static esp_err_t system_ns_load_defaults(void* ctx) {
-    (void)ctx;
-    config_load_system_defaults(&g_system_config);
-    return ESP_OK;
-}
-
-static esp_err_t joint_ns_load_defaults(void* ctx) {
-    (void)ctx;
-    config_load_joint_calib_defaults(&g_joint_calib_config);
-    return ESP_OK;
-}
-
-static esp_err_t system_ns_load_from_nvs(void* ctx) {
-    (void)ctx;
-    return load_system_config_from_nvs();
-}
-
-static esp_err_t joint_ns_load_from_nvs(void* ctx) {
-    (void)ctx;
-    return load_joint_calib_config_from_nvs();
-}
-
-static esp_err_t system_ns_write_defaults_to_nvs(void* ctx) {
-    (void)ctx;
-    return config_domain_system_write_defaults_to_nvs(
-        g_manager_state.nvs_handles[CONFIG_NS_SYSTEM],
-        CONFIG_SCHEMA_VERSION
-    );
-}
-
-static esp_err_t joint_ns_write_defaults_to_nvs(void* ctx) {
-    (void)ctx;
-    return config_domain_joint_cal_write_defaults_to_nvs(
-        g_manager_state.nvs_handles[CONFIG_NS_JOINT_CALIB]
-    );
-}
-
-static esp_err_t system_ns_save(void* ctx) {
-    (void)ctx;
-    return save_system_config_to_nvs();
-}
-
-static esp_err_t joint_ns_save(void* ctx) {
-    (void)ctx;
-    return save_joint_calib_config_to_nvs();
-}
-
-static esp_err_t system_ns_list_parameters(void* ctx, const char** param_names, size_t max_params, size_t* count) {
-    (void)ctx;
-    return config_domain_system_list_parameters(param_names, max_params, count);
-}
-
-static esp_err_t joint_ns_list_parameters(void* ctx, const char** param_names, size_t max_params, size_t* count) {
-    (void)ctx;
-    return config_registry_list_joint_parameters(param_names, max_params, count);
-}
-
-static esp_err_t system_ns_get_param_info(void* ctx, const char* param_name, config_param_info_t* info) {
-    (void)ctx;
-    return config_domain_system_get_param_info(param_name, info);
-}
-
-static esp_err_t joint_ns_get_param_info(void* ctx, const char* param_name, config_param_info_t* info) {
-    (void)ctx;
-    int leg_index = 0;
-    int joint_index = 0;
-    const char* param_suffix = NULL;
-    esp_err_t err = config_domain_joint_parse_param_name(param_name, &leg_index, &joint_index, &param_suffix);
-    if (err != ESP_OK || !param_suffix) {
-        return ESP_ERR_NOT_FOUND;
-    }
-
-    return config_registry_build_joint_param_info(leg_index, joint_index, param_suffix, param_name, info);
-}
-
-static esp_err_t system_ns_get_raw(void* ctx, const char* key, void* value_out, size_t value_size) {
-    (void)ctx;
-    return config_domain_system_get_raw(&g_system_config, key, value_out, value_size);
-}
-
-static esp_err_t system_ns_get_bool(void* ctx, const char* param_name, bool* value) {
-    (void)ctx;
-    return config_domain_system_get_bool(&g_system_config, param_name, value);
-}
-
-static esp_err_t system_ns_set_bool(void* ctx, const char* param_name, bool value) {
-    (void)ctx;
-    return config_domain_system_set_bool(&g_system_config, param_name, value);
-}
-
-static esp_err_t system_ns_get_int32(void* ctx, const char* param_name, int32_t* value) {
-    (void)ctx;
-    return config_domain_system_get_int32(&g_system_config, param_name, value);
-}
-
-static esp_err_t system_ns_set_int32(void* ctx, const char* param_name, int32_t value) {
-    (void)ctx;
-    return config_domain_system_set_int32(&g_system_config, param_name, value);
-}
-
-static esp_err_t joint_ns_get_int32(void* ctx, const char* param_name, int32_t* value) {
-    (void)ctx;
-    return config_domain_joint_get_int32(&g_joint_calib_config, param_name, value);
-}
-
-static esp_err_t joint_ns_set_int32(void* ctx, const char* param_name, int32_t value) {
-    (void)ctx;
-    return config_domain_joint_set_int32(&g_joint_calib_config, param_name, value);
-}
-
-static esp_err_t system_ns_get_uint32(void* ctx, const char* param_name, uint32_t* value) {
-    (void)ctx;
-    return config_domain_system_get_uint32(&g_system_config, param_name, value);
-}
-
-static esp_err_t system_ns_set_uint32(void* ctx, const char* param_name, uint32_t value) {
-    (void)ctx;
-    return config_domain_system_set_uint32(&g_system_config, param_name, value);
-}
-
-static esp_err_t system_ns_get_float(void* ctx, const char* param_name, float* value) {
-    (void)ctx;
-    return config_domain_system_get_float(&g_system_config, param_name, value);
-}
-
-static esp_err_t system_ns_set_float(void* ctx, const char* param_name, float value) {
-    (void)ctx;
-    return config_domain_system_set_float(&g_system_config, param_name, value);
-}
-
-static esp_err_t joint_ns_get_float(void* ctx, const char* param_name, float* value) {
-    (void)ctx;
-    return config_domain_joint_get_float(&g_joint_calib_config, param_name, value);
-}
-
-static esp_err_t joint_ns_set_float(void* ctx, const char* param_name, float value) {
-    (void)ctx;
-    return config_domain_joint_set_float(&g_joint_calib_config, param_name, value);
-}
-
-static esp_err_t system_ns_get_string(void* ctx, const char* param_name, char* value, size_t max_len) {
-    (void)ctx;
-    return config_domain_system_get_string(&g_system_config, param_name, value, max_len);
-}
-
-static esp_err_t system_ns_set_string(void* ctx, const char* param_name, const char* value) {
-    (void)ctx;
-    return config_domain_system_set_string(&g_system_config, param_name, value);
-}
-
-static const config_namespace_descriptor_t g_system_namespace_descriptor = {
-    .ns_id = CONFIG_NS_SYSTEM,
-    .ns_name = "system",
-    .load_defaults = system_ns_load_defaults,
-    .load_from_nvs = system_ns_load_from_nvs,
-    .write_defaults_to_nvs = system_ns_write_defaults_to_nvs,
-    .save = system_ns_save,
-    .list_parameters = system_ns_list_parameters,
-    .get_parameter_info = system_ns_get_param_info,
-    .get_raw = system_ns_get_raw,
-    .get_bool = system_ns_get_bool,
-    .set_bool = system_ns_set_bool,
-    .get_int32 = system_ns_get_int32,
-    .set_int32 = system_ns_set_int32,
-    .get_uint32 = system_ns_get_uint32,
-    .set_uint32 = system_ns_set_uint32,
-    .get_float = system_ns_get_float,
-    .set_float = system_ns_set_float,
-    .get_string = system_ns_get_string,
-    .set_string = system_ns_set_string
-};
-
-static const config_namespace_descriptor_t g_joint_namespace_descriptor = {
-    .ns_id = CONFIG_NS_JOINT_CALIB,
-    .ns_name = "joint_cal",
-    .load_defaults = joint_ns_load_defaults,
-    .load_from_nvs = joint_ns_load_from_nvs,
-    .write_defaults_to_nvs = joint_ns_write_defaults_to_nvs,
-    .save = joint_ns_save,
-    .list_parameters = joint_ns_list_parameters,
-    .get_parameter_info = joint_ns_get_param_info,
-    .get_raw = NULL,
-    .get_bool = NULL,
-    .set_bool = NULL,
-    .get_int32 = joint_ns_get_int32,
-    .set_int32 = joint_ns_set_int32,
-    .get_uint32 = NULL,
-    .set_uint32 = NULL,
-    .get_float = joint_ns_get_float,
-    .set_float = joint_ns_set_float,
-    .get_string = NULL,
-    .set_string = NULL
-};
-
-static const config_namespace_descriptor_t* g_namespace_descriptors[] = {
-    &g_system_namespace_descriptor,
-    &g_joint_namespace_descriptor,
+static namespace_registration_entry_t g_namespace_registration_entries[] = {
+    { &g_system_namespace_descriptor, &g_system_namespace_ctx },
+    { &g_joint_namespace_descriptor, &g_joint_namespace_ctx },
 };
 
 static bool g_namespace_registry_initialized = false;
@@ -413,10 +166,11 @@ static esp_err_t ensure_namespace_registry_initialized(void) {
 
     config_namespace_registry_reset();
 
-    size_t descriptor_count = sizeof(g_namespace_descriptors) / sizeof(g_namespace_descriptors[0]);
+    size_t descriptor_count = sizeof(g_namespace_registration_entries) / sizeof(g_namespace_registration_entries[0]);
     for (size_t i = 0; i < descriptor_count; i++) {
-        const config_namespace_descriptor_t* descriptor = g_namespace_descriptors[i];
-        esp_err_t err = config_namespace_registry_register(descriptor, NULL);
+        const config_namespace_descriptor_t* descriptor = g_namespace_registration_entries[i].descriptor;
+        void* context = g_namespace_registration_entries[i].context;
+        esp_err_t err = config_namespace_registry_register(descriptor, context);
         if (err != ESP_OK) {
             ESP_LOGE(TAG, "Failed to register namespace %s: %s", descriptor->ns_name, esp_err_to_name(err));
             return err;

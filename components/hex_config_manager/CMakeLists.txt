@@ -5,6 +5,8 @@ idf_component_register(
     "config_namespace_registry.c"
     "config_migration.c"
     "config_manager.c"
+    "config_ns_system.c"
+    "config_ns_joint_calib.c"
     "config_domain_system_access.c"
     "config_domain_persistence_nvs.c"
     "config_domain_joint_access.c"
