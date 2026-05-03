@@ -257,7 +257,7 @@
 ---
 
 ## 📝 Notes
-- Current system has comprehensive KPP (Kinematic Path Planning) implementation
+- Current system has comprehensive KPP (Kinematic Pose Position) implementation
 - Debug infrastructure is in place for development and tuning
 - Motion limiting and safety systems are partially implemented
 - FlySky controller was previously working but needs debugging for signal stability

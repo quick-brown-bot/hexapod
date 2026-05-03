@@ -8,7 +8,7 @@
 </div>
 
 ## 1. Project Overview
-This repository contains firmware for a fully custom 6‑leg (hexapod) walking robot built around an ESP32 using the ESP‑IDF framework. The code implements a modular locomotion stack: user command capture → gait phase scheduling → swing trajectory generation → whole body inverse kinematics → servo actuation. All mechanical parts are custom designed and 3D printed.
+This repository contains firmware for a fully custom 6‑leg (hexapod) walking robot built around an ESP32 using the ESP‑IDF framework. The code implements a modular locomotion stack: user command capture → gait phase scheduling → swing trajectory generation → whole body inverse kinematics → KPP motion limiting/state estimation → servo actuation. All mechanical parts are custom designed and 3D printed.
 
 Facts:
 - Architecture design inspired by [Efficient gait generation and evaluation for hexapod robots (2024)](https://cjme.springeropen.com/articles/10.1186/s10033-024-01000-0)
@@ -40,15 +40,56 @@ Nominal link lengths (meters) from `robot_config.c`:
 
 Coordinate Frames:
 * Body frame: X forward (+), Y left (+), Z up (+)
-* Leg-local frame: X outward (+), Y forward (+), Z up (+) for planning; internally the IK expects Z downward in some comments but is reconciled via transforms in `whole_body_control.c`.
+* Leg-local frame: X outward (+), Y forward (+), Z up (+) for planning; internally the IK expects Z downward in some comments but is reconciled via transforms in `components/hex_locomotion/whole_body_control.c`.
 
 Mount poses (per leg) define (x, y, z, yaw) to rotate body-frame targets into leg-local coordinates. Yaw is ±90° plus minor angular offsets to create a symmetric stance.
 
 ## 4. Software Architecture
+Compact component overview:
+
+```mermaid
+flowchart LR
+	App[main app loop]
+	Loc[hex_locomotion]
+	Lim[hex_motion_limits]
+	Act[hex_actuation]
+	Kin[hex_kinematics]
+	Cfg[hex_robot_config]
+	CCore[hex_controller_core]
+	CFly[flysky driver]
+	CWifi[wifi tcp driver]
+	CBt[bt classic driver]
+	RpcCore[hex_rpc_core]
+	RpcTx[hex_rpc_transport]
+	CfgMgr[hex_config_manager]
+	Wap[hex_wifi_ap]
+
+	App --> Loc --> Lim --> Act
+	Loc --> Kin
+	Loc --> Cfg
+	Lim --> Kin
+	Lim --> Cfg
+	Act --> Kin
+	Act --> Cfg
+
+	CFly --> CCore
+	CWifi --> CCore
+	CBt --> CCore
+	CWifi --> RpcTx
+	CBt --> RpcTx
+	RpcCore --> RpcTx
+	RpcCore --> CfgMgr
+	RpcCore --> CCore
+	Wap --> CWifi
+	App --> CCore
+	App --> RpcCore
+	App --> Wap
+```
+
 High-level data flow (single control task loop at 100 Hz / 10 ms):
 
 1. `user_command_poll()` (in `components/hex_locomotion/user_command.c`)
-	* Reads latest decoded RC controller state (`controller.c`) over FlySky iBUS via UART.
+	* Reads latest decoded RC controller state (`components/hex_controller_core/controller.c`) over FlySky iBUS via UART.
 	* Produces normalized user command structure (`user_command_t`). Includes gait selection, enable flag, velocity command, body height, lateral offset, terrain mode, step scaling.
 2. `gait_scheduler_update()` (in `components/hex_locomotion/gait_scheduler.c`)
 	* Maintains a continuous phase 0..1 and per‑leg support vs swing state based on selected gait (Tripod, Ripple, Wave) and commanded speed.
@@ -61,7 +102,7 @@ High-level data flow (single control task loop at 100 Hz / 10 ms):
 5. `kpp_apply_limits()` (in `components/hex_motion_limits/kpp_system.c`)
 	* Applies jerk/acceleration/velocity limiting to desired joint commands.
 6. `robot_execute()` (in `components/hex_actuation/robot_control.c`)
-	* Maps joint angles (radians) into microsecond PWM pulses with calibration (limits, inversion, offsets) from `robot_config.c`.
+	* Maps joint angles (radians) into microsecond PWM pulses with calibration (limits, inversion, offsets) from `components/hex_robot_config/robot_config.c`.
 	* Lazily initializes MCPWM / LEDC channels and updates compare or duty registers.
 7. `kpp_update_state()` (in `components/hex_motion_limits/kpp_system.c`)
 	* Updates state estimation from the original (pre-limited) command stream.
@@ -161,12 +202,12 @@ Long-term / Stretch:
 ## 12. Getting Started (Build & Flash)
 1. Install ESP‑IDF (v5.x recommended) and export environment.
 2. Connect ESP32 over USB.
-3. (Optional) Edit GPIO mappings / driver selections in `robot_config.c` before first flash.
+3. (Optional) Edit GPIO mappings / driver selections in `components/hex_robot_config/robot_config.c` before first flash.
 4. Build & flash.
 5. Power servos from their UBECs only after confirming logic supply is stable.
 
 ## 13. Notes on Customization
-* Adjust leg geometry: change lengths in `leg_config_t` initialization before calling `leg_configure()`.
+* Adjust leg geometry: change lengths in `leg_geometry_t` initialization before calling `leg_configure()`.
 * Tune servo mappings: update `joint_calib_t` ranges & neutral offsets in `robot_config_init_default()`.
 * Tune KPP limits/filters in `components/hex_motion_limits/kpp_config.h`.
 * Add new gait: extend `gait_type_t`, expand switch in `gait_scheduler_update()` and adapt `swing_trajectory_generate()` for phase offset logic.

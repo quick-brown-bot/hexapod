@@ -263,7 +263,7 @@ void gait_framework_main(void *arg) {
 2. ✅ **Configuration**: Compile-time constants in `kpp_config.h` - **IMPLEMENTED**
 3. ✅ **Logging**: KPP state logged with ESP_LOGD() for debugging - **IMPLEMENTED**
 4. ✅ **Filter Type**: Exponential filtering strategy - **IMPLEMENTED**
-5. ✅ **Motion Profile**: Normal walk profile with limits (6.0 rad/s, 50 rad/s², 2000 rad/s³) - **IMPLEMENTED**
+5. ✅ **Motion Profile**: Normal walk profile with limits (5.0 rad/s, 600 rad/s², 3500 rad/s³) - **IMPLEMENTED**
 6. ✅ **Filter Parameters**: Configurable alpha values for different estimate types - **IMPLEMENTED**
 7. ✅ **Coordinate Frame Consistency**: Body frame for high-level, leg-local for IK - **IMPLEMENTED**
 8. ✅ **Memory Allocation**: Static allocation for real-time safety - **IMPLEMENTED**
