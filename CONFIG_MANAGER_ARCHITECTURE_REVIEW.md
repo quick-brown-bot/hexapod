@@ -132,17 +132,7 @@ Evidence:
 - [main/config_manager.c](main/config_manager.c#L1860)
 - [main/config_manager.c](main/config_manager.c#L1881)
 
-### 10. Legacy Compatibility API
-
-Responsibilities:
-- keep generic key-value get and set entry points,
-- forward old interface to typed functions.
-
-Evidence:
-- [main/config_manager.h](main/config_manager.h#L415)
-- [main/config_manager.c](main/config_manager.c#L1914)
-
-### 11. Cross-Partition WiFi Utility
+### 10. Cross-Partition WiFi Utility
 
 Responsibilities:
 - read credentials from default WiFi partition using ESP-IDF keys.
@@ -251,10 +241,7 @@ All responsibilities can be separated. Separation is strongly recommended.
 - joint parameter parser and metadata builder,
 - joint-specific validation hooks.
 
-8. hex_config_compat
-- legacy wrappers such as config_get_parameter and config_set_parameter.
-
-9. hex_config_wifi_bridge optional
+8. hex_config_wifi_bridge optional
 - WiFi partition read helper kept out of core settings path.
 
 ## Interaction Diagram
@@ -300,7 +287,7 @@ The sequence below follows small components first while making config redesign a
 ### Phase 0 Low-Risk Prep
 
 1. Freeze current public behavior with lightweight tests for system and joint_cal get set and save paths.
-2. Add a compatibility header map so old function names remain callable during migration.
+2. Keep public typed/discovery APIs stable while internal refactor proceeds.
 
 ### Phase 1 Small Component Extractions First
 
@@ -343,19 +330,18 @@ Notes:
 5. Move system and joint_cal logic into separate domain modules that implement the descriptor contract.
 6. Replace namespace if/switch routing in runtime/API with registry-driven dispatch.
 7. Build hex_config_api facade that preserves existing function signatures.
-8. Keep hex_config_compat wrappers for old generic API.
 
 Notes where it matters:
 - At step 4: keep descriptor small but complete; missing callbacks create hidden special-cases later.
-- At step 6: no hardcoded namespace literals in generic paths except controlled compatibility shims.
-- At step 7: compatibility facade can translate old behavior, but should call generic registry-driven core.
+- At step 6: no hardcoded namespace literals in generic paths.
+- At step 7: facade should call registry-driven core.
 
 Phase 2 progress note (2026-05-03):
 - Namespace descriptors are now registered through a descriptor table plus loop, so onboarding a new namespace is reduced to adding a domain descriptor and one table entry.
 - Descriptor lifecycle hooks are wired for defaults, load-from-NVS, and write-defaults-to-NVS flows, and manager initialization/migration uses those hooks.
 
 Exit criteria for Phase 2:
-- all old config APIs still callable,
+- typed and discovery config APIs remain callable,
 - domain registration works for system and joint_cal,
 - adding a new namespace requires only: new domain module plus one registration entry,
 - adding a new parameter in an existing namespace requires changes only in that namespace module plus optional migration,
@@ -367,7 +353,7 @@ Exit criteria for Phase 2:
 1. Extract locomotion pipeline as one component.
 2. Extract actuation component.
 3. Extract kinematics and motion-limit components.
-4. Remove temporary compatibility layers after call sites are migrated.
+4. Remove temporary transitional code after call sites are migrated.
 
 ## Immediate Review Findings and Risks
 

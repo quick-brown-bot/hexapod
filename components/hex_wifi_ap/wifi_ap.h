@@ -29,7 +29,7 @@ typedef struct {
 // Initialize AP once with options (if called multiple times, original config retained)
 bool wifi_ap_init_with_options(const wifi_ap_options_t *opt);
 
-// Convenience: legacy fixed init (calls wifi_ap_init_with_options with defaults)
+// Convenience default initializer (calls wifi_ap_init_with_options with defaults)
 bool wifi_ap_init_once(void);
 
 // Retrieve the actual SSID in use (NULL if not started yet)

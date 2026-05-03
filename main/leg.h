@@ -73,12 +73,6 @@ typedef struct {
 // Returns ESP_OK on success and writes angles to out_angles (no clamping/offsets applied).
 esp_err_t leg_ik_solve(leg_handle_t leg, float x, float y, float z, leg_angles_t *out_angles);
 
-// Deprecated: kept for source-compatibility with old demos. This no longer drives servos.
-static inline esp_err_t leg_move_xyz(leg_handle_t leg, float x, float y, float z) {
-	leg_angles_t tmp;
-	return leg_ik_solve(leg, x, y, z, &tmp);
-}
-
 #ifdef __cplusplus
 }
 #endif
