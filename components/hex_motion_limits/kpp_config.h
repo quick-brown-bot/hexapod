@@ -90,14 +90,6 @@ extern "C" {
 // Enable motion limiting debug info
 #define KPP_ENABLE_LIMIT_LOGGING   1
 
-// Enable debug monitoring of acceleration/jerk limits (development only)
-#ifndef NDEBUG
-#define KPP_ENABLE_DEBUG_MONITORING 1
-#define KPP_DEBUG_LOG_INTERVAL     100     // Debug logs every 100 cycles
-#else
-#define KPP_ENABLE_DEBUG_MONITORING 0
-#endif
-
 // =============================================================================
 // Future Configuration TODOs
 // =============================================================================
@@ -130,7 +122,7 @@ extern "C" {
  * PERFORMANCE CHARACTERISTICS:
  * - Normal operation: Zero interference (diff=0.000)
  * - Extreme maneuvers: Minimal limiting when needed (diff<0.01 typical)
- * - Debug builds: Include monitoring and logging
+ * - Debug builds: include state/limit logging
  * - Production builds: Zero debug overhead
  */
 

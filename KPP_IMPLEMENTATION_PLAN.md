@@ -30,10 +30,10 @@ All data structures, core functions, and integration points have been successful
 
 #### 1.1 Data Structures ✅ **IMPLEMENTED**
 
-**Status**: ✅ All data structures implemented in `main/kpp_system.h`
+**Status**: ✅ All data structures implemented in `components/hex_motion_limits/kpp_system.h`
 
 ```c
-// Implemented in main/kpp_system.h
+// Implemented in components/hex_motion_limits/kpp_system.h
 typedef enum {
     MOTION_MODE_NORMAL,      // S-curve jerk-limited, very smooth ✅ IMPLEMENTED
     // TODO: Add MOTION_MODE_FAST and MOTION_MODE_EMERGENCY later
@@ -73,10 +73,10 @@ typedef struct {
 
 #### 1.2 Core Functions ✅ **IMPLEMENTED**
 
-**Status**: ✅ All core functions implemented in `main/kpp_system.c` with full functionality
+**Status**: ✅ All core functions implemented in `components/hex_motion_limits/kpp_system.c` with full functionality
 
 ```c
-// Implemented in main/kpp_system.c
+// Implemented in components/hex_motion_limits/kpp_system.c
 
 // Initialize KPP system ✅ IMPLEMENTED
 esp_err_t kpp_init(kinematic_state_t* state, motion_limits_t* limits);
@@ -111,9 +111,9 @@ esp_err_t kpp_get_limits(const motion_limits_t* limits, int joint,
 
 **Modified Files**:
 - ✅ `main/main.c`: KPP system initialization and update calls integrated
-- ✅ `main/robot_control.c`: Motion limiting integrated before servo commands  
-- ✅ `main/CMakeLists.txt`: KPP source files added (`kpp_system.c`, `kpp_forward_kin.c`)
-- ✅ `main/kpp_config.h`: Configuration parameters added
+- ✅ `components/hex_motion_limits/CMakeLists.txt`: KPP source files owned by hex_motion_limits
+- ✅ `components/hex_motion_limits/kpp_system.c`: Motion limiting core implementation
+- ✅ `components/hex_motion_limits/kpp_config.h`: Configuration parameters owned by hex_motion_limits
 
 ### ✅ **Phase 2: State Estimation Implementation** - **COMPLETED**
 **Goal**: Track actual robot state based on commanded positions

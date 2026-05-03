@@ -1,9 +1,6 @@
 idf_component_register(
     SRCS
     "main.c"
-    "kpp_system.c"
-    "kpp_forward_kin.c"
-    "kpp_debug.c"
     INCLUDE_DIRS "."
     REQUIRES
     hex_rpc_transport
@@ -14,6 +11,7 @@ idf_component_register(
     hex_controller_driver_bt_classic
     hex_controller_core
     hex_locomotion
+    hex_motion_limits
     hex_actuation
     hex_robot_config
     hex_kinematics

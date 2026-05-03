@@ -51,7 +51,7 @@ Component: Whole Body Control
 - Produces: joint-angle command set for all legs.
 
 Component: KPP Motion Limiter and State Estimation
-- Files: `main/kpp_system.c`, `main/kpp_system.h`, `main/kpp_forward_kin.c`, `main/kpp_debug.c`
+- Files: `components/hex_motion_limits/kpp_system.c`, `components/hex_motion_limits/kpp_system.h`, `components/hex_motion_limits/kpp_forward_kin.c`, `components/hex_motion_limits/kpp_config.h`
 - Consumes: desired joint commands.
 - Produces:
 	- limited commands for actuator execution,
@@ -294,7 +294,7 @@ This section proposes a concrete decomposition into `components/` packages.
 
 4. `hex_motion_limits`
 - role: KPP state estimation and command limiting.
-- owns: `kpp_system`, `kpp_debug`.
+- owns: `kpp_system`.
 
 5. `hex_actuation`
 - role: hardware actuation for joints.
@@ -397,6 +397,7 @@ Progress note:
 - Step 3 is implemented using merged controller core and interfaces in `components/hex_controller_core`, with controller drivers extracted as dedicated components.
 - Step 4 is implemented in `components/hex_locomotion`.
 - Step 5 is implemented in `components/hex_actuation`.
+- Step 6 is implemented in `components/hex_motion_limits`.
 - Foundational dependencies were extracted to support Step 4 include boundaries:
 	- `components/hex_kinematics`
 	- `components/hex_robot_config`

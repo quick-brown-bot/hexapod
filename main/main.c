@@ -22,7 +22,6 @@
 #include "controller_bt_classic.h"
 #include "controller_wifi_tcp.h"
 #include "kpp_system.h"
-#include "kpp_debug.h"
 #include "config_manager.h"
 #include "rpc_commands.h"
 
@@ -77,9 +76,6 @@ void gait_framework_main(void *arg)
         // CRITICAL FIX: Update state estimation based on ORIGINAL commands, not limited ones
         // This breaks the feedback loop that was causing oscillations
         kpp_update_state(&kpp_state, &cmds, dt);  // Use original commands for state estimation
-        
-        // Debug monitoring (only in debug builds)
-        kpp_debug_monitor_limits(&kpp_state, &cmds, &limited_cmds, dt);        
         
         float time_end = esp_timer_get_time();
         // Calculate how long to wait to maintain dt period
