@@ -52,21 +52,24 @@ typedef struct {
 
 // Motion limits for smooth servo operation
 typedef struct {
-    // Motion limits per joint type [coxa, femur, tibia]
+    // Runtime motion limits per joint type [coxa, femur, tibia]
     float max_velocity[3];         // rad/s
     float max_acceleration[3];     // rad/s²
-    float max_jerk[3];            // rad/s³
+    float max_jerk[3];             // rad/s³
     
     motion_mode_t current_mode;
     // TODO: Add mode_transition_time for future multi-mode support
 } motion_limits_t;
 
 /**
- * @brief Initialize KPP system with default parameters
+ * @brief Initialize KPP system from persisted motion configuration
  * 
+ * Requires config_manager to be initialized and motion_lim namespace loaded.
+ * Fails fast if runtime configuration is missing or invalid.
+ *
  * @param state Kinematic state structure to initialize
- * @param limits Motion limits structure to initialize
- * @return esp_err_t ESP_OK on success
+ * @param limits Motion limits structure populated from runtime configuration
+ * @return ESP_OK on success, error code if runtime config is unavailable/invalid
  */
 esp_err_t kpp_init(kinematic_state_t* state, motion_limits_t* limits);
 

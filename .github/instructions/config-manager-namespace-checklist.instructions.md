@@ -81,7 +81,16 @@ When creating a new namespace in `hex_config_manager`, follow this checklist in 
 - Confirm `list namespaces` includes new namespace.
 - Confirm `save <namespace>` works via `config_manager_save_namespace_by_name`.
 - Ensure `config_list_namespaces` indexes output by `ns_id`, not registry iteration index.
+- Verify every affected runtime consumer actually reads values from the new namespace at runtime (not just that the namespace exists).
+- If a subsystem still uses compile-time constants or local defaults, wire it to the config manager namespace before considering the namespace complete.
 - If namespace still does not appear at runtime, verify flashed firmware is current (not stale binary).
+
+## 8.1) Runtime Configuration Contract (Fail Fast)
+
+- Do not assume hardcoded defaults are acceptable when configuration is expected to come from NVS/config manager.
+- For critical runtime subsystems, fail fast with clear logs if required namespace data is missing, unloaded, or invalid.
+- Validate initialization order so config manager loads before subsystems that consume persisted configuration.
+- Log the configuration source at startup (for example namespace-backed vs fallback) and prefer namespace-backed only for completed integrations.
 
 ## 9) Documentation Sync
 
@@ -95,3 +104,5 @@ When creating a new namespace in `hex_config_manager`, follow this checklist in 
 - `list <namespace>` returns expected parameter names.
 - `get` and `set` work for at least one parameter.
 - `setpersist` and `save <namespace>` persist and survive reboot.
+- Runtime subsystem behavior changes when namespace values change (proves real consumption path).
+- Startup fails clearly (or blocks subsystem start) when required namespace config cannot be loaded for strict integrations.

@@ -8,6 +8,7 @@
 
 #include "kpp_system.h"
 #include "kpp_config.h"
+#include "config_manager.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include <string.h>
@@ -28,6 +29,46 @@ static void kpp_update_leg_velocities(kinematic_state_t* state, float dt);
 static void kpp_update_body_pose(kinematic_state_t* state);
 static void kpp_update_body_velocities(kinematic_state_t* state, float dt);
 static void kpp_log_state(const kinematic_state_t* state);
+static esp_err_t kpp_load_runtime_motion_config(void);
+
+static motion_limits_config_t g_motion_cfg = {0};
+
+static esp_err_t kpp_load_runtime_motion_config(void) {
+    config_manager_state_t state = {0};
+
+    if (config_manager_get_state(&state) != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to read config_manager state");
+        return ESP_FAIL;
+    }
+
+    if (!state.initialized) {
+        ESP_LOGE(TAG, "config_manager is not initialized; cannot load motion_lim");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    if (!state.namespace_loaded[CONFIG_NS_MOTION_LIMITS]) {
+        ESP_LOGE(TAG, "motion_lim namespace is not loaded");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    const motion_limits_config_t* cfg = config_get_motion_limits();
+    if (!cfg) {
+        ESP_LOGE(TAG, "config_get_motion_limits returned NULL");
+        return ESP_FAIL;
+    }
+
+    g_motion_cfg = *cfg;
+
+    // Fail fast on clearly invalid persisted configuration.
+    if (g_motion_cfg.min_dt <= 0.0f || g_motion_cfg.max_dt <= 0.0f || g_motion_cfg.min_dt > g_motion_cfg.max_dt) {
+        ESP_LOGE(TAG, "Invalid motion_lim dt configuration: min_dt=%.6f max_dt=%.6f",
+                 g_motion_cfg.min_dt, g_motion_cfg.max_dt);
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    ESP_LOGI(TAG, "Loaded motion_lim configuration from config_manager/NVS path");
+    return ESP_OK;
+}
 
 esp_err_t kpp_init(kinematic_state_t* state, motion_limits_t* limits)
 {
@@ -41,24 +82,31 @@ esp_err_t kpp_init(kinematic_state_t* state, motion_limits_t* limits)
     state->initialized = false;
     state->last_update_time = 0.0f;
 
+    esp_err_t cfg_err = kpp_load_runtime_motion_config();
+    if (cfg_err != ESP_OK) {
+        ESP_LOGE(TAG, "KPP init aborted: motion_lim configuration load failed (%s)", esp_err_to_name(cfg_err));
+        return cfg_err;
+    }
+
     // Initialize motion limits with configuration values
-    limits->max_velocity[0] = KPP_MAX_VELOCITY_COXA;
-    limits->max_velocity[1] = KPP_MAX_VELOCITY_FEMUR;
-    limits->max_velocity[2] = KPP_MAX_VELOCITY_TIBIA;
+    limits->max_velocity[0] = g_motion_cfg.max_velocity[0];
+    limits->max_velocity[1] = g_motion_cfg.max_velocity[1];
+    limits->max_velocity[2] = g_motion_cfg.max_velocity[2];
     
-    limits->max_acceleration[0] = KPP_MAX_ACCELERATION_COXA;
-    limits->max_acceleration[1] = KPP_MAX_ACCELERATION_FEMUR;
-    limits->max_acceleration[2] = KPP_MAX_ACCELERATION_TIBIA;
+    limits->max_acceleration[0] = g_motion_cfg.max_acceleration[0];
+    limits->max_acceleration[1] = g_motion_cfg.max_acceleration[1];
+    limits->max_acceleration[2] = g_motion_cfg.max_acceleration[2];
     
-    limits->max_jerk[0] = KPP_MAX_JERK_COXA;
-    limits->max_jerk[1] = KPP_MAX_JERK_FEMUR;
-    limits->max_jerk[2] = KPP_MAX_JERK_TIBIA;
+    limits->max_jerk[0] = g_motion_cfg.max_jerk[0];
+    limits->max_jerk[1] = g_motion_cfg.max_jerk[1];
+    limits->max_jerk[2] = g_motion_cfg.max_jerk[2];
     
     limits->current_mode = MOTION_MODE_NORMAL;
 
     ESP_LOGI(TAG, "KPP system initialized");
     ESP_LOGI(TAG, "Motion limits - vel: %.1f rad/s, accel: %.1f rad/s², jerk: %.1f rad/s³", 
              limits->max_velocity[0], limits->max_acceleration[0], limits->max_jerk[0]);
+    ESP_LOGI(TAG, "Motion config source: motion_lim namespace");
 
     return ESP_OK;
 }
@@ -70,9 +118,9 @@ void kpp_update_state(kinematic_state_t* state, const whole_body_cmd_t* current_
     assert(dt > 0);
 
     // Validate and clamp time step
-    if (dt < KPP_MIN_DT || dt > KPP_MAX_DT) {
+    if (dt < g_motion_cfg.min_dt || dt > g_motion_cfg.max_dt) {
         ESP_LOGW(TAG, "Invalid dt: %.6f, clamping to valid range", dt);
-        dt = kpp_constrain_f(dt, KPP_MIN_DT, KPP_MAX_DT);
+        dt = kpp_constrain_f(dt, g_motion_cfg.min_dt, g_motion_cfg.max_dt);
     }
 
     // Update joint angles, velocities, and accelerations
@@ -109,9 +157,9 @@ void kpp_apply_limits(const kinematic_state_t* state, const motion_limits_t* lim
     }
 
     // Validate time step
-    if (dt < KPP_MIN_DT || dt > KPP_MAX_DT) {
+    if (dt < g_motion_cfg.min_dt || dt > g_motion_cfg.max_dt) {
         ESP_LOGW(TAG, "Invalid dt in apply_limits: %.6f", dt);
-        dt = kpp_constrain_f(dt, KPP_MIN_DT, KPP_MAX_DT);
+        dt = kpp_constrain_f(dt, g_motion_cfg.min_dt, g_motion_cfg.max_dt);
     }
 
     // Apply motion limiting to each joint
@@ -253,12 +301,12 @@ static void kpp_update_joint_state(kinematic_state_t* state, const whole_body_cm
                 // Velocity estimation with filtering
                 float raw_velocity = (state->joint_angles[leg][joint] - prev_angles[leg][joint]) / dt;
                 state->joint_velocities[leg][joint] = kpp_apply_exponential_filter(
-                    raw_velocity, state->joint_velocities[leg][joint], KPP_VELOCITY_FILTER_ALPHA);
+                    raw_velocity, state->joint_velocities[leg][joint], g_motion_cfg.velocity_filter_alpha);
 
                 // Acceleration estimation with filtering
                 float raw_acceleration = (state->joint_velocities[leg][joint] - prev_velocities[leg][joint]) / dt;
                 state->joint_accelerations[leg][joint] = kpp_apply_exponential_filter(
-                    raw_acceleration, state->joint_accelerations[leg][joint], KPP_ACCEL_FILTER_ALPHA);
+                    raw_acceleration, state->joint_accelerations[leg][joint], g_motion_cfg.accel_filter_alpha);
             }
         }
     }
@@ -280,7 +328,7 @@ static void kpp_update_leg_velocities(kinematic_state_t* state, float dt)
                 
                 // Apply low-pass filtering to reduce noise
                 state->leg_velocities[leg][axis] = kpp_apply_exponential_filter(
-                    raw_leg_velocity, state->leg_velocities[leg][axis], KPP_LEG_VELOCITY_FILTER_ALPHA);
+                    raw_leg_velocity, state->leg_velocities[leg][axis], g_motion_cfg.leg_velocity_filter_alpha);
             }
         }
     } else {
@@ -331,12 +379,12 @@ static void kpp_update_body_pose(kinematic_state_t* state)
     float right_height = (state->leg_positions[1][2] + state->leg_positions[3][2] + state->leg_positions[5][2]) / 3.0f; // Right legs
     
     // Estimate pitch (front-back tilt) and roll (left-right tilt)
-    float pitch_estimate = atan2f(back_height - front_height, KPP_FRONT_TO_BACK_DISTANCE);
-    float roll_estimate = atan2f(right_height - left_height, KPP_LEFT_TO_RIGHT_DISTANCE);
+    float pitch_estimate = atan2f(back_height - front_height, g_motion_cfg.front_to_back_distance);
+    float roll_estimate = atan2f(right_height - left_height, g_motion_cfg.left_to_right_distance);
     
     // Apply filtering to orientation estimates
-    state->body_orientation[0] = kpp_apply_exponential_filter(roll_estimate, state->body_orientation[0], KPP_BODY_ROLL_FILTER_ALPHA);   // Roll
-    state->body_orientation[1] = kpp_apply_exponential_filter(pitch_estimate, state->body_orientation[1], KPP_BODY_PITCH_FILTER_ALPHA);  // Pitch
+    state->body_orientation[0] = kpp_apply_exponential_filter(roll_estimate, state->body_orientation[0], g_motion_cfg.body_roll_filter_alpha);   // Roll
+    state->body_orientation[1] = kpp_apply_exponential_filter(pitch_estimate, state->body_orientation[1], g_motion_cfg.body_pitch_filter_alpha);  // Pitch
     // Yaw (state->body_orientation[2]) would require more sophisticated estimation or IMU data
 }
 
@@ -359,14 +407,14 @@ static void kpp_update_body_velocities(kinematic_state_t* state, float dt)
         for (int axis = 0; axis < 3; axis++) {
             float raw_body_velocity = (state->body_position[axis] - prev_body_position[axis]) / dt;
             state->body_velocity[axis] = kpp_apply_exponential_filter(
-                raw_body_velocity, state->body_velocity[axis], KPP_BODY_VELOCITY_FILTER_ALPHA);
+                raw_body_velocity, state->body_velocity[axis], g_motion_cfg.body_velocity_filter_alpha);
         }
         
         // Calculate body angular velocity from orientation change
         for (int axis = 0; axis < 3; axis++) {
             float raw_angular_velocity = (state->body_orientation[axis] - prev_body_orientation[axis]) / dt;
             state->body_angular_vel[axis] = kpp_apply_exponential_filter(
-                raw_angular_velocity, state->body_angular_vel[axis], KPP_BODY_VELOCITY_FILTER_ALPHA);
+                raw_angular_velocity, state->body_angular_vel[axis], g_motion_cfg.body_velocity_filter_alpha);
         }
     } else {
         // Initialize body velocities to zero
@@ -465,10 +513,10 @@ static void kpp_validate_velocity_estimates(kinematic_state_t* state)
     for (int leg = 0; leg < NUM_LEGS; leg++) {
         for (int axis = 0; axis < 3; axis++) {
             float vel = state->leg_velocities[leg][axis];
-            if (fabsf(vel) > KPP_MAX_LEG_VELOCITY) {
+            if (fabsf(vel) > g_motion_cfg.max_leg_velocity) {
                 ESP_LOGW(TAG, "Clamping leg %d axis %d velocity from %.3f to %.3f", 
-                         leg, axis, vel, copysignf(KPP_MAX_LEG_VELOCITY, vel));
-                state->leg_velocities[leg][axis] = kpp_constrain_f(vel, -KPP_MAX_LEG_VELOCITY, KPP_MAX_LEG_VELOCITY);
+                         leg, axis, vel, copysignf(g_motion_cfg.max_leg_velocity, vel));
+                state->leg_velocities[leg][axis] = kpp_constrain_f(vel, -g_motion_cfg.max_leg_velocity, g_motion_cfg.max_leg_velocity);
             }
         }
     }
@@ -476,17 +524,17 @@ static void kpp_validate_velocity_estimates(kinematic_state_t* state)
     // Validate and constrain body velocities
     for (int axis = 0; axis < 3; axis++) {
         float vel = state->body_velocity[axis];
-        if (fabsf(vel) > KPP_MAX_BODY_VELOCITY) {
+        if (fabsf(vel) > g_motion_cfg.max_body_velocity) {
             ESP_LOGW(TAG, "Clamping body velocity axis %d from %.3f to %.3f", 
-                     axis, vel, copysignf(KPP_MAX_BODY_VELOCITY, vel));
-            state->body_velocity[axis] = kpp_constrain_f(vel, -KPP_MAX_BODY_VELOCITY, KPP_MAX_BODY_VELOCITY);
+                     axis, vel, copysignf(g_motion_cfg.max_body_velocity, vel));
+            state->body_velocity[axis] = kpp_constrain_f(vel, -g_motion_cfg.max_body_velocity, g_motion_cfg.max_body_velocity);
         }
         
         float ang_vel = state->body_angular_vel[axis];
-        if (fabsf(ang_vel) > KPP_MAX_ANGULAR_VELOCITY) {
+        if (fabsf(ang_vel) > g_motion_cfg.max_angular_velocity) {
             ESP_LOGW(TAG, "Clamping body angular velocity axis %d from %.3f to %.3f", 
-                     axis, ang_vel, copysignf(KPP_MAX_ANGULAR_VELOCITY, ang_vel));
-            state->body_angular_vel[axis] = kpp_constrain_f(ang_vel, -KPP_MAX_ANGULAR_VELOCITY, KPP_MAX_ANGULAR_VELOCITY);
+                     axis, ang_vel, copysignf(g_motion_cfg.max_angular_velocity, ang_vel));
+            state->body_angular_vel[axis] = kpp_constrain_f(ang_vel, -g_motion_cfg.max_angular_velocity, g_motion_cfg.max_angular_velocity);
         }
     }
 }

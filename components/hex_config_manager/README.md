@@ -27,6 +27,7 @@ Configuration domain management, registry dispatch, migration, and NVS persisten
 - config_ns_system: system namespace descriptor and callbacks.
 - config_ns_joint_calib: joint calibration namespace descriptor and callbacks.
 - config_ns_leg_geometry: leg geometry namespace descriptor and callbacks.
+- config_ns_motion_limits: motion limits namespace descriptor and callbacks.
 - config_registry: parameter metadata registry.
 - config_domain_defaults: default value seeding helpers.
 - config_domain_persistence_nvs: namespace load/write hooks.

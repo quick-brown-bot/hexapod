@@ -6,5 +6,6 @@ idf_component_register(
     REQUIRES
     hex_locomotion
     hex_robot_config
+    hex_config_manager
     hex_kinematics
 )

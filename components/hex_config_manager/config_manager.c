@@ -9,6 +9,7 @@
 #include "config_manager.h"
 #include "config_ns_joint_calib.h"
 #include "config_ns_leg_geometry.h"
+#include "config_ns_motion_limits.h"
 #include "config_ns_system.h"
 #include "config_migration.h"
 #include "config_namespace_registry.h"
@@ -43,6 +44,9 @@ static joint_calib_config_t g_joint_calib_config = {0};
 // Configuration cache - leg geometry namespace
 static leg_geometry_config_t g_leg_geometry_config = {0};
 
+// Configuration cache - motion limits namespace
+static motion_limits_config_t g_motion_limits_config = {0};
+
 static config_system_namespace_context_t g_system_namespace_ctx = {
     .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_SYSTEM],
     .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM],
@@ -64,6 +68,13 @@ static config_leg_geometry_namespace_context_t g_leg_geometry_namespace_ctx = {
     .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_LEG_GEOMETRY],
     .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_LEG_GEOMETRY],
     .config = &g_leg_geometry_config
+};
+
+static config_motion_limits_namespace_context_t g_motion_limits_namespace_ctx = {
+    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_MOTION_LIMITS],
+    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_MOTION_LIMITS],
+    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_MOTION_LIMITS],
+    .config = &g_motion_limits_config
 };
 
 // =============================================================================
@@ -134,6 +145,7 @@ static namespace_registration_entry_t g_namespace_registration_entries[] = {
     { &g_system_namespace_descriptor, &g_system_namespace_ctx },
     { &g_joint_namespace_descriptor, &g_joint_namespace_ctx },
     { &g_leg_geometry_namespace_descriptor, &g_leg_geometry_namespace_ctx },
+    { &g_motion_limits_namespace_descriptor, &g_motion_limits_namespace_ctx },
 };
 
 static bool g_namespace_registry_initialized = false;
@@ -425,6 +437,10 @@ const joint_calib_config_t* config_get_joint_calib(void) {
 
 const leg_geometry_config_t* config_get_leg_geometry(void) {
     return &g_leg_geometry_config;
+}
+
+const motion_limits_config_t* config_get_motion_limits(void) {
+    return &g_motion_limits_config;
 }
 
 esp_err_t config_set_leg_geometry(const leg_geometry_config_t* config) {
@@ -931,4 +947,19 @@ esp_err_t config_factory_reset(void) {
 
 esp_err_t config_get_wifi_credentials(char* ssid, size_t ssid_len, char* password, size_t password_len) {
     return config_storage_read_wifi_credentials(ssid, ssid_len, password, password_len);
+}
+
+esp_err_t config_set_motion_limits(const motion_limits_config_t* config) {
+    if (!config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    memcpy(&g_motion_limits_config, config, sizeof(motion_limits_config_t));
+    g_manager_state.namespace_dirty[CONFIG_NS_MOTION_LIMITS] = true;
+
+    esp_err_t err = config_manager_save_namespace(CONFIG_NS_MOTION_LIMITS);
+    if (err == ESP_OK) {
+        g_manager_state.namespace_dirty[CONFIG_NS_MOTION_LIMITS] = false;
+    }
+    return err;
 }

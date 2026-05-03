@@ -193,9 +193,42 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 ### 3. motion_lim - KPP Motion Parameters
 **Derived from:** `kpp_config.h` motion limits and filters
 
-**Motion limits per joint type:**
+**Scope and parameter count:**
+
+- Flat namespace (not per-leg)
+- 25 float parameters in `motion_lim`
+
+**Parameter groups:**
+
+- Joint limit vectors (coxa/femur/tibia):
+  - `max_velocity_*`, `max_acceleration_*`, `max_jerk_*`
+- Estimation filters:
+  - `velocity_filter_alpha`, `accel_filter_alpha`, `leg_velocity_filter_alpha`
+  - `body_velocity_filter_alpha`, `body_pitch_filter_alpha`, `body_roll_filter_alpha`
+- Geometric/validation parameters:
+  - `front_to_back_distance`, `left_to_right_distance`
+  - `max_leg_velocity`, `max_body_velocity`, `max_angular_velocity`
+  - `min_dt`, `max_dt`
+- Body frame offsets:
+  - `body_offset_x`, `body_offset_y`, `body_offset_z`
+
+**Validation constraints (descriptor):**
+
+- `max_velocity_*`: `[0.0, 20.0]`
+- `max_acceleration_*`: `[0.0, 5000.0]`
+- `max_jerk_*`: `[0.0, 50000.0]`
+- Filter alphas: `[0.0, 1.0]`
+- `front_to_back_distance`, `left_to_right_distance`: `[0.0, 2.0]`
+- `max_leg_velocity`: `[0.0, 20.0]`
+- `max_body_velocity`: `[0.0, 10.0]`
+- `max_angular_velocity`: `[0.0, 20.0]`
+- `min_dt`, `max_dt`: `[0.0001, 1.0]`
+  - Additional relation: `min_dt <= max_dt`
+- `body_offset_x/y/z`: `[-1.0, 1.0]`
+
+**Implemented parameter names:**
 ```c
-// Joint motion limits (9 parameters × 3 joint types = 27 total)  
+// Joint motion limits (9 total)
 "max_velocity_coxa"         // KPP_MAX_VELOCITY_COXA (rad/s)
 "max_velocity_femur"        // KPP_MAX_VELOCITY_FEMUR (rad/s)
 "max_velocity_tibia"        // KPP_MAX_VELOCITY_TIBIA (rad/s)
@@ -206,7 +239,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "max_jerk_femur"           // KPP_MAX_JERK_FEMUR (rad/s³)
 "max_jerk_tibia"           // KPP_MAX_JERK_TIBIA (rad/s³)
 
-// State estimation filters (~15 parameters)
+// State estimation filters (6 total)
 "velocity_filter_alpha"     // KPP_VELOCITY_FILTER_ALPHA
 "accel_filter_alpha"        // KPP_ACCEL_FILTER_ALPHA
 "leg_velocity_filter_alpha" // KPP_LEG_VELOCITY_FILTER_ALPHA
@@ -214,7 +247,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "body_pitch_filter_alpha"   // KPP_BODY_PITCH_FILTER_ALPHA
 "body_roll_filter_alpha"    // KPP_BODY_ROLL_FILTER_ALPHA
 
-// Geometric and validation parameters
+// Geometric and validation parameters (7 total)
 "front_to_back_distance"    // KPP_FRONT_TO_BACK_DISTANCE (meters)
 "left_to_right_distance"    // KPP_LEFT_TO_RIGHT_DISTANCE (meters)
 "max_leg_velocity"          // KPP_MAX_LEG_VELOCITY (m/s)
@@ -228,6 +261,13 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "body_offset_y"             // KPP_BODY_OFFSET_Y (meters)
 "body_offset_z"             // KPP_BODY_OFFSET_Z (meters)
 ```
+
+**Persistence key shape in NVS (internal):**
+
+- Joint vectors: `mv_{c|f|t}`, `ma_{c|f|t}`, `mj_{c|f|t}`
+- Filters: `vf_a`, `af_a`, `lvf_a`, `bvf_a`, `bp_a`, `br_a`
+- Geometry/limits: `fb_d`, `lr_d`, `ml_v`, `mb_v`, `ma_v`, `min_dt`, `max_dt`
+- Body offsets: `bo_x`, `bo_y`, `bo_z`
 
 ### 4. servo_map - Hardware Configuration
 **Derived from:** `robot_config_t` servo and MCPWM mappings
@@ -364,7 +404,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 **Total Estimated Parameters:** ~600-700 parameters
 - Joint Calibration: ~126 parameters (18 × 6 legs + extras)
 - Leg Geometry: 54 parameters (9 × 6 legs)
-- Motion Limits: ~27 parameters
+- Motion Limits: 25 parameters
 - Servo Mapping: ~114 parameters (19 × 6 legs)
 - Controller: ~35 parameters
 - Gait: ~20 parameters
@@ -561,6 +601,7 @@ esp_err_t config_manager_migrate(uint16_t detected_version) {
 - **System namespace is implemented and wired** for core parameters (ongoing expansion expected)
 - **joint_cal namespace is implemented and wired** (defaults, load/save, parameter discovery, typed get/set)
 - **leg_geom namespace is implemented and wired** (defaults, load/save, parameter discovery, typed float get/set)
+- **motion_lim namespace is implemented and wired** (defaults, load/save, parameter discovery, typed float get/set)
 - **NVS operations** working with automatic error handling and wear leveling
 - **Dual-method API** demonstrated: `config_set_*_memory()` vs `config_set_*_persist()`
 - **Generic parameter API** foundation created for RPC integration

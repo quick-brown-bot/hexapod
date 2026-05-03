@@ -30,6 +30,7 @@ typedef enum {
     CONFIG_NS_SYSTEM = 0,        // System-wide settings and safety
     CONFIG_NS_JOINT_CALIB = 1,   // Joint calibration per leg/joint
     CONFIG_NS_LEG_GEOMETRY = 2,  // Leg geometry and mounting poses
+    CONFIG_NS_MOTION_LIMITS = 3, // KPP motion limits and estimation filters
     CONFIG_NS_COUNT              // Keep this last
 } config_namespace_t;
 
@@ -71,6 +72,39 @@ typedef struct {
     float stance_out[NUM_LEGS];
     float stance_fwd[NUM_LEGS];
 } leg_geometry_config_t;
+
+// =============================================================================
+// Motion Limits Configuration Structure
+// =============================================================================
+
+typedef struct {
+    // Joint motion limits indexed by [coxa, femur, tibia]
+    float max_velocity[NUM_JOINTS_PER_LEG];
+    float max_acceleration[NUM_JOINTS_PER_LEG];
+    float max_jerk[NUM_JOINTS_PER_LEG];
+
+    // Estimation filters
+    float velocity_filter_alpha;
+    float accel_filter_alpha;
+    float leg_velocity_filter_alpha;
+    float body_velocity_filter_alpha;
+    float body_pitch_filter_alpha;
+    float body_roll_filter_alpha;
+
+    // Geometric and validation parameters
+    float front_to_back_distance;
+    float left_to_right_distance;
+    float max_leg_velocity;
+    float max_body_velocity;
+    float max_angular_velocity;
+    float min_dt;
+    float max_dt;
+
+    // Body frame offsets
+    float body_offset_x;
+    float body_offset_y;
+    float body_offset_z;
+} motion_limits_config_t;
 
 // =============================================================================
 // System Configuration Structure
@@ -303,6 +337,25 @@ const leg_geometry_config_t* config_get_leg_geometry(void);
 esp_err_t config_set_leg_geometry(const leg_geometry_config_t* config);
 
 // =============================================================================
+// Motion Limits Configuration API
+// =============================================================================
+
+/**
+ * @brief Get motion limits configuration (from memory cache)
+ *
+ * @return Pointer to motion limits configuration structure (read-only)
+ */
+const motion_limits_config_t* config_get_motion_limits(void);
+
+/**
+ * @brief Set complete motion limits configuration structure (always persistent)
+ *
+ * @param config Pointer to motion limits configuration structure
+ * @return ESP_OK on success, error code on NVS write failure
+ */
+esp_err_t config_set_motion_limits(const motion_limits_config_t* config);
+
+// =============================================================================
 // Parameter Types and Metadata
 // =============================================================================
 
@@ -499,6 +552,13 @@ void config_load_joint_calib_defaults(joint_calib_config_t* config);
  * @param config Pointer to leg geometry config structure to fill with defaults
  */
 void config_load_leg_geometry_defaults(leg_geometry_config_t* config);
+
+/**
+ * @brief Load factory default motion limits configuration
+ *
+ * @param config Pointer to motion limits config structure to fill with defaults
+ */
+void config_load_motion_limits_defaults(motion_limits_config_t* config);
 
 /**
  * @brief Factory reset - restore all configuration to defaults
