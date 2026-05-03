@@ -20,6 +20,7 @@ idf_component_register(
     hex_controller_driver_flysky_ibus
     hex_controller_driver_wifi_tcp
     hex_controller_driver_bt_classic
+    hex_controller_iface
     hex_config_manager
     hex_shared_types
 )

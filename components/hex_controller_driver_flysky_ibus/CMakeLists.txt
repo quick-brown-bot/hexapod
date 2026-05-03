@@ -1,6 +1,5 @@
 idf_component_register(
     SRCS "controller_flysky_ibus.c"
     INCLUDE_DIRS "."
-    PRIV_INCLUDE_DIRS "../../main"
-    REQUIRES driver hex_shared_types
+    REQUIRES driver hex_controller_iface hex_shared_types
 )
