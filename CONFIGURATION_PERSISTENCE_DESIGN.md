@@ -258,7 +258,6 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "enable_state_logging"      // KPP_ENABLE_STATE_LOGGING
 "log_interval"              // KPP_LOG_INTERVAL (control cycles)
 "enable_limit_logging"      // KPP_ENABLE_LIMIT_LOGGING
-"state_log_interval"        // KPP_LOG_INTERVAL (control cycles)
 "log_level"                 // ESP log level (ERROR/WARN/INFO/DEBUG)
 "telemetry_rate"            // Telemetry broadcast rate (Hz)
 "enable_performance_stats"  // Performance monitoring enable

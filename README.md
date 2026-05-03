@@ -47,28 +47,33 @@ Mount poses (per leg) define (x, y, z, yaw) to rotate body-frame targets into le
 ## 4. Software Architecture
 High-level data flow (single control task loop at 100 Hz / 10 ms):
 
-1. `user_command_poll()` (in `user_command.c`)
+1. `user_command_poll()` (in `components/hex_locomotion/user_command.c`)
 	* Reads latest decoded RC controller state (`controller.c`) over FlySky iBUS via UART.
 	* Produces normalized user command structure (`user_command_t`). Includes gait selection, enable flag, velocity command, body height, lateral offset, terrain mode, step scaling.
-2. `gait_scheduler_update()` (in `gait_scheduler.c`)
+2. `gait_scheduler_update()` (in `components/hex_locomotion/gait_scheduler.c`)
 	* Maintains a continuous phase 0..1 and per‑leg support vs swing state based on selected gait (Tripod, Ripple, Wave) and commanded speed.
-3. `swing_trajectory_generate()` (in `swing_trajectory.c`)
+3. `swing_trajectory_generate()` (in `components/hex_locomotion/swing_trajectory.c`)
 	* Converts gait phase + user motion/pose targets into desired foot positions in the body frame.
 	* Uses cycloid‑like arcs for swing, linear pass for support, adjustable step length and clearance.
-4. `whole_body_control_compute()` (in `whole_body_control.c`)
+4. `whole_body_control_compute()` (in `components/hex_locomotion/whole_body_control.c`)
 	* Transforms each foot target from body frame into its corresponding leg-local frame using mount pose and yaw.
-	* Solves per‑leg inverse kinematics (`leg_ik_solve()` from `leg.c`) to produce joint angles.
-5. `robot_execute()` (in `robot_control.c`)
+	* Solves per‑leg inverse kinematics (`leg_ik_solve()` from `components/hex_kinematics/leg.c`) to produce joint angles.
+5. `kpp_apply_limits()` (in `components/hex_motion_limits/kpp_system.c`)
+	* Applies jerk/acceleration/velocity limiting to desired joint commands.
+6. `robot_execute()` (in `components/hex_actuation/robot_control.c`)
 	* Maps joint angles (radians) into microsecond PWM pulses with calibration (limits, inversion, offsets) from `robot_config.c`.
 	* Lazily initializes MCPWM / LEDC channels and updates compare or duty registers.
+7. `kpp_update_state()` (in `components/hex_motion_limits/kpp_system.c`)
+	* Updates state estimation from the original (pre-limited) command stream.
 
 Supporting Modules:
-* `robot_config.*` centralizes all geometry, calibration, servo driver selection, GPIO mappings, and stance parameters.
-* `controller.*` encapsulates UART reception + decoding of iBUS frames with failsafe and deadband filtering.
-* `leg.*` provides pure kinematic modeling (opaque handle + IK solver) decoupled from hardware.
+* `components/hex_robot_config/robot_config.*` centralizes geometry, calibration, servo driver selection, GPIO mappings, and stance parameters.
+* `components/hex_controller_core/controller.*` encapsulates channel state and decode helpers.
+* `components/hex_kinematics/leg.*` provides pure kinematic modeling (opaque handle + IK solver) decoupled from hardware.
+* `components/hex_motion_limits/kpp_config.h` contains KPP runtime-limit/filter constants.
 
 ### Main Loop (`main.c`)
-The `gait_framework_main()` task sets a fixed timestep `dt=0.01f`, gathers user input, advances scheduler, generates trajectories, computes IK, and finally commands servos. Timing uses `esp_timer_get_time()` plus `vTaskDelay()` to maintain cadence while yielding to other tasks.
+The `gait_framework_main()` task sets a fixed timestep `dt=0.01f`, gathers user input, advances scheduler, generates trajectories, computes IK, applies KPP motion limits, commands servos, and updates KPP state from original commands. Timing uses `esp_timer_get_time()` plus `vTaskDelay()` to maintain cadence while yielding to other tasks.
 
 ### Concurrency & Timing
 * Currently a single high-level control loop task drives all locomotion logic.
@@ -140,16 +145,18 @@ Long-term / Stretch:
 
 ## 11. Repository Structure (Key Files)
 * `main/main.c` – Control loop entry point.
-* `main/gait_scheduler.*` – Phase management & leg support/swing pattern logic.
-* `main/swing_trajectory.*` – Foot trajectory generation from scheduler + user command.
-* `main/whole_body_control.*` – Frame transforms & IK orchestration.
-* `main/robot_control.*` – Joint angle to PWM mapping, peripheral management (MCPWM + LEDC).
-* `main/robot_config.*` – Central configuration: geometry, calibration, mounts, driver selection.
-* `main/leg.*` – Pure kinematic leg model & IK solver.
-* `main/controller.*` – RC receiver (iBUS) decoding & normalization.
-* `main/controller_flysky_ibus.c` – FlySky iBUS driver (UART task) feeding abstraction.
-* `main/controller_internal.h` – Internal helpers for controller drivers.
-* `main/user_command.*` – Aggregates controller state into locomotion command.
+* `components/hex_locomotion/gait_scheduler.*` – Phase management & leg support/swing pattern logic.
+* `components/hex_locomotion/swing_trajectory.*` – Foot trajectory generation from scheduler + user command.
+* `components/hex_locomotion/whole_body_control.*` – Frame transforms & IK orchestration.
+* `components/hex_locomotion/user_command.*` – Aggregates controller state into locomotion command.
+* `components/hex_motion_limits/kpp_system.*` – KPP limiting and state estimation.
+* `components/hex_motion_limits/kpp_forward_kin.c` – Forward kinematics for state estimation.
+* `components/hex_motion_limits/kpp_config.h` – KPP limits/filter tuning constants.
+* `components/hex_actuation/robot_control.*` – Joint angle to PWM mapping, peripheral management (MCPWM + LEDC).
+* `components/hex_robot_config/robot_config.*` – Central configuration: geometry, calibration, mounts, driver selection.
+* `components/hex_kinematics/leg.*` – Pure kinematic leg model & IK solver.
+* `components/hex_controller_core/controller.*` – Controller abstraction and channel decoding.
+* `components/hex_controller_driver_flysky_ibus/controller_flysky_ibus.c` – FlySky iBUS driver (UART task) feeding abstraction.
 
 ## 12. Getting Started (Build & Flash)
 1. Install ESP‑IDF (v5.x recommended) and export environment.
@@ -161,6 +168,7 @@ Long-term / Stretch:
 ## 13. Notes on Customization
 * Adjust leg geometry: change lengths in `leg_config_t` initialization before calling `leg_configure()`.
 * Tune servo mappings: update `joint_calib_t` ranges & neutral offsets in `robot_config_init_default()`.
+* Tune KPP limits/filters in `components/hex_motion_limits/kpp_config.h`.
 * Add new gait: extend `gait_type_t`, expand switch in `gait_scheduler_update()` and adapt `swing_trajectory_generate()` for phase offset logic.
 
 ### Controller Abstraction & Future Runtime Swapping

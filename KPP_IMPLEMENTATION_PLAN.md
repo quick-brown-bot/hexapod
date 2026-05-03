@@ -211,9 +211,9 @@ limited_velocity = kpp_constrain_f(limited_velocity, -max_velocity, max_velocity
 // Normal mode limits (S-curve jerk-limited profile) - IMPLEMENTED
 // Focus on acceleration and jerk limits, allow higher velocity
 motion_limits_t default_limits = {
-    .max_velocity = {6.0f, 6.0f, 6.0f},         // rad/s [coxa, femur, tibia] - near hardware limit
-    .max_acceleration = {50.0f, 50.0f, 50.0f},  // rad/s²
-    .max_jerk = {2000.0f, 2000.0f, 2000.0f},    // rad/s³
+  .max_velocity = {5.0f, 5.0f, 5.0f},            // rad/s [coxa, femur, tibia]
+  .max_acceleration = {600.0f, 600.0f, 600.0f},  // rad/s²
+  .max_jerk = {3500.0f, 3500.0f, 3500.0f},       // rad/s³
     .current_mode = MOTION_MODE_NORMAL,
 };
 
@@ -248,8 +248,8 @@ void gait_framework_main(void *arg) {
         // Execute limited commands ✅ IMPLEMENTED
         robot_execute(&limited_cmds);
         
-        // KPP: Update state estimation ✅ IMPLEMENTED
-        kpp_update_state(&kpp_state, &limited_cmds, dt);
+        // KPP: Update state estimation from original commands ✅ IMPLEMENTED
+        kpp_update_state(&kpp_state, &cmds, dt);
         
         // ... existing timing ...
     }
@@ -270,12 +270,15 @@ void gait_framework_main(void *arg) {
 
 ## File Structure ✅ **IMPLEMENTED**
 ```
-main/
+components/hex_motion_limits/
 ├── kpp_system.h          # ✅ KPP data structures and API
 ├── kpp_system.c          # ✅ Core KPP implementation with refactored helper functions
 ├── kpp_forward_kin.c     # ✅ Forward kinematics calculations
 ├── kpp_config.h          # ✅ Configurable parameters
-└── (existing files...)   # ✅ Modified to integrate KPP (main.c, CMakeLists.txt)
+└── CMakeLists.txt        # ✅ Component registration
+
+main/
+└── main.c                # ✅ KPP integration points in the control loop
 ```
 
 **Note**: `kpp_motion_limits.c` functionality was integrated directly into `kpp_system.c` for better organization.

@@ -217,12 +217,14 @@ flowchart TD
 		Sched[gait_scheduler_update]
 		Traj[swing_trajectory_generate]
 		Body[whole_body_control_compute]
+		Orig[original joint cmds]
 		Limit[kpp_apply_limits]
 		Exec[robot_execute]
 		Est[kpp_update_state]
 		Delay[vTaskDelay to keep period]
 
-		Start --> Poll --> Sched --> Traj --> Body --> Limit --> Exec --> Est --> Delay --> Start
+		Start --> Poll --> Sched --> Traj --> Body --> Orig --> Limit --> Exec --> Est --> Delay --> Start
+		Orig -.state input.-> Est
 ```
 
 ### 2.3 RPC Queue-Centric Interaction
@@ -290,11 +292,11 @@ This section proposes a concrete decomposition into `components/` packages.
 
 3. `hex_kinematics`
 - role: leg IK and forward kinematics utilities.
-- owns: `leg`, `kpp_forward_kin` math parts.
+- owns: `leg`.
 
 4. `hex_motion_limits`
 - role: KPP state estimation and command limiting.
-- owns: `kpp_system`.
+- owns: `kpp_system`, `kpp_forward_kin`.
 
 5. `hex_actuation`
 - role: hardware actuation for joints.
@@ -364,7 +366,11 @@ flowchart LR
 
 		Loc --> Kin
 		Loc --> RCfg
+		Lim --> Loc
 		Lim --> Kin
+		Lim --> RCfg
+		Act --> Loc
+		Act --> Kin
 		Act --> RCfg
 
 		CFly --> CCore
