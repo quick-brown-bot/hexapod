@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "controller.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,6 +32,9 @@ static inline controller_flysky_ibus_cfg_t controller_flysky_ibus_default(void) 
     };
     return c;
 }
+
+// Driver initialization function (called by controller bootstrap flow)
+void controller_driver_init_flysky_ibus(const controller_config_t *cfg);
 
 #ifdef __cplusplus
 }

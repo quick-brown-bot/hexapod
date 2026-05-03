@@ -21,6 +21,9 @@ typedef struct {
 // Passing NULL uses default configuration (FLYSKY_IBUS driver with built-in UART pins).
 void controller_init(const controller_config_t *cfg);
 
+// Get active controller runtime configuration.
+const controller_config_t *controller_get_config(void);
+
 // Copy latest raw channel values (signed -32768..32767). Returns true on success.
 bool controller_get_channels(int16_t out[CONTROLLER_MAX_CHANNELS]);
 

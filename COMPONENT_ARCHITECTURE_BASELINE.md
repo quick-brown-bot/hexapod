@@ -30,7 +30,7 @@ Component: Application Bootstrap and Loop
 ### 1.2 Locomotion Pipeline
 
 Component: User Command Mapping
-- Files: `main/user_command.c`, `main/user_command.h`
+- Files: `main/user_command.c`, `components/hex_controller_core/user_command.h`
 - Consumes: `controller` channel/state abstraction.
 - Produces: normalized `user_command_t`.
 
@@ -83,11 +83,21 @@ Component: Leg IK Library
 ### 1.3 Controller and Communications
 
 Component: Controller Core Abstraction
-- Files: `main/controller.c`, `main/controller.h`, `main/controller_internal.h`
+- Files: `components/hex_controller_core/controller.c`, `components/hex_controller_core/controller.h`, `components/hex_controller_core/controller_internal.h`
 - Responsibilities:
 	- shared channel cache with mutex,
 	- connection/failsafe state,
 	- dispatch to selected controller driver.
+
+Component: Controller Interface Contracts
+- Files:
+	- `components/hex_controller_core/controller.h`,
+	- `components/hex_controller_core/controller_internal.h`,
+	- `components/hex_controller_core/user_command.h`.
+- Responsibilities:
+	- provide stable controller-facing API and internal driver ingress contracts,
+	- remove component reliance on `main` private include paths,
+	- centralize command/control shared types used by drivers, RPC, and locomotion mapping.
 
 Component: Controller Drivers
 - Files:
@@ -97,7 +107,8 @@ Component: Controller Drivers
 - Responsibilities:
 	- ingest transport-specific input,
 	- map to canonical channel format,
-	- forward text/RPC frames to RPC transport where needed.
+	- forward text/RPC frames to RPC transport where needed,
+	- push decoded channels directly to controller core ingress.
 
 Component: WiFi AP Service
 - Files: `components/hex_wifi_ap/wifi_ap.c`, `components/hex_wifi_ap/wifi_ap.h`
@@ -159,6 +170,7 @@ flowchart LR
 		end
 
 		subgraph IO[Controller and Comms]
+			CIface[Controller Interface Contracts]
 			CCore[Controller Core]
 			CFly[FlySky iBUS Driver]
 			CWifi[WiFi TCP Driver]
@@ -179,14 +191,18 @@ flowchart LR
 		RC --> CFG
 
 		CCore --> UC
+		CIface --> CCore
 		CFly --> CCore
+		CFly -.uses.-> CIface
 		CWifi --> CCore
+		CWifi -.uses.-> CIface
 		CBt --> CCore
+		CBt -.uses.-> CIface
 		AP --> CWifi
 
 		CWifi --> RT
 		CBt --> RT
-		CFly --> RT
+		RCmd -.uses.-> CIface
 		RT --> RCmd
 		RCmd --> CM --> NVS
 		RCmd --> CCore
@@ -329,6 +345,7 @@ flowchart LR
 		RCfg[hex_robot_config]
 
 		CCore[hex_controller_core]
+		CIface[hex_controller_core]
 		CFly[hex_controller_driver_flysky_ibus]
 		CWifi[hex_controller_driver_wifi_tcp]
 		CBt[hex_controller_driver_bt_classic]
@@ -342,6 +359,7 @@ flowchart LR
 		Core --> Lim
 		Core --> Act
 		Core --> CCore
+		Core --> CIface
 		Core --> RpcCore
 		Core --> WAP
 		Core --> RCfg
@@ -352,16 +370,19 @@ flowchart LR
 		Act --> RCfg
 
 		CFly --> CCore
+		CFly --> CIface
 		CWifi --> CCore
+		CWifi --> CIface
 		CBt --> CCore
+		CBt --> CIface
 		CWifi --> RpcTx
 		CBt --> RpcTx
-		CFly --> RpcTx
 		WAP --> CWifi
 
 		RpcCore --> RpcTx
 		RpcCore --> Cfg
 		RpcCore --> CCore
+		RpcCore --> CIface
 ```
 
 ### 4.3 Initial Refactor Sequence

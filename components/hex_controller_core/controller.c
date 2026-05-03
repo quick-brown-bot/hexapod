@@ -92,11 +92,6 @@ const void *controller_internal_get_driver_cfg(size_t *out_size)
     return g_cfg.driver_cfg;
 }
 
-// Forward declaration of implemented driver init functions
-void controller_driver_init_flysky_ibus(const controller_config_t *cfg);
-void controller_driver_init_bt_classic(const controller_config_t *cfg);
-void controller_driver_init_wifi_tcp(const controller_config_t *cfg);
-
 void controller_init(const controller_config_t *cfg)
 {
     if (cfg) {
@@ -110,18 +105,11 @@ void controller_init(const controller_config_t *cfg)
         g_ch_mutex = xSemaphoreCreateMutex();
     }
     controller_fill_failsafe(g_channels);
-    switch (g_cfg.driver_type) {
-        case CONTROLLER_DRIVER_WIFI_TCP:
-            controller_driver_init_wifi_tcp(&g_cfg);
-            break;
-        case CONTROLLER_DRIVER_BT_CLASSIC:
-            controller_driver_init_bt_classic(&g_cfg);
-            break;
-        case CONTROLLER_DRIVER_FLYSKY_IBUS:
-        default:
-            controller_driver_init_flysky_ibus(&g_cfg);
-            break;
-    }
+}
+
+const controller_config_t *controller_get_config(void)
+{
+    return &g_cfg;
 }
 
 bool controller_get_channels(int16_t out[CONTROLLER_MAX_CHANNELS])

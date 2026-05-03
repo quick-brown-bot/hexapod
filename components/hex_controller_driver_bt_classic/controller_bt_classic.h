@@ -4,13 +4,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "esp_err.h"
+#include "controller.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// Forward declaration for controller_config_t
-struct controller_config_s;
 
 // Bluetooth Classic SPP controller driver configuration
 typedef struct {
@@ -34,7 +32,7 @@ static inline controller_bt_classic_cfg_t controller_bt_classic_default(void) {
 }
 
 // Driver initialization function (called by controller core)
-void controller_driver_init_bt_classic(const struct controller_config_s *core);
+void controller_driver_init_bt_classic(const controller_config_t *core);
 
 // Get the active Bluetooth device name (NULL if not started yet)
 const char *controller_bt_get_device_name(void);

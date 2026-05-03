@@ -1,6 +1,9 @@
 #include <stddef.h>
 #include "user_command.h"
 #include "controller.h"
+#include "controller_flysky_ibus.h"
+#include "controller_wifi_tcp.h"
+#include "controller_bt_classic.h"
 #include "esp_log.h"
 
 static const char* TAG = "user_command";
@@ -9,6 +12,25 @@ void user_command_init(void) {
     // Start controller task with default configuration (defaults to FLYSKY iBUS driver);
     // Future: configuration portal will supply a runtime-selected driver & parameters.
     controller_init(0);
+
+    const controller_config_t *cfg = controller_get_config();
+    if (!cfg) {
+        ESP_LOGE(TAG, "Controller configuration unavailable");
+        return;
+    }
+
+    switch (cfg->driver_type) {
+        case CONTROLLER_DRIVER_WIFI_TCP:
+            controller_driver_init_wifi_tcp(cfg);
+            break;
+        case CONTROLLER_DRIVER_BT_CLASSIC:
+            controller_driver_init_bt_classic(cfg);
+            break;
+        case CONTROLLER_DRIVER_FLYSKY_IBUS:
+        default:
+            controller_driver_init_flysky_ibus(cfg);
+            break;
+    }
 }
 
 void user_command_poll(user_command_t *cmd) {

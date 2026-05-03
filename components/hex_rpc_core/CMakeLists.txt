@@ -4,6 +4,6 @@ idf_component_register(
     REQUIRES
     hex_rpc_transport
     hex_config_manager
-    hex_controller_iface
+    hex_controller_core
     hex_shared_types
 )

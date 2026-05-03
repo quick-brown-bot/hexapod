@@ -139,7 +139,7 @@ static void bt_watchdog_task(void *arg) {
     }
 }
 
-void controller_driver_init_bt_classic(const struct controller_config_s *core) {
+void controller_driver_init_bt_classic(const controller_config_t *core) {
     esp_err_t ret;
     
     // Get driver config or use defaults

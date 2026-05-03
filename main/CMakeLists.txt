@@ -8,7 +8,6 @@ idf_component_register(
     "robot_control.c"
     "robot_config.c"
     "user_command.c"
-    "controller.c"
     "kpp_system.c"
     "kpp_forward_kin.c"
     "kpp_debug.c"
@@ -20,7 +19,7 @@ idf_component_register(
     hex_controller_driver_flysky_ibus
     hex_controller_driver_wifi_tcp
     hex_controller_driver_bt_classic
-    hex_controller_iface
+    hex_controller_core
     hex_config_manager
     hex_shared_types
 )
