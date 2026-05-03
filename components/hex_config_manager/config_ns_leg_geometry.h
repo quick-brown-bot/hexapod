@@ -1,0 +1,27 @@
+/*
+ * Leg geometry namespace descriptor and context.
+ */
+
+#pragma once
+
+#include <stdbool.h>
+
+#include "config_manager.h"
+#include "config_namespace_registry.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct {
+    nvs_handle_t* nvs_handle;
+    bool* namespace_dirty;
+    bool* namespace_loaded;
+    leg_geometry_config_t* config;
+} config_leg_geometry_namespace_context_t;
+
+extern const config_namespace_descriptor_t g_leg_geometry_namespace_descriptor;
+
+#ifdef __cplusplus
+}
+#endif

@@ -17,6 +17,7 @@ void config_domain_fill_joint_default(int joint, joint_calib_t* calib);
 
 void config_load_system_defaults(system_config_t* config);
 void config_load_joint_calib_defaults(joint_calib_config_t* config);
+void config_load_leg_geometry_defaults(leg_geometry_config_t* config);
 
 #ifdef __cplusplus
 }

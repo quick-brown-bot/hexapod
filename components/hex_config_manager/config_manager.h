@@ -29,6 +29,7 @@ extern "C" {
 typedef enum {
     CONFIG_NS_SYSTEM = 0,        // System-wide settings and safety
     CONFIG_NS_JOINT_CALIB = 1,   // Joint calibration per leg/joint
+    CONFIG_NS_LEG_GEOMETRY = 2,  // Leg geometry and mounting poses
     CONFIG_NS_COUNT              // Keep this last
 } config_namespace_t;
 
@@ -49,6 +50,27 @@ typedef struct {
     // joint: 0-2 (LEG_SERVO_COXA, LEG_SERVO_FEMUR, LEG_SERVO_TIBIA)
     joint_calib_t joints[NUM_LEGS][NUM_JOINTS_PER_LEG];
 } joint_calib_config_t;
+
+// =============================================================================
+// Leg Geometry Configuration Structure
+// =============================================================================
+
+typedef struct {
+    // Mechanical dimensions per leg (meters)
+    float len_coxa[NUM_LEGS];
+    float len_femur[NUM_LEGS];
+    float len_tibia[NUM_LEGS];
+
+    // Mounting pose per leg in body frame
+    float mount_x[NUM_LEGS];
+    float mount_y[NUM_LEGS];
+    float mount_z[NUM_LEGS];
+    float mount_yaw[NUM_LEGS];
+
+    // Stance defaults in leg-local frame
+    float stance_out[NUM_LEGS];
+    float stance_fwd[NUM_LEGS];
+} leg_geometry_config_t;
 
 // =============================================================================
 // System Configuration Structure
@@ -262,6 +284,25 @@ esp_err_t config_set_joint_pwm_memory(int leg_index, int joint, int32_t pwm_min_
 esp_err_t config_set_joint_pwm_persist(int leg_index, int joint, int32_t pwm_min_us, int32_t pwm_max_us, int32_t pwm_neutral_us);
 
 // =============================================================================
+// Leg Geometry Configuration API
+// =============================================================================
+
+/**
+ * @brief Get leg geometry configuration (from memory cache)
+ *
+ * @return Pointer to leg geometry configuration structure (read-only)
+ */
+const leg_geometry_config_t* config_get_leg_geometry(void);
+
+/**
+ * @brief Set complete leg geometry configuration structure (always persistent)
+ *
+ * @param config Pointer to leg geometry configuration structure
+ * @return ESP_OK on success, error code on NVS write failure
+ */
+esp_err_t config_set_leg_geometry(const leg_geometry_config_t* config);
+
+// =============================================================================
 // Parameter Types and Metadata
 // =============================================================================
 
@@ -451,6 +492,13 @@ void config_load_system_defaults(system_config_t* config);
  * @param config Pointer to joint calibration config structure to fill with defaults
  */
 void config_load_joint_calib_defaults(joint_calib_config_t* config);
+
+/**
+ * @brief Load factory default leg geometry configuration
+ *
+ * @param config Pointer to leg geometry config structure to fill with defaults
+ */
+void config_load_leg_geometry_defaults(leg_geometry_config_t* config);
 
 /**
  * @brief Factory reset - restore all configuration to defaults
