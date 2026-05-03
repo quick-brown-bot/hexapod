@@ -13,15 +13,6 @@ idf_component_register(
     "kpp_system.c"
     "kpp_forward_kin.c"
     "kpp_debug.c"
-    "config_storage_nvs.c"
-    "config_migration.c"
-    "config_namespace_registry.c"
-    "config_registry.c"
-    "config_domain_defaults.c"
-    "config_domain_persistence_nvs.c"
-    "config_domain_system_access.c"
-    "config_domain_joint_access.c"
-    "config_manager.c"
     INCLUDE_DIRS "."
     REQUIRES
     hex_rpc_transport
@@ -29,4 +20,5 @@ idf_component_register(
     hex_controller_driver_flysky_ibus
     hex_controller_driver_wifi_tcp
     hex_controller_driver_bt_classic
+    hex_config_manager
 )
