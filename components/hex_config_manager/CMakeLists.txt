@@ -10,8 +10,8 @@ idf_component_register(
     "config_domain_joint_access.c"
     "config_domain_defaults.c"
     INCLUDE_DIRS "."
-    PRIV_INCLUDE_DIRS "../../main"
     REQUIRES
     nvs_flash
     esp_partition
+    hex_shared_types
 )

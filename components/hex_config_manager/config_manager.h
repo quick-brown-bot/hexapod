@@ -15,7 +15,7 @@
 #include <stddef.h>
 #include "esp_err.h"
 #include "nvs_flash.h"
-#include "controller.h"
+#include "controller_driver_types.h"
 #include "types/joint_types.h"
 
 #ifdef __cplusplus
