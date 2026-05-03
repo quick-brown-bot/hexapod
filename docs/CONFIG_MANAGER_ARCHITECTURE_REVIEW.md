@@ -2,19 +2,19 @@
 
 ## Scope
 
-This review analyzes the current implementation in [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h) and [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c), lists its responsibilities, and proposes a separable architecture for a shared settings platform usable by all components.
+This review analyzes the current implementation in [components/hex_config_manager/config_manager.h](../components/hex_config_manager/config_manager.h) and [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c), lists its responsibilities, and proposes a separable architecture for a shared settings platform usable by all components.
 
 ## Current Implementation Status (2026-05-03)
 
 Recent refactor progress reflected in codebase:
 - Config manager implementation has been extracted from `main` into the dedicated component:
-    - [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h)
-    - [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c)
+    - [components/hex_config_manager/config_manager.h](../components/hex_config_manager/config_manager.h)
+    - [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c)
 - Main application now consumes config via component dependency instead of compiling config sources directly:
-    - [main/CMakeLists.txt](main/CMakeLists.txt)
+    - [main/CMakeLists.txt](../main/CMakeLists.txt)
 - Shared cross-component types were separated into a dedicated component to remove temporary include coupling:
-    - [components/hex_shared_types/controller_driver_types.h](components/hex_shared_types/controller_driver_types.h)
-    - [components/hex_shared_types/types/joint_types.h](components/hex_shared_types/types/joint_types.h)
+    - [components/hex_shared_types/controller_driver_types.h](../components/hex_shared_types/controller_driver_types.h)
+    - [components/hex_shared_types/types/joint_types.h](../components/hex_shared_types/types/joint_types.h)
 
 This document keeps the original responsibility analysis and phase plan, but file references now point to extracted component paths.
 
@@ -31,10 +31,10 @@ Responsibilities:
 - open and hold NVS handles for each namespace.
 
 Evidence:
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L643)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L669)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L687)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L699)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L643)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L669)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L687)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L699)
 
 ### 2. Global Manager Runtime State
 
@@ -45,9 +45,9 @@ Responsibilities:
 - expose manager state snapshot.
 
 Evidence:
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L40)
-- [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h#L74)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L762)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L40)
+- [components/hex_config_manager/config_manager.h](../components/hex_config_manager/config_manager.h#L74)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L762)
 
 ### 3. Schema Versioning and Migration
 
@@ -58,11 +58,11 @@ Responsibilities:
 - enforce no downgrade policy.
 
 Evidence:
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L173)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L185)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L321)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L335)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L358)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L173)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L185)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L321)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L335)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L358)
 
 ### 4. Namespace Cache Ownership
 
@@ -73,12 +73,12 @@ Responsibilities:
 - load persisted values into cache.
 
 Evidence:
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L43)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L46)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L389)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L485)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1819)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1860)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L43)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L46)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L389)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L485)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1819)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1860)
 
 ### 5. Serialization and NVS Key Mapping
 
@@ -89,10 +89,10 @@ Responsibilities:
 - serialize and deserialize complete namespaces.
 
 Evidence:
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L52)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L72)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L569)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L609)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L52)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L72)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L569)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L609)
 
 ### 6. Parameter Name Parsing and Dynamic Addressing
 
@@ -102,9 +102,9 @@ Responsibilities:
 - translate between short and full joint names.
 
 Evidence:
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L111)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1288)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1349)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L111)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1288)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1349)
 
 ### 7. Type-Specific Access API Layer
 
@@ -114,9 +114,9 @@ Responsibilities:
 - apply namespace routing and per-type validation.
 
 Evidence:
-- [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h#L269)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1355)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1589)
+- [components/hex_config_manager/config_manager.h](../components/hex_config_manager/config_manager.h#L269)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1355)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1589)
 
 ### 8. Metadata and Discovery API
 
@@ -127,11 +127,11 @@ Responsibilities:
 - maintain metadata tables for system and joint_cal domains.
 
 Evidence:
-- [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h#L379)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1663)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1715)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1768)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1090)
+- [components/hex_config_manager/config_manager.h](../components/hex_config_manager/config_manager.h#L379)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1663)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1715)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1768)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1090)
 
 ### 9. Domain Defaults and Factory Reset
 
@@ -141,10 +141,10 @@ Responsibilities:
 - erase all namespaces and restore in-memory defaults.
 
 Evidence:
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L251)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1819)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1860)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1881)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L251)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1819)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1860)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1881)
 
 ### 10. Cross-Partition WiFi Utility
 
@@ -152,8 +152,8 @@ Responsibilities:
 - read credentials from default WiFi partition using ESP-IDF keys.
 
 Evidence:
-- [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h#L489)
-- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1978)
+- [components/hex_config_manager/config_manager.h](../components/hex_config_manager/config_manager.h#L489)
+- [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1978)
 
 ## Separation Feasibility
 
@@ -305,8 +305,8 @@ The sequence below follows small components first while making config redesign a
 
 ### Phase 1 Small Component Extractions First
 
-1. Extract hex_rpc_transport from [main/rpc_transport.c](main/rpc_transport.c).
-2. Extract hex_wifi_ap from [main/wifi_ap.c](main/wifi_ap.c).
+1. Extract hex_rpc_transport from [main/rpc_transport.c](../main/rpc_transport.c).
+2. Extract hex_wifi_ap from [main/wifi_ap.c](../main/wifi_ap.c).
 3. Extract controller drivers one by one as leaf components, keeping controller core unchanged.
 
 Why first: these are narrower modules with lower cross-cutting data ownership.
@@ -317,22 +317,22 @@ Status: completed.
 
 Completed checklist:
 - hex_rpc_transport extracted into dedicated component:
-    - [components/hex_rpc_transport/CMakeLists.txt](components/hex_rpc_transport/CMakeLists.txt)
-    - [components/hex_rpc_transport/rpc_transport.c](components/hex_rpc_transport/rpc_transport.c)
+    - [components/hex_rpc_transport/CMakeLists.txt](../components/hex_rpc_transport/CMakeLists.txt)
+    - [components/hex_rpc_transport/rpc_transport.c](../components/hex_rpc_transport/rpc_transport.c)
 - hex_wifi_ap extracted into dedicated component:
-    - [components/hex_wifi_ap/CMakeLists.txt](components/hex_wifi_ap/CMakeLists.txt)
-    - [components/hex_wifi_ap/wifi_ap.c](components/hex_wifi_ap/wifi_ap.c)
+    - [components/hex_wifi_ap/CMakeLists.txt](../components/hex_wifi_ap/CMakeLists.txt)
+    - [components/hex_wifi_ap/wifi_ap.c](../components/hex_wifi_ap/wifi_ap.c)
 - Controller drivers extracted as leaf components:
-    - [components/hex_controller_driver_flysky_ibus/CMakeLists.txt](components/hex_controller_driver_flysky_ibus/CMakeLists.txt)
-    - [components/hex_controller_driver_wifi_tcp/CMakeLists.txt](components/hex_controller_driver_wifi_tcp/CMakeLists.txt)
-    - [components/hex_controller_driver_bt_classic/CMakeLists.txt](components/hex_controller_driver_bt_classic/CMakeLists.txt)
+    - [components/hex_controller_driver_flysky_ibus/CMakeLists.txt](../components/hex_controller_driver_flysky_ibus/CMakeLists.txt)
+    - [components/hex_controller_driver_wifi_tcp/CMakeLists.txt](../components/hex_controller_driver_wifi_tcp/CMakeLists.txt)
+    - [components/hex_controller_driver_bt_classic/CMakeLists.txt](../components/hex_controller_driver_bt_classic/CMakeLists.txt)
 - Controller core kept in main and remains driver-agnostic:
-    - [main/controller.c](main/controller.c)
+    - [main/controller.c](../main/controller.c)
 - main component now depends on extracted components instead of compiling those sources directly:
-    - [main/CMakeLists.txt](main/CMakeLists.txt)
+    - [main/CMakeLists.txt](../main/CMakeLists.txt)
 
 Notes:
-- Extracted source/header duplicates were removed from [main](main).
+- Extracted source/header duplicates were removed from [main](../main).
 - Full project builds passed after extraction cutover.
 
 ### Phase 2 Must-Have Config Architecture Refactor
@@ -378,12 +378,12 @@ Exit criteria for Phase 2:
 2. Static buffer in metadata builder
 - build_joint_param_info uses a static name buffer.
 - impact: not safe for concurrent callers and can be overwritten on next call.
-- evidence: [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1295)
+- evidence: [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1295)
 
 3. Static buffer in parameter listing
 - config_list_parameters for joint_cal uses static buffers and capped output.
 - impact: partial discovery and potential confusion for clients.
-- evidence: [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1738)
+- evidence: [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1738)
 
 4. Configuration and robot calibration ownership overlap
 - settings exist in config manager while robot_config also owns calibration-facing behavior.
@@ -399,3 +399,4 @@ Proceed with small-first extraction, but start Phase 2 immediately after first t
 
 Practical recommendation note:
 - prioritize descriptor + registration design review before coding Phase 2 steps 5-8, because this decision determines whether namespace extensibility becomes genuinely easy or remains partially hardcoded.
+

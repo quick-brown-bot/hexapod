@@ -15,6 +15,9 @@ Facts:
 - I burned three ESP32 dev boards during development and counting
 - Project eaten up 2 months of my life up to the first release and working stage
 
+Documentation:
+- Consolidated technical docs live in [docs/README.md](docs/README.md).
+
 ## 2. Hardware Summary
 * MCU / Control: ESP32 module (classic dual‑core variant) running FreeRTOS via ESP‑IDF
 * Servos: 18 × high‑torque 35 kg.cm hobby servos (3 DOF per leg: coxa yaw, femur pitch, tibia)
@@ -221,12 +224,12 @@ The controller layer now provides a driver abstraction. Key points:
 * Failsafe injects neutral (zero) channels when a driver times out or disconnects.
 * Current driver: FlySky iBUS over UART (default) – its 1000..2000 values are rescaled into full signed range for first 14 slots; remaining slots zero.
 * WiFi TCP driver (added): versioned binary frame (74 bytes) with sync (AA55), header, 32 signed channels, CRC16.
-	* Detailed spec: see `WIFI_TCP_PROTOCOL.md`.
-	* Current network mode: AP-only for simplicity (see `WIFI_NETWORK_MODES.md` for evolution plan to AP+STA).
+	* Detailed spec: see [docs/WIFI_TCP_PROTOCOL.md](docs/WIFI_TCP_PROTOCOL.md).
+	* Current network mode: AP-only for simplicity (see [docs/WIFI_NETWORK_MODES.md](docs/WIFI_NETWORK_MODES.md) for evolution plan to AP+STA).
 	* AP SSID generation supports fixed, MAC-suffix, or random-suffix modes (default = MAC suffix, e.g. `HEXAPOD_AP_3AF2B7`).
 * Opaque driver configuration: `controller_config_t` holds a `driver_cfg` pointer + size (e.g. `controller_flysky_ibus_cfg_t`). This keeps core lean while enabling WiFi / BT specific parameters. Memory ownership is with caller.
-* Developer guide for writing new drivers: see `CONTROLLER_DRIVERS.md`.
-* (Early draft WiFi packet format removed; see `WIFI_TCP_PROTOCOL.md` for the authoritative current definition.)
+* Developer guide for writing new drivers: see [docs/CONTROLLER_DRIVERS.md](docs/CONTROLLER_DRIVERS.md).
+* (Early draft WiFi packet format removed; see [docs/WIFI_TCP_PROTOCOL.md](docs/WIFI_TCP_PROTOCOL.md) for the authoritative current definition.)
 
 Runtime selection (future): store selected driver + params (e.g. WiFi port, BT service UUID) in NVS, applied at boot so firmware can remain static while changing control sources from the portal.
 
