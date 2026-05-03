@@ -62,21 +62,21 @@ This document outlines the design decisions for the hexapod robot's configuratio
 Following Betaflight's Parameter Group (PG) concept, organized by logical functionality:
 
 ```c
-// Primary configuration namespaces
-#define CONFIG_NS_JOINT_CALIB    "joint_cal"    // Joint calibration per leg/joint
-#define CONFIG_NS_LEG_GEOMETRY   "leg_geom"     // Leg link lengths and mounting poses
-#define CONFIG_NS_MOTION_LIMITS  "motion_lim"   // KPP velocity/acceleration/jerk limits  
-#define CONFIG_NS_SERVO_MAPPING  "servo_map"    // GPIO pins and driver selections
-#define CONFIG_NS_CONTROLLER     "controller"   // Controller driver configurations
-#define CONFIG_NS_GAIT           "gait"         // Gait scheduler and trajectory parameters
-#define CONFIG_NS_SYSTEM         "system"       // System-wide settings and safety
-#define CONFIG_NS_DEBUG          "debug"        // Debug and logging parameters
-#define CONFIG_NS_WIFI           "wifi"         // WiFi AP and network configuration
+// Primary namespace string names (console/RPC friendly)
+"joint_cal"   // Joint calibration per leg/joint
+"leg_geom"    // Leg link lengths and mounting poses
+"motion_lim"  // KPP velocity/acceleration/jerk limits
+"servo_map"   // GPIO pins and driver selections
+"controller"  // Controller driver configurations
+"gait"        // Gait scheduler and trajectory parameters
+"system"      // System-wide settings and safety
+"debug"       // Debug and logging parameters
+"wifi"        // WiFi AP and network configuration
 ```
 
 ## Detailed Namespace Design
 
-### 1. CONFIG_NS_JOINT_CALIB - Joint Calibration Data
+### 1. joint_cal - Joint Calibration Data
 **Derived from:** `robot_config_t.joint_calib[NUM_LEGS][3]`
 
 **Parameters per leg/joint:**
@@ -88,14 +88,14 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "leg{0-5}_coxa_max"         // joint_calib_t.max_rad
 "leg{0-5}_coxa_pwm_min"     // joint_calib_t.pwm_min_us
 "leg{0-5}_coxa_pwm_max"     // joint_calib_t.pwm_max_us
-"leg{0-5}_coxa_pwm_neutral" // joint_calib_t.neutral_us
+"leg{0-5}_coxa_neutral"     // joint_calib_t.neutral_us
 
 // Same pattern for femur and tibia joints
 "leg{0-5}_femur_offset", "leg{0-5}_femur_invert", etc.
 "leg{0-5}_tibia_offset", "leg{0-5}_tibia_invert", etc.
 ```
 
-### 2. CONFIG_NS_LEG_GEOMETRY - Leg Physical Properties  
+### 2. leg_geom - Leg Physical Properties  
 **Derived from:** `leg_geometry_t` and mounting poses
 
 **Leg geometry parameters:**
@@ -116,7 +116,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "leg{0-5}_stance_fwd"       // Forward stance distance (meters)
 ```
 
-### 3. CONFIG_NS_MOTION_LIMITS - KPP Motion Parameters
+### 3. motion_lim - KPP Motion Parameters
 **Derived from:** `kpp_config.h` motion limits and filters
 
 **Motion limits per joint type:**
@@ -155,7 +155,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "body_offset_z"             // KPP_BODY_OFFSET_Z (meters)
 ```
 
-### 4. CONFIG_NS_SERVO_MAPPING - Hardware Configuration
+### 4. servo_map - Hardware Configuration
 **Derived from:** `robot_config_t` servo and MCPWM mappings
 
 **Servo hardware mapping:**
@@ -174,7 +174,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "leg{0-5}_mcpwm_group"      // mcpwm_group_id[leg]
 ```
 
-### 5. CONFIG_NS_CONTROLLER - Input Device Configuration
+### 5. controller - Input Device Configuration
 **Derived from:** `controller_config_t` and driver-specific configs
 
 **Controller driver configuration:**
@@ -200,7 +200,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "switch_thresholds"        // 3-position switch thresholds
 ```
 
-### 6. CONFIG_NS_GAIT - Locomotion Parameters  
+### 6. gait - Locomotion Parameters  
 **Derived from:** `gait_scheduler_t` and `swing_trajectory_t`
 
 **Gait and trajectory parameters:**
@@ -223,7 +223,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "stance_width_scale"       // Dynamic stance width scaling
 ```
 
-### 7. CONFIG_NS_SYSTEM - System-Wide Settings
+### 7. system - System-Wide Settings
 **Derived from:** System safety and operational parameters
 
 **System configuration:**
@@ -243,7 +243,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "config_version"            // Configuration schema version
 ```
 
-### 8. CONFIG_NS_DEBUG - Development and Diagnostic Settings
+### 8. debug - Development and Diagnostic Settings
 **Derived from:** `robot_config_t` debug settings and `kpp_config.h` logging
 
 **Debug and logging configuration:**
@@ -263,7 +263,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "enable_performance_stats"  // Performance monitoring enable
 ```
 
-### 9. CONFIG_NS_WIFI - Network Configuration
+### 9. wifi - Network Configuration
 **Derived from:** `wifi_ap_options_t` and future network settings
 
 **WiFi and network parameters:**
@@ -344,13 +344,13 @@ esp_err_t config_reload_namespace(config_namespace_t ns);   // Discard changes, 
 // Batch save multiple changes at once
 {
   "cmd": "save_namespace",
-  "namespace": "joint_calib"
+  "namespace": "joint_cal"
 }
 
 // Revert all unsaved changes
 {
   "cmd": "reload_namespace", 
-  "namespace": "joint_calib"
+  "namespace": "joint_cal"
 }
 ```
 
@@ -364,10 +364,10 @@ esp_err_t config_get_parameter_float(const char *namespace_str, const char *key,
 esp_err_t config_set_parameter_float(const char *namespace_str, const char *key, float value);
 
 // Example RPC endpoints:
-// GET  /api/config/joint_calib/leg0_coxa_offset
-// PUT  /api/config/joint_calib/leg0_coxa_offset  {"value": 0.523, "persist": false}
-// POST /api/config/joint_calib/save
-// POST /api/config/joint_calib/reload
+// GET  /api/config/joint_cal/leg0_coxa_offset
+// PUT  /api/config/joint_cal/leg0_coxa_offset  {"value": 0.523, "persist": false}
+// POST /api/config/joint_cal/save
+// POST /api/config/joint_cal/reload
 ```
 
 **Configuration state management:**
@@ -383,8 +383,8 @@ typedef struct {
 **Live Tuning Workflow:**
 1. User slides joint offset → `set_joint_offset_memory()` → robot moves immediately  
 2. User continues adjusting → more `_memory()` calls → immediate feedback
-3. User likes result → `save_namespace("joint_calib")` → persisted to NVS
-4. OR user doesn't like it → `reload_namespace("joint_calib")` → back to saved state
+3. User likes result → `save_namespace("joint_cal")` → persisted to NVS
+4. OR user doesn't like it → `reload_namespace("joint_cal")` → back to saved state
 
 **Cautious Workflow:**  
 1. User changes value → `set_joint_offset_persist()` → immediate save to NVS
@@ -441,7 +441,7 @@ esp_err_t config_manager_migrate(uint16_t detected_version) {
     "timestamp": 1699200000,
     "robot_id": "hexapod_001"
   },
-  "joint_calib": {
+  "joint_cal": {
     "leg0_coxa_offset": 0.523,
     "leg0_coxa_min": -1.57,
     "leg0_coxa_max": 1.57
@@ -484,7 +484,8 @@ esp_err_t config_manager_migrate(uint16_t detected_version) {
 
 #### Implementation Notes:
 - **Files created:** `config_manager.h`, `config_manager.c`, `config_test.c`
-- **System namespace fully implemented** with 10 configuration parameters
+- **System namespace is implemented and wired** for core parameters (ongoing expansion expected)
+- **joint_cal namespace is implemented and wired** (defaults, load/save, parameter discovery, typed get/set)
 - **NVS operations** working with automatic error handling and wear leveling
 - **Dual-method API** demonstrated: `config_set_*_memory()` vs `config_set_*_persist()`
 - **Generic parameter API** foundation created for RPC integration
@@ -524,7 +525,7 @@ config_set_robot_name_memory("Test Robot");
 // Check for unsaved changes
 if (config_manager_has_dirty_data()) {
     // Save all changes at once
-    config_manager_save_namespace(CONFIG_NS_SYSTEM);
+  config_manager_save_namespace_by_name("system");
 }
 
 // Or save immediately (live tuning + persistence)  
