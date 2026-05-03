@@ -32,9 +32,6 @@ typedef enum {
     CONFIG_NS_COUNT              // Keep this last
 } config_namespace_t;
 
-// Namespace string mappings (must match enum order)
-extern const char* CONFIG_NAMESPACE_NAMES[CONFIG_NS_COUNT];
-
 // =============================================================================
 // Joint Calibration Configuration Structure
 // =============================================================================
@@ -121,6 +118,14 @@ bool config_manager_has_dirty_data(void);
  * @return ESP_OK on success, error code on failure
  */
 esp_err_t config_manager_save_namespace(config_namespace_t ns);
+
+/**
+ * @brief Save specific namespace to NVS by namespace name
+ *
+ * @param namespace_str Namespace name (for example "system")
+ * @return ESP_OK on success, ESP_ERR_NOT_FOUND if name is unknown, error code on failure
+ */
+esp_err_t config_manager_save_namespace_by_name(const char* namespace_str);
 
 // =============================================================================
 // System Configuration API

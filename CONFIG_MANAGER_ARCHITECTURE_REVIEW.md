@@ -184,9 +184,32 @@ All responsibilities can be separated. Separation is strongly recommended.
 
 - one shared settings platform for all components,
 - no component needs direct NVS knowledge,
+- easily extend namespaces and parameter sets with minimal code changes,
 - domains can be added independently,
 - migration and storage concerns isolated from domain logic,
 - stable C API for runtime use and RPC tooling.
+
+### Important Decisions
+
+1. Namespace extension model must be registration-based, not switch-based.
+- Why it matters: if hex_config_api or runtime keeps hardcoded if/switch routing by namespace, extension pain returns even after split.
+- Decision: each namespace provides a descriptor and registers once at startup.
+
+2. Domain contract must include full lifecycle hooks.
+- Why it matters: add namespace once, then automatically participate in defaults, load, save, list, metadata, and validation flows.
+- Decision: descriptor includes callbacks for defaults, load, save, typed get/set, list parameters, and get parameter info.
+
+3. Registry must be the single source of truth for namespace identity.
+- Why it matters: avoid drift between enum values, string literals, and module wiring.
+- Decision: runtime and API resolve namespaces through registry lookup only.
+
+4. Migration ownership must be explicit per namespace.
+- Why it matters: adding a namespace should not require touching unrelated migration logic paths.
+- Decision: global migration orchestrates; namespace migration steps are provided by each domain module.
+
+5. Extension acceptance criteria should be testable.
+- Why it matters: prevents regressions where new namespaces require edits in multiple generic modules.
+- Decision: add concrete "new namespace" and "new parameter" change-budget checks to Phase 2 exit criteria.
 
 ## Target Component Split
 
@@ -199,12 +222,14 @@ All responsibilities can be separated. Separation is strongly recommended.
 - cache store,
 - dirty flags,
 - load, apply, commit orchestration,
-- optional read-write lock for concurrency.
+- optional read-write lock for concurrency,
+- generic dispatch through registered namespace descriptors only.
 
 3. hex_config_registry
 - namespace and parameter metadata registry,
 - domain registration at startup,
-- lookup by namespace and parameter.
+- lookup by namespace and parameter,
+- canonical namespace descriptor ownership.
 
 4. hex_config_storage_nvs
 - NVS partition lifecycle,
@@ -266,6 +291,7 @@ flowchart LR
 - Domains remain independent and can be owned by their component teams.
 - New domain example motion_limits can be added without touching storage backend.
 - RPC discovery commands can use registry uniformly across all domains.
+- New namespace onboarding becomes predictable and low-touch.
 
 ## Small-First Refactor Plan With Config Must-Have
 
@@ -289,13 +315,22 @@ Why first: these are narrower modules with lower cross-cutting data ownership.
 1. Extract hex_config_storage_nvs from existing config_manager NVS code.
 2. Extract hex_config_migration from version and migration code.
 3. Extract hex_config_registry from parameter tables and discovery code.
-4. Move system and joint_cal logic into separate domain modules.
-5. Build hex_config_api facade that preserves existing function signatures.
-6. Keep hex_config_compat wrappers for old generic API.
+4. Define namespace descriptor contract and registration API.
+5. Move system and joint_cal logic into separate domain modules that implement the descriptor contract.
+6. Replace namespace if/switch routing in runtime/API with registry-driven dispatch.
+7. Build hex_config_api facade that preserves existing function signatures.
+8. Keep hex_config_compat wrappers for old generic API.
+
+Notes where it matters:
+- At step 4: keep descriptor small but complete; missing callbacks create hidden special-cases later.
+- At step 6: no hardcoded namespace literals in generic paths except controlled compatibility shims.
+- At step 7: compatibility facade can translate old behavior, but should call generic registry-driven core.
 
 Exit criteria for Phase 2:
 - all old config APIs still callable,
 - domain registration works for system and joint_cal,
+- adding a new namespace requires only: new domain module plus one registration entry,
+- adding a new parameter in an existing namespace requires changes only in that namespace module plus optional migration,
 - storage backend and migration are no longer mixed with domain logic,
 - module is ready for new domains used by other components.
 
@@ -333,3 +368,6 @@ Exit criteria for Phase 2:
 ## Recommendation
 
 Proceed with small-first extraction, but start Phase 2 immediately after first three low-risk splits. Treat config architecture refactor as a platform prerequisite before broad component extraction. This enables every future component to adopt one stable configuration contract from day one.
+
+Practical recommendation note:
+- prioritize descriptor + registration design review before coding Phase 2 steps 5-8, because this decision determines whether namespace extensibility becomes genuinely easy or remains partially hardcoded.

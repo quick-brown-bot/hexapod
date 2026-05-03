@@ -241,17 +241,38 @@ static void cmd_export(int argc, char *argv[]) {
 
 static void cmd_save(int argc, char *argv[]) {
 	if (argc == 1) {
-		// Save all namespaces (currently only system)
-		if (config_manager_save_namespace(CONFIG_NS_SYSTEM)==ESP_OK) rpc_send("save: SYSTEM OK");
-		if (config_manager_save_namespace(CONFIG_NS_JOINT_CALIB)==ESP_OK) rpc_send("save: JOINT_CAL OK");
-		else rpc_send("save: ERROR");
+		const char* names[CONFIG_NS_COUNT];
+		size_t count = 0;
+		if (config_list_namespaces(names, &count) != ESP_OK) {
+			rpc_send("save: ERROR listing namespaces");
+			return;
+		}
+
+		bool had_error = false;
+		for (size_t i = 0; i < count; i++) {
+			esp_err_t err = config_manager_save_namespace_by_name(names[i]);
+			if (err == ESP_OK) {
+				rpc_send("save %s: OK", names[i]);
+			} else {
+				had_error = true;
+				rpc_send("save %s: ERROR", names[i]);
+			}
+		}
+
+		if (had_error) {
+			rpc_send("save: completed with errors");
+		}
 		return;
 	}
-	if (strcmp(argv[1], CONFIG_NAMESPACE_NAMES[CONFIG_NS_SYSTEM])==0) {
-		if (config_manager_save_namespace(CONFIG_NS_SYSTEM)==ESP_OK) rpc_send("save SYSTEM: OK"); else rpc_send("save SYSTEM: ERROR");
-	} else if (strcmp(argv[1], CONFIG_NAMESPACE_NAMES[CONFIG_NS_JOINT_CALIB])==0) {
-		if (config_manager_save_namespace(CONFIG_NS_JOINT_CALIB)==ESP_OK) rpc_send("save JOINT_CAL: OK"); else rpc_send("save JOINT_CAL: ERROR");
-	} else rpc_send("save: unsupported namespace");
+
+	esp_err_t err = config_manager_save_namespace_by_name(argv[1]);
+	if (err == ESP_OK) {
+		rpc_send("save %s: OK", argv[1]);
+	} else if (err == ESP_ERR_NOT_FOUND) {
+		rpc_send("save: unsupported namespace");
+	} else {
+		rpc_send("save %s: ERROR", argv[1]);
+	}
 }
 
 static void cmd_factory_reset(void) {

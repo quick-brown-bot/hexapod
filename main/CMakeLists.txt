@@ -20,6 +20,7 @@ idf_component_register(
     "kpp_debug.c"
     "config_storage_nvs.c"
     "config_migration.c"
+    "config_namespace_registry.c"
     "config_registry.c"
     "config_domain_defaults.c"
     "config_domain_persistence_nvs.c"

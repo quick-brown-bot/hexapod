@@ -12,6 +12,7 @@
 #include "config_domain_persistence_nvs.h"
 #include "config_domain_system_access.h"
 #include "config_migration.h"
+#include "config_namespace_registry.h"
 #include "config_registry.h"
 #include "config_storage_nvs.h"
 #include "esp_log.h"
@@ -29,12 +30,6 @@ static const char *TAG = "config_mgr";
 // =============================================================================
 // Global State
 // =============================================================================
-
-// Namespace string mappings (must match config_namespace_t enum order)
-const char* CONFIG_NAMESPACE_NAMES[CONFIG_NS_COUNT] = {
-    "system",
-    "joint_cal"
-};
 
 // Global manager state
 static config_manager_state_t g_manager_state = {0};
@@ -166,6 +161,215 @@ static esp_err_t save_joint_calib_config_to_nvs(void) {
     return ESP_OK;
 }
 
+static esp_err_t system_ns_save(void* ctx) {
+    (void)ctx;
+    return save_system_config_to_nvs();
+}
+
+static esp_err_t joint_ns_save(void* ctx) {
+    (void)ctx;
+    return save_joint_calib_config_to_nvs();
+}
+
+static esp_err_t system_ns_list_parameters(void* ctx, const char** param_names, size_t max_params, size_t* count) {
+    (void)ctx;
+    return config_domain_system_list_parameters(param_names, max_params, count);
+}
+
+static esp_err_t joint_ns_list_parameters(void* ctx, const char** param_names, size_t max_params, size_t* count) {
+    (void)ctx;
+    return config_registry_list_joint_parameters(param_names, max_params, count);
+}
+
+static esp_err_t system_ns_get_param_info(void* ctx, const char* param_name, config_param_info_t* info) {
+    (void)ctx;
+    return config_domain_system_get_param_info(param_name, info);
+}
+
+static esp_err_t joint_ns_get_param_info(void* ctx, const char* param_name, config_param_info_t* info) {
+    (void)ctx;
+    int leg_index = 0;
+    int joint_index = 0;
+    const char* param_suffix = NULL;
+    esp_err_t err = config_domain_joint_parse_param_name(param_name, &leg_index, &joint_index, &param_suffix);
+    if (err != ESP_OK || !param_suffix) {
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    return config_registry_build_joint_param_info(leg_index, joint_index, param_suffix, param_name, info);
+}
+
+static esp_err_t system_ns_get_raw(void* ctx, const char* key, void* value_out, size_t value_size) {
+    (void)ctx;
+    return config_domain_system_get_raw(&g_system_config, key, value_out, value_size);
+}
+
+static esp_err_t system_ns_get_bool(void* ctx, const char* param_name, bool* value) {
+    (void)ctx;
+    return config_domain_system_get_bool(&g_system_config, param_name, value);
+}
+
+static esp_err_t system_ns_set_bool(void* ctx, const char* param_name, bool value) {
+    (void)ctx;
+    return config_domain_system_set_bool(&g_system_config, param_name, value);
+}
+
+static esp_err_t system_ns_get_int32(void* ctx, const char* param_name, int32_t* value) {
+    (void)ctx;
+    return config_domain_system_get_int32(&g_system_config, param_name, value);
+}
+
+static esp_err_t system_ns_set_int32(void* ctx, const char* param_name, int32_t value) {
+    (void)ctx;
+    return config_domain_system_set_int32(&g_system_config, param_name, value);
+}
+
+static esp_err_t joint_ns_get_int32(void* ctx, const char* param_name, int32_t* value) {
+    (void)ctx;
+    return config_domain_joint_get_int32(&g_joint_calib_config, param_name, value);
+}
+
+static esp_err_t joint_ns_set_int32(void* ctx, const char* param_name, int32_t value) {
+    (void)ctx;
+    return config_domain_joint_set_int32(&g_joint_calib_config, param_name, value);
+}
+
+static esp_err_t system_ns_get_uint32(void* ctx, const char* param_name, uint32_t* value) {
+    (void)ctx;
+    return config_domain_system_get_uint32(&g_system_config, param_name, value);
+}
+
+static esp_err_t system_ns_set_uint32(void* ctx, const char* param_name, uint32_t value) {
+    (void)ctx;
+    return config_domain_system_set_uint32(&g_system_config, param_name, value);
+}
+
+static esp_err_t system_ns_get_float(void* ctx, const char* param_name, float* value) {
+    (void)ctx;
+    return config_domain_system_get_float(&g_system_config, param_name, value);
+}
+
+static esp_err_t system_ns_set_float(void* ctx, const char* param_name, float value) {
+    (void)ctx;
+    return config_domain_system_set_float(&g_system_config, param_name, value);
+}
+
+static esp_err_t joint_ns_get_float(void* ctx, const char* param_name, float* value) {
+    (void)ctx;
+    return config_domain_joint_get_float(&g_joint_calib_config, param_name, value);
+}
+
+static esp_err_t joint_ns_set_float(void* ctx, const char* param_name, float value) {
+    (void)ctx;
+    return config_domain_joint_set_float(&g_joint_calib_config, param_name, value);
+}
+
+static esp_err_t system_ns_get_string(void* ctx, const char* param_name, char* value, size_t max_len) {
+    (void)ctx;
+    return config_domain_system_get_string(&g_system_config, param_name, value, max_len);
+}
+
+static esp_err_t system_ns_set_string(void* ctx, const char* param_name, const char* value) {
+    (void)ctx;
+    return config_domain_system_set_string(&g_system_config, param_name, value);
+}
+
+static const config_namespace_descriptor_t g_system_namespace_descriptor = {
+    .ns_id = CONFIG_NS_SYSTEM,
+    .ns_name = "system",
+    .save = system_ns_save,
+    .list_parameters = system_ns_list_parameters,
+    .get_parameter_info = system_ns_get_param_info,
+    .get_raw = system_ns_get_raw,
+    .get_bool = system_ns_get_bool,
+    .set_bool = system_ns_set_bool,
+    .get_int32 = system_ns_get_int32,
+    .set_int32 = system_ns_set_int32,
+    .get_uint32 = system_ns_get_uint32,
+    .set_uint32 = system_ns_set_uint32,
+    .get_float = system_ns_get_float,
+    .set_float = system_ns_set_float,
+    .get_string = system_ns_get_string,
+    .set_string = system_ns_set_string
+};
+
+static const config_namespace_descriptor_t g_joint_namespace_descriptor = {
+    .ns_id = CONFIG_NS_JOINT_CALIB,
+    .ns_name = "joint_cal",
+    .save = joint_ns_save,
+    .list_parameters = joint_ns_list_parameters,
+    .get_parameter_info = joint_ns_get_param_info,
+    .get_raw = NULL,
+    .get_bool = NULL,
+    .set_bool = NULL,
+    .get_int32 = joint_ns_get_int32,
+    .set_int32 = joint_ns_set_int32,
+    .get_uint32 = NULL,
+    .set_uint32 = NULL,
+    .get_float = joint_ns_get_float,
+    .set_float = joint_ns_set_float,
+    .get_string = NULL,
+    .set_string = NULL
+};
+
+static bool g_namespace_registry_initialized = false;
+static esp_err_t ensure_namespace_registry_initialized(void);
+
+static esp_err_t build_registered_namespace_name_table(const char* namespace_names[CONFIG_NS_COUNT]) {
+    if (ensure_namespace_registry_initialized() != ESP_OK) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    for (size_t i = 0; i < CONFIG_NS_COUNT; i++) {
+        namespace_names[i] = NULL;
+    }
+
+    size_t ns_count = config_namespace_registry_count();
+    for (size_t i = 0; i < ns_count; i++) {
+        const config_namespace_registration_t* reg = config_namespace_registry_get_at(i);
+        if (!reg || !reg->descriptor) {
+            continue;
+        }
+
+        config_namespace_t ns_id = reg->descriptor->ns_id;
+        if (ns_id < 0 || ns_id >= CONFIG_NS_COUNT) {
+            return ESP_ERR_INVALID_STATE;
+        }
+
+        namespace_names[ns_id] = reg->descriptor->ns_name;
+    }
+
+    for (size_t i = 0; i < CONFIG_NS_COUNT; i++) {
+        if (!namespace_names[i]) {
+            return ESP_ERR_INVALID_STATE;
+        }
+    }
+
+    return ESP_OK;
+}
+
+static esp_err_t ensure_namespace_registry_initialized(void) {
+    if (g_namespace_registry_initialized) {
+        return ESP_OK;
+    }
+
+    config_namespace_registry_reset();
+    esp_err_t err = config_namespace_registry_register(&g_system_namespace_descriptor, NULL);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to register namespace %s: %s", g_system_namespace_descriptor.ns_name, esp_err_to_name(err));
+        return err;
+    }
+
+    err = config_namespace_registry_register(&g_joint_namespace_descriptor, NULL);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to register namespace %s: %s", g_joint_namespace_descriptor.ns_name, esp_err_to_name(err));
+        return err;
+    }
+
+    g_namespace_registry_initialized = true;
+    return ESP_OK;
+}
+
 // =============================================================================
 // Core Configuration Manager API
 // =============================================================================
@@ -174,6 +378,12 @@ esp_err_t config_manager_init(void) {
     esp_err_t err;
     const char* robot_partition = config_storage_robot_partition_name();
     bool handles_opened = false;
+    const char* namespace_names[CONFIG_NS_COUNT] = {0};
+
+    err = ensure_namespace_registry_initialized();
+    if (err != ESP_OK) {
+        return err;
+    }
     
     if (g_manager_state.initialized) {
         ESP_LOGW(TAG, "Configuration manager already initialized");
@@ -199,9 +409,15 @@ esp_err_t config_manager_init(void) {
     }
 
     // Open NVS handles for all namespaces in the robot partition.
+    err = build_registered_namespace_name_table(namespace_names);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to build namespace name table: %s", esp_err_to_name(err));
+        return err;
+    }
+
     err = config_storage_open_namespace_handles(
         robot_partition,
-        (const char* const*)CONFIG_NAMESPACE_NAMES,
+        (const char* const*)namespace_names,
         CONFIG_NS_COUNT,
         g_manager_state.nvs_handles
     );
@@ -288,35 +504,67 @@ esp_err_t config_manager_get_state(config_manager_state_t *state) {
 }
 
 bool config_manager_has_dirty_data(void) {
-    for (int i = 0; i < CONFIG_NS_COUNT; i++) {
-        if (g_manager_state.namespace_dirty[i]) {
+    if (ensure_namespace_registry_initialized() != ESP_OK) {
+        return false;
+    }
+
+    size_t ns_count = config_namespace_registry_count();
+    for (size_t i = 0; i < ns_count; i++) {
+        const config_namespace_registration_t* reg = config_namespace_registry_get_at(i);
+        if (!reg || !reg->descriptor) {
+            continue;
+        }
+
+        config_namespace_t ns_id = reg->descriptor->ns_id;
+        if (ns_id >= 0 && ns_id < CONFIG_NS_COUNT && g_manager_state.namespace_dirty[ns_id]) {
             return true;
         }
     }
+
     return false;
 }
 
 esp_err_t config_manager_save_namespace(config_namespace_t ns) {
-    if (ns >= CONFIG_NS_COUNT) {
-        return ESP_ERR_INVALID_ARG;
-    }
-    
     if (!g_manager_state.initialized) {
         return ESP_ERR_INVALID_STATE;
     }
-    
-    ESP_LOGI(TAG, "Saving namespace: %s", CONFIG_NAMESPACE_NAMES[ns]);
-    
-    switch (ns) {
-        case CONFIG_NS_SYSTEM:
-            return save_system_config_to_nvs();
-        
-        case CONFIG_NS_JOINT_CALIB:
-            return save_joint_calib_config_to_nvs();
-        
-        default:
-            return ESP_ERR_NOT_SUPPORTED;
+
+    const config_namespace_registration_t* reg = config_namespace_registry_find_by_id(ns);
+    if (!reg || !reg->descriptor) {
+        return ESP_ERR_INVALID_ARG;
     }
+    if (!reg->descriptor->save) {
+        return ESP_ERR_NOT_SUPPORTED;
+    }
+
+    ESP_LOGI(TAG, "Saving namespace: %s", reg->descriptor->ns_name);
+    return reg->descriptor->save(reg->context);
+}
+
+esp_err_t config_manager_save_namespace_by_name(const char* namespace_str) {
+    if (!namespace_str) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (!g_manager_state.initialized) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    esp_err_t err = ensure_namespace_registry_initialized();
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    const config_namespace_registration_t* reg = config_namespace_registry_find_by_name(namespace_str);
+    if (!reg || !reg->descriptor) {
+        return ESP_ERR_NOT_FOUND;
+    }
+    if (!reg->descriptor->save) {
+        return ESP_ERR_NOT_SUPPORTED;
+    }
+
+    ESP_LOGI(TAG, "Saving namespace: %s", reg->descriptor->ns_name);
+    return reg->descriptor->save(reg->context);
 }
 
 // =============================================================================
@@ -483,228 +731,211 @@ esp_err_t config_set_system(const system_config_t* config) {
 // Hybrid Parameter API (Approach B)
 // =============================================================================
 
+static const config_namespace_registration_t* find_namespace_registration(const char* namespace_str) {
+    if (!namespace_str) {
+        return NULL;
+    }
+
+    if (ensure_namespace_registry_initialized() != ESP_OK) {
+        return NULL;
+    }
+
+    return config_namespace_registry_find_by_name(namespace_str);
+}
+
 esp_err_t hexapod_config_get_bool(const char* namespace_str, const char* param_name, bool* value) {
     if (!namespace_str || !param_name || !value) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        return config_domain_system_get_bool(&g_system_config, param_name, value);
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->get_bool) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    return reg->descriptor->get_bool(reg->context, param_name, value);
 }
 
 esp_err_t hexapod_config_set_bool(const char* namespace_str, const char* param_name, bool value, bool persist) {
     if (!namespace_str || !param_name) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        esp_err_t err = config_domain_system_set_bool(&g_system_config, param_name, value);
-        if (err != ESP_OK) {
-            return err;
-        }
-        g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM] = true;
-        
-        ESP_LOGD(TAG, "Set %s.%s = %s %s", namespace_str, param_name, 
-                 value ? "true" : "false", persist ? "(persistent)" : "(memory-only)");
-        
-        if (persist) {
-            return config_manager_save_namespace(CONFIG_NS_SYSTEM);
-        }
-        return ESP_OK;
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->set_bool) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    esp_err_t err = reg->descriptor->set_bool(reg->context, param_name, value);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    g_manager_state.namespace_dirty[reg->descriptor->ns_id] = true;
+    ESP_LOGD(TAG, "Set %s.%s = %s %s", namespace_str, param_name,
+             value ? "true" : "false", persist ? "(persistent)" : "(memory-only)");
+
+    if (persist) {
+        return config_manager_save_namespace(reg->descriptor->ns_id);
+    }
+
+    return ESP_OK;
 }
 
 esp_err_t hexapod_config_get_int32(const char* namespace_str, const char* param_name, int32_t* value) {
     if (!namespace_str || !param_name || !value) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        return config_domain_system_get_int32(&g_system_config, param_name, value);
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->get_int32) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    if (strcmp(namespace_str, "joint_cal") == 0) {
-        return config_domain_joint_get_int32(&g_joint_calib_config, param_name, value);
-    }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    return reg->descriptor->get_int32(reg->context, param_name, value);
 }
 
 esp_err_t hexapod_config_set_int32(const char* namespace_str, const char* param_name, int32_t value, bool persist) {
     if (!namespace_str || !param_name) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        esp_err_t err = config_domain_system_set_int32(&g_system_config, param_name, value);
-        if (err != ESP_OK) {
-            return err;
-        }
-        g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM] = true;
-        
-        ESP_LOGD(TAG, "Set %s.%s = %ld %s", namespace_str, param_name, 
-                 (long)value, persist ? "(persistent)" : "(memory-only)");
-        
-        if (persist) {
-            return config_manager_save_namespace(CONFIG_NS_SYSTEM);
-        }
-        return ESP_OK;
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->set_int32) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    if (strcmp(namespace_str, "joint_cal") == 0) {
-        esp_err_t err = config_domain_joint_set_int32(&g_joint_calib_config, param_name, value);
-        if (err != ESP_OK) {
-            return err;
-        }
-        
-        g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB] = true;
-        
-        ESP_LOGD(TAG, "Set %s.%s = %ld %s", namespace_str, param_name, 
-                 (long)value, persist ? "(persistent)" : "(memory-only)");
-        
-        if (persist) {
-            esp_err_t err = config_manager_save_namespace(CONFIG_NS_JOINT_CALIB);
-            return err;
-        }
-        return ESP_OK;
+
+    esp_err_t err = reg->descriptor->set_int32(reg->context, param_name, value);
+    if (err != ESP_OK) {
+        return err;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    g_manager_state.namespace_dirty[reg->descriptor->ns_id] = true;
+    ESP_LOGD(TAG, "Set %s.%s = %ld %s", namespace_str, param_name,
+             (long)value, persist ? "(persistent)" : "(memory-only)");
+
+    if (persist) {
+        return config_manager_save_namespace(reg->descriptor->ns_id);
+    }
+
+    return ESP_OK;
 }
 
 esp_err_t hexapod_config_get_uint32(const char* namespace_str, const char* param_name, uint32_t* value) {
     if (!namespace_str || !param_name || !value) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        return config_domain_system_get_uint32(&g_system_config, param_name, value);
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->get_uint32) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    return reg->descriptor->get_uint32(reg->context, param_name, value);
 }
 
 esp_err_t hexapod_config_set_uint32(const char* namespace_str, const char* param_name, uint32_t value, bool persist) {
     if (!namespace_str || !param_name) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        esp_err_t err = config_domain_system_set_uint32(&g_system_config, param_name, value);
-        if (err != ESP_OK) {
-            return err;
-        }
-        g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM] = true;
-        
-        ESP_LOGD(TAG, "Set %s.%s = %lu %s", namespace_str, param_name, 
-                 (unsigned long)value, persist ? "(persistent)" : "(memory-only)");
-        
-        if (persist) {
-            return config_manager_save_namespace(CONFIG_NS_SYSTEM);
-        }
-        return ESP_OK;
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->set_uint32) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    esp_err_t err = reg->descriptor->set_uint32(reg->context, param_name, value);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    g_manager_state.namespace_dirty[reg->descriptor->ns_id] = true;
+    ESP_LOGD(TAG, "Set %s.%s = %lu %s", namespace_str, param_name,
+             (unsigned long)value, persist ? "(persistent)" : "(memory-only)");
+
+    if (persist) {
+        return config_manager_save_namespace(reg->descriptor->ns_id);
+    }
+
+    return ESP_OK;
 }
 
 esp_err_t hexapod_config_get_float(const char* namespace_str, const char* param_name, float* value) {
     if (!namespace_str || !param_name || !value) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        return config_domain_system_get_float(&g_system_config, param_name, value);
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->get_float) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    if (strcmp(namespace_str, "joint_cal") == 0) {
-        return config_domain_joint_get_float(&g_joint_calib_config, param_name, value);
-    }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    return reg->descriptor->get_float(reg->context, param_name, value);
 }
 
 esp_err_t hexapod_config_set_float(const char* namespace_str, const char* param_name, float value, bool persist) {
     if (!namespace_str || !param_name) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        esp_err_t err = config_domain_system_set_float(&g_system_config, param_name, value);
-        if (err != ESP_OK) {
-            return err;
-        }
-        g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM] = true;
-        
-        ESP_LOGD(TAG, "Set %s.%s = %.3f %s", namespace_str, param_name, 
-                 value, persist ? "(persistent)" : "(memory-only)");
-        
-        if (persist) {
-            return config_manager_save_namespace(CONFIG_NS_SYSTEM);
-        }
-        return ESP_OK;
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->set_float) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    if (strcmp(namespace_str, "joint_cal") == 0) {
-        esp_err_t err = config_domain_joint_set_float(&g_joint_calib_config, param_name, value);
-        if (err != ESP_OK) {
-            return err;
-        }
-        
-        g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB] = true;
-        
-        ESP_LOGD(TAG, "Set %s.%s = %.3f %s", namespace_str, param_name, 
-                 value, persist ? "(persistent)" : "(memory-only)");
-        
-        if (persist) {
-            esp_err_t err = config_manager_save_namespace(CONFIG_NS_JOINT_CALIB);
-            return err;
-        }
-        return ESP_OK;
+
+    esp_err_t err = reg->descriptor->set_float(reg->context, param_name, value);
+    if (err != ESP_OK) {
+        return err;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    g_manager_state.namespace_dirty[reg->descriptor->ns_id] = true;
+    ESP_LOGD(TAG, "Set %s.%s = %.3f %s", namespace_str, param_name,
+             value, persist ? "(persistent)" : "(memory-only)");
+
+    if (persist) {
+        return config_manager_save_namespace(reg->descriptor->ns_id);
+    }
+
+    return ESP_OK;
 }
 
 esp_err_t hexapod_config_get_string(const char* namespace_str, const char* param_name, char* value, size_t max_len) {
     if (!namespace_str || !param_name || !value || max_len == 0) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        return config_domain_system_get_string(&g_system_config, param_name, value, max_len);
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->get_string) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    return reg->descriptor->get_string(reg->context, param_name, value, max_len);
 }
 
 esp_err_t hexapod_config_set_string(const char* namespace_str, const char* param_name, const char* value, bool persist) {
     if (!namespace_str || !param_name || !value) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        esp_err_t err = config_domain_system_set_string(&g_system_config, param_name, value);
-        if (err != ESP_OK) {
-            return err;
-        }
-        g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM] = true;
-        
-        ESP_LOGD(TAG, "Set %s.%s = \"%s\" %s", namespace_str, param_name, 
-                 value, persist ? "(persistent)" : "(memory-only)");
-        
-        if (persist) {
-            return config_manager_save_namespace(CONFIG_NS_SYSTEM);
-        }
-        return ESP_OK;
+
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->set_string) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    esp_err_t err = reg->descriptor->set_string(reg->context, param_name, value);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    g_manager_state.namespace_dirty[reg->descriptor->ns_id] = true;
+    ESP_LOGD(TAG, "Set %s.%s = \"%s\" %s", namespace_str, param_name,
+             value, persist ? "(persistent)" : "(memory-only)");
+
+    if (persist) {
+        return config_manager_save_namespace(reg->descriptor->ns_id);
+    }
+
+    return ESP_OK;
 }
 
 // =============================================================================
@@ -715,12 +946,20 @@ esp_err_t config_list_namespaces(const char** namespace_names, size_t* count) {
     if (!namespace_names || !count) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    for (int i = 0; i < CONFIG_NS_COUNT; i++) {
-        namespace_names[i] = CONFIG_NAMESPACE_NAMES[i];
+
+    if (ensure_namespace_registry_initialized() != ESP_OK) {
+        return ESP_ERR_INVALID_STATE;
     }
-    
-    *count = CONFIG_NS_COUNT;
+
+    size_t ns_count = config_namespace_registry_count();
+    for (size_t i = 0; i < ns_count; i++) {
+        const config_namespace_registration_t* reg = config_namespace_registry_get_at(i);
+        if (reg && reg->descriptor) {
+            namespace_names[i] = reg->descriptor->ns_name;
+        }
+    }
+
+    *count = ns_count;
     return ESP_OK;
 }
 
@@ -731,21 +970,12 @@ esp_err_t config_list_parameters(const char* namespace_str, const char** param_n
         return ESP_ERR_INVALID_ARG;
     }
     
-    *count = 0;
-    
-    if (strcmp(namespace_str, "system") == 0) {
-        return config_domain_system_list_parameters(param_names, max_params, count);
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->list_parameters) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    if (strcmp(namespace_str, "joint_cal") == 0) {
-        return config_registry_list_joint_parameters(
-            param_names,
-            max_params,
-            count
-        );
-    }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    return reg->descriptor->list_parameters(reg->context, param_names, max_params, count);
 }
 
 esp_err_t config_get_parameter_info(const char* namespace_str, const char* param_name, 
@@ -754,34 +984,12 @@ esp_err_t config_get_parameter_info(const char* namespace_str, const char* param
         return ESP_ERR_INVALID_ARG;
     }
     
-    if (strcmp(namespace_str, "system") == 0) {
-        return config_domain_system_get_param_info(param_name, info);
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->get_parameter_info) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    if (strcmp(namespace_str, "joint_cal") == 0) {
-        int leg_index = 0;
-        int joint_index = 0;
-        const char* param_suffix = NULL;
-        esp_err_t err = config_domain_joint_parse_param_name(
-            param_name,
-            &leg_index,
-            &joint_index,
-            &param_suffix
-        );
-        if (err != ESP_OK || !param_suffix) {
-            return ESP_ERR_NOT_FOUND;
-        }
 
-        return config_registry_build_joint_param_info(
-            leg_index,
-            joint_index,
-            param_suffix,
-            param_name,
-            info
-        );
-    }
-    
-    return ESP_ERR_NOT_FOUND;
+    return reg->descriptor->get_parameter_info(reg->context, param_name, info);
 }
 
 // =============================================================================
@@ -791,16 +999,37 @@ esp_err_t config_get_parameter_info(const char* namespace_str, const char* param
 esp_err_t config_factory_reset(void) {
     ESP_LOGW(TAG, "Performing factory reset - robot configuration will be lost!");
     ESP_LOGI(TAG, "Note: WiFi credentials in default partition will be preserved");
+
+    if (ensure_namespace_registry_initialized() != ESP_OK) {
+        return ESP_ERR_INVALID_STATE;
+    }
     
     // Clear all robot configuration namespaces (preserves WiFi partition)
-    for (int i = 0; i < CONFIG_NS_COUNT; i++) {
-        esp_err_t err = nvs_erase_all(g_manager_state.nvs_handles[i]);
+    size_t ns_count = config_namespace_registry_count();
+    for (size_t i = 0; i < ns_count; i++) {
+        const config_namespace_registration_t* reg = config_namespace_registry_get_at(i);
+        if (!reg || !reg->descriptor) {
+            continue;
+        }
+
+        config_namespace_t ns_id = reg->descriptor->ns_id;
+        if (ns_id < 0 || ns_id >= CONFIG_NS_COUNT) {
+            return ESP_ERR_INVALID_STATE;
+        }
+
+        esp_err_t err = nvs_erase_all(g_manager_state.nvs_handles[ns_id]);
         if (err != ESP_OK) {
             ESP_LOGE(TAG, "Failed to erase namespace %s: %s", 
-                     CONFIG_NAMESPACE_NAMES[i], esp_err_to_name(err));
+                     reg->descriptor->ns_name, esp_err_to_name(err));
             return err;
         }
-        nvs_commit(g_manager_state.nvs_handles[i]);
+
+        err = nvs_commit(g_manager_state.nvs_handles[ns_id]);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to commit erase for namespace %s: %s",
+                     reg->descriptor->ns_name, esp_err_to_name(err));
+            return err;
+        }
     }
     
     // Reload defaults
@@ -808,9 +1037,17 @@ esp_err_t config_factory_reset(void) {
     config_load_joint_calib_defaults(&g_joint_calib_config);
     
     // Clear dirty flags
-    for (int i = 0; i < CONFIG_NS_COUNT; i++) {
-        g_manager_state.namespace_dirty[i] = false;
-        g_manager_state.namespace_loaded[i] = true;
+    for (size_t i = 0; i < ns_count; i++) {
+        const config_namespace_registration_t* reg = config_namespace_registry_get_at(i);
+        if (!reg || !reg->descriptor) {
+            continue;
+        }
+
+        config_namespace_t ns_id = reg->descriptor->ns_id;
+        if (ns_id >= 0 && ns_id < CONFIG_NS_COUNT) {
+            g_manager_state.namespace_dirty[ns_id] = false;
+            g_manager_state.namespace_loaded[ns_id] = true;
+        }
     }
     
     ESP_LOGI(TAG, "Factory reset completed");
@@ -827,11 +1064,12 @@ esp_err_t config_get_parameter(const char* namespace_str, const char* key,
         return ESP_ERR_INVALID_ARG;
     }
     
-    if (strcmp(namespace_str, "system") == 0) {
-        return config_domain_system_get_raw(&g_system_config, key, value_out, value_size);
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->get_raw) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    return reg->descriptor->get_raw(reg->context, key, value_out, value_size);
 }
 
 esp_err_t config_set_parameter(const char* namespace_str, const char* key,
@@ -840,48 +1078,37 @@ esp_err_t config_set_parameter(const char* namespace_str, const char* key,
         return ESP_ERR_INVALID_ARG;
     }
     
-    if (strcmp(namespace_str, "system") == 0) {
-        config_param_info_t param;
-        esp_err_t info_err = config_domain_system_get_param_info(key, &param);
-        if (info_err != ESP_OK) {
-            return info_err;
-        }
-        
-        // Check value size
-        if (value_size != param.size) {
-            return ESP_ERR_INVALID_SIZE;
-        }
-        
-        // Use type-specific functions for validation
-        esp_err_t err = ESP_OK;
-        switch (param.type) {
-            case CONFIG_TYPE_BOOL:
-                err = hexapod_config_set_bool(namespace_str, key, *(const bool*)value, persist);
-                break;
-            case CONFIG_TYPE_INT32:
-                err = hexapod_config_set_int32(namespace_str, key, *(const int32_t*)value, persist);
-                break;
-            case CONFIG_TYPE_UINT32:
-                err = hexapod_config_set_uint32(namespace_str, key, *(const uint32_t*)value, persist);
-                break;
-            case CONFIG_TYPE_UINT16:
-                err = hexapod_config_set_uint32(namespace_str, key, *(const uint16_t*)value, persist);
-                break;
-            case CONFIG_TYPE_FLOAT:
-                err = hexapod_config_set_float(namespace_str, key, *(const float*)value, persist);
-                break;
-            case CONFIG_TYPE_STRING:
-                err = hexapod_config_set_string(namespace_str, key, (const char*)value, persist);
-                break;
-            default:
-                err = ESP_ERR_NOT_SUPPORTED;
-                break;
-        }
-        
-        return err;
+    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
+    if (!reg || !reg->descriptor || !reg->descriptor->get_parameter_info) {
+        return ESP_ERR_NOT_FOUND;
     }
-    
-    return ESP_ERR_NOT_FOUND;
+
+    config_param_info_t param;
+    esp_err_t info_err = reg->descriptor->get_parameter_info(reg->context, key, &param);
+    if (info_err != ESP_OK) {
+        return info_err;
+    }
+
+    if (value_size != param.size) {
+        return ESP_ERR_INVALID_SIZE;
+    }
+
+    switch (param.type) {
+        case CONFIG_TYPE_BOOL:
+            return hexapod_config_set_bool(namespace_str, key, *(const bool*)value, persist);
+        case CONFIG_TYPE_INT32:
+            return hexapod_config_set_int32(namespace_str, key, *(const int32_t*)value, persist);
+        case CONFIG_TYPE_UINT32:
+            return hexapod_config_set_uint32(namespace_str, key, *(const uint32_t*)value, persist);
+        case CONFIG_TYPE_UINT16:
+            return hexapod_config_set_uint32(namespace_str, key, *(const uint16_t*)value, persist);
+        case CONFIG_TYPE_FLOAT:
+            return hexapod_config_set_float(namespace_str, key, *(const float*)value, persist);
+        case CONFIG_TYPE_STRING:
+            return hexapod_config_set_string(namespace_str, key, (const char*)value, persist);
+        default:
+            return ESP_ERR_NOT_SUPPORTED;
+    }
 }
 
 // =============================================================================
