@@ -1,0 +1,50 @@
+/*
+ * Domain persistence helpers for NVS.
+ *
+ * Isolates namespace default initialization writes from migration orchestration.
+ */
+
+#pragma once
+
+#include <stdint.h>
+
+#include "esp_err.h"
+#include "nvs.h"
+#include "config_manager.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+esp_err_t config_domain_system_write_defaults_to_nvs(
+    nvs_handle_t handle,
+    uint16_t schema_version
+);
+
+esp_err_t config_domain_joint_cal_write_defaults_to_nvs(nvs_handle_t handle);
+
+esp_err_t config_domain_system_load_from_nvs(
+    nvs_handle_t handle,
+    system_config_t* config,
+    uint16_t fallback_schema_version,
+    controller_driver_type_e fallback_controller_type
+);
+
+esp_err_t config_domain_joint_cal_load_from_nvs(
+    nvs_handle_t handle,
+    joint_calib_config_t* config
+);
+
+esp_err_t config_domain_system_save_to_nvs(
+    nvs_handle_t handle,
+    const system_config_t* config
+);
+
+esp_err_t config_domain_joint_cal_save_to_nvs(
+    nvs_handle_t handle,
+    const joint_calib_config_t* config
+);
+
+#ifdef __cplusplus
+}
+#endif

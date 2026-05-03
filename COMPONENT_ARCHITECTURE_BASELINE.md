@@ -1,0 +1,398 @@
+# Hexapod Component Architecture Baseline
+
+## Purpose
+
+This document captures the current software component architecture in the repository and defines a refactoring baseline toward ESP-IDF components.
+
+Goals:
+- describe what components exist today,
+- describe how they interact at runtime,
+- define dependency boundaries,
+- provide a practical target split into ESP-IDF components.
+
+This baseline is intentionally implementation-oriented and aligned with files currently compiled from `main/CMakeLists.txt`.
+
+## 1. Current Component Inventory
+
+### 1.1 Application Orchestration
+
+Component: Application Bootstrap and Loop
+- Files: `main/main.c`
+- Responsibilities:
+	- initialize configuration manager,
+	- initialize RPC subsystem,
+	- initialize WiFi AP,
+	- initialize robot configuration and controller drivers,
+	- run the 10 ms locomotion loop.
+- Main runtime pipeline:
+	- `user_command_poll` -> `gait_scheduler_update` -> `swing_trajectory_generate` -> `whole_body_control_compute` -> `kpp_apply_limits` -> `robot_execute` -> `kpp_update_state`.
+
+### 1.2 Locomotion Pipeline
+
+Component: User Command Mapping
+- Files: `main/user_command.c`, `main/user_command.h`
+- Consumes: `controller` channel/state abstraction.
+- Produces: normalized `user_command_t`.
+
+Component: Gait Scheduler
+- Files: `main/gait_scheduler.c`, `main/gait_scheduler.h`
+- Consumes: `user_command_t`, `dt`.
+- Produces: per-leg support/swing states and gait phase.
+
+Component: Swing Trajectory Generator
+- Files: `main/swing_trajectory.c`, `main/swing_trajectory.h`
+- Consumes: scheduler state + user command.
+- Produces: body-frame foot targets per leg.
+
+Component: Whole Body Control
+- Files: `main/whole_body_control.c`, `main/whole_body_control.h`
+- Consumes: desired foot targets + robot mounting config.
+- Uses: per-leg IK solver from `leg`.
+- Produces: joint-angle command set for all legs.
+
+Component: KPP Motion Limiter and State Estimation
+- Files: `main/kpp_system.c`, `main/kpp_system.h`, `main/kpp_forward_kin.c`, `main/kpp_debug.c`
+- Consumes: desired joint commands.
+- Produces:
+	- limited commands for actuator execution,
+	- estimated joint and leg kinematic state.
+
+Component: Robot Control (Actuation)
+- Files: `main/robot_control.c`, `main/robot_control.h`
+- Consumes: whole-body joint command set.
+- Uses:
+	- `robot_config` calibration and mapping,
+	- MCPWM and LEDC drivers.
+- Produces: servo PWM output.
+
+Component: Robot Static and Runtime Configuration
+- Files: `main/robot_config.c`, `main/robot_config.h`
+- Responsibilities:
+	- geometry and mount poses,
+	- servo mapping and driver selection,
+	- joint calibration accessors.
+
+Component: Leg IK Library
+- Files: `main/leg.c`, `main/leg.h`
+- Responsibilities:
+	- pure 3-DOF IK solve in leg-local frame.
+- Notes:
+	- does not drive hardware,
+	- acts as reusable math primitive.
+
+### 1.3 Controller and Communications
+
+Component: Controller Core Abstraction
+- Files: `main/controller.c`, `main/controller.h`, `main/controller_internal.h`
+- Responsibilities:
+	- shared channel cache with mutex,
+	- connection/failsafe state,
+	- dispatch to selected controller driver.
+
+Component: Controller Drivers
+- Files:
+	- `main/controller_flysky_ibus.c`,
+	- `main/controller_wifi_tcp.c`,
+	- `main/controller_bt_classic.c`.
+- Responsibilities:
+	- ingest transport-specific input,
+	- map to canonical channel format,
+	- forward text/RPC frames to RPC transport where needed.
+
+Component: WiFi AP Service
+- Files: `main/wifi_ap.c`, `main/wifi_ap.h`
+- Responsibilities:
+	- AP setup and naming policy,
+	- startup network availability for TCP diagnostics/control.
+
+### 1.4 RPC and Persistent Configuration
+
+Component: RPC Command Engine
+- Files: `main/rpc_commands.c`, `main/rpc_commands.h`
+- Responsibilities:
+	- command parsing,
+	- command dispatch (`get`, `set`, `setpersist`, `list`, `save`, etc.),
+	- async task consuming RX queue.
+
+Component: RPC Transport Abstraction
+- Files: `main/rpc_transport.c`, `main/rpc_transport.h`
+- Responsibilities:
+	- RX queue (controllers -> RPC),
+	- TX queue (RPC -> transport sender),
+	- per-transport sender registration.
+
+Component: Configuration Manager
+- Files: `main/config_manager.c`, `main/config_manager.h`
+- Responsibilities:
+	- NVS-backed namespaces,
+	- memory-only and persistent parameter writes,
+	- system and joint calibration parameter APIs.
+
+Important observation:
+- `main/rpc_system.h` exists but is currently empty. The functional RPC subsystem is in `rpc_commands` and `rpc_transport`.
+
+## 2. Current Runtime Interaction Diagrams
+
+### 2.1 Top-Level Component Interaction
+
+```mermaid
+flowchart LR
+		App[Application Bootstrap and Main Loop]
+
+		subgraph Locomotion[Locomotion Pipeline]
+			UC[User Command]
+			GS[Gait Scheduler]
+			ST[Swing Trajectory]
+			WBC[Whole Body Control]
+			KPP[KPP Motion Limiter]
+			RC[Robot Control]
+			IK[Leg IK]
+			CFG[Robot Config]
+		end
+
+		subgraph IO[Controller and Comms]
+			CCore[Controller Core]
+			CFly[FlySky iBUS Driver]
+			CWifi[WiFi TCP Driver]
+			CBt[BT Classic Driver]
+			AP[WiFi AP]
+		end
+
+		subgraph RPC[RPC and Configuration]
+			RCmd[RPC Command Engine]
+			RT[RPC Transport Layer]
+			CM[Config Manager]
+			NVS[(NVS)]
+		end
+
+		App --> UC --> GS --> ST --> WBC --> KPP --> RC
+		WBC --> IK
+		WBC --> CFG
+		RC --> CFG
+
+		CCore --> UC
+		CFly --> CCore
+		CWifi --> CCore
+		CBt --> CCore
+		AP --> CWifi
+
+		CWifi --> RT
+		CBt --> RT
+		CFly --> RT
+		RT --> RCmd
+		RCmd --> CM --> NVS
+		RCmd --> CCore
+```
+
+### 2.2 10 ms Control Loop Data Flow
+
+```mermaid
+flowchart TD
+		Start[Loop Tick dt = 10 ms]
+		Poll[user_command_poll]
+		Sched[gait_scheduler_update]
+		Traj[swing_trajectory_generate]
+		Body[whole_body_control_compute]
+		Limit[kpp_apply_limits]
+		Exec[robot_execute]
+		Est[kpp_update_state]
+		Delay[vTaskDelay to keep period]
+
+		Start --> Poll --> Sched --> Traj --> Body --> Limit --> Exec --> Est --> Delay --> Start
+```
+
+### 2.3 RPC Queue-Centric Interaction
+
+```mermaid
+flowchart LR
+		subgraph TransportSide[Transport Drivers]
+			BTD[BT Driver]
+			WFD[WiFi TCP Driver]
+			UTD[UART/Future]
+		end
+
+		RXQ[[RX Queue]]
+		RPCTask[RPC Processing Task]
+		Parser[Command Parser and Dispatcher]
+		CFGM[Config Manager API]
+		TXQ[[TX Queue]]
+		Senders[Registered Transport Senders]
+
+		BTD --> RXQ
+		WFD --> RXQ
+		UTD --> RXQ
+		RXQ --> RPCTask --> Parser --> CFGM
+		Parser --> TXQ --> Senders
+```
+
+## 3. Component Contracts and Boundaries
+
+### 3.1 Intended Direction of Dependencies
+
+Rules:
+- Locomotion pipeline must not depend on transport-specific controller drivers.
+- Transport drivers must not call locomotion modules directly.
+- RPC command engine should use public config/controller service APIs only.
+- Math/kinematics components (`leg`, KPP math paths) should remain hardware-agnostic.
+- Robot actuation is the only layer that touches MCPWM/LEDC driver APIs.
+
+### 3.2 Coupling Risks to Address During Refactor
+
+1. Header-level internal coupling:
+- `controller_internal.h` is used by RPC and driver code; this is practical but tightly couples internals.
+
+2. Feature placement ambiguity:
+- RPC implementation is in `rpc_commands.*`, while `rpc_system.h` is empty.
+
+3. Configuration ownership overlap:
+- both `robot_config` and `config_manager` influence calibration and runtime behavior.
+
+4. Networking startup path coupling:
+- application bootstrap currently decides network bring-up ordering and secondary driver startup.
+
+## 4. Target ESP-IDF Component Refactor Baseline
+
+This section proposes a concrete decomposition into `components/` packages.
+
+### 4.1 Proposed Components
+
+1. `hex_core_app`
+- role: app startup, task orchestration, lifecycle.
+- owns: `app_main`, loop task creation, boot ordering.
+
+2. `hex_locomotion`
+- role: user command mapping, gait scheduler, swing trajectory, whole body control.
+- owns: `user_command`, `gait_scheduler`, `swing_trajectory`, `whole_body_control`.
+
+3. `hex_kinematics`
+- role: leg IK and forward kinematics utilities.
+- owns: `leg`, `kpp_forward_kin` math parts.
+
+4. `hex_motion_limits`
+- role: KPP state estimation and command limiting.
+- owns: `kpp_system`, `kpp_debug`.
+
+5. `hex_actuation`
+- role: hardware actuation for joints.
+- owns: `robot_control`.
+
+6. `hex_robot_config`
+- role: robot geometry, mount poses, servo mapping, calibration projection.
+- owns: `robot_config`.
+
+7. `hex_controller_core`
+- role: normalized channel state, failsafe, driver dispatch interface.
+- owns: `controller` public API plus refined internal interfaces.
+
+8. `hex_controller_flysky`
+- role: FlySky iBUS driver.
+
+9. `hex_controller_wifi_tcp`
+- role: WiFi TCP controller driver.
+
+10. `hex_controller_bt_classic`
+- role: Bluetooth Classic controller driver.
+
+11. `hex_wifi_ap`
+- role: WiFi AP provisioning and status.
+
+12. `hex_rpc_core`
+- role: parser, command handlers, command task.
+- owns: `rpc_commands` (or renamed `rpc_core`).
+
+13. `hex_rpc_transport`
+- role: transport queue abstraction and sender registry.
+- owns: `rpc_transport`.
+
+14. `hex_config`
+- role: NVS persistence and parameter APIs.
+- owns: `config_manager`.
+
+### 4.2 Target Dependency Diagram
+
+```mermaid
+flowchart LR
+		Core[hex_core_app]
+
+		Loc[hex_locomotion]
+		Kin[hex_kinematics]
+		Lim[hex_motion_limits]
+		Act[hex_actuation]
+		RCfg[hex_robot_config]
+
+		CCore[hex_controller_core]
+		CFly[hex_controller_flysky]
+		CWifi[hex_controller_wifi_tcp]
+		CBt[hex_controller_bt_classic]
+		WAP[hex_wifi_ap]
+
+		RpcCore[hex_rpc_core]
+		RpcTx[hex_rpc_transport]
+		Cfg[hex_config]
+
+		Core --> Loc
+		Core --> Lim
+		Core --> Act
+		Core --> CCore
+		Core --> RpcCore
+		Core --> WAP
+		Core --> RCfg
+
+		Loc --> Kin
+		Loc --> RCfg
+		Lim --> Kin
+		Act --> RCfg
+
+		CFly --> CCore
+		CWifi --> CCore
+		CBt --> CCore
+		CWifi --> RpcTx
+		CBt --> RpcTx
+		CFly --> RpcTx
+		WAP --> CWifi
+
+		RpcCore --> RpcTx
+		RpcCore --> Cfg
+		RpcCore --> CCore
+```
+
+### 4.3 Initial Refactor Sequence
+
+1. Extract `rpc_transport` and `rpc_commands` into separate components with unchanged C APIs.
+2. Extract `config_manager` as `hex_config` and keep call sites unchanged.
+3. Split controller core from each driver implementation into separate components.
+4. Extract locomotion pipeline (`user_command`, `gait_scheduler`, `swing_trajectory`, `whole_body_control`) as one cohesive unit.
+5. Extract `robot_control` as actuation component.
+6. Extract KPP into `hex_motion_limits` with explicit dependency on kinematics and locomotion command types.
+7. Normalize include boundaries and move internal headers to private include paths.
+
+## 5. Definition of Done for Architecture Refactor Base
+
+This document is considered complete as a refactor baseline when:
+- each current source file is mapped to exactly one target component,
+- dependency directions are documented and enforceable,
+- runtime interactions are represented in diagrams,
+- migration steps can be executed incrementally without behavior changes.
+
+Current status: baseline complete and ready to drive component extraction tickets.
+
+## 6. Execution Priority Update (Small-First + Config Must-Have)
+
+Execution strategy update:
+- start with small and low-coupling components,
+- then execute config architecture refactor as a mandatory platform milestone,
+- continue with larger pipeline components only after config platform split.
+
+Recommended order:
+1. `hex_rpc_transport`
+2. `hex_wifi_ap`
+3. controller leaf drivers (`hex_controller_flysky`, `hex_controller_wifi_tcp`, `hex_controller_bt_classic`)
+4. config platform refactor (`hex_config_api`, `hex_config_runtime`, `hex_config_registry`, `hex_config_storage_nvs`, `hex_config_migration`, domain modules)
+5. locomotion, actuation, kinematics, and motion limits components
+
+Rationale:
+- Steps 1-3 are small and reduce risk while creating component boundaries.
+- Step 4 is required before broad extraction because all components need stable shared settings access.
+
+Detailed config review and decomposition:
+- See `CONFIG_MANAGER_ARCHITECTURE_REVIEW.md`.
