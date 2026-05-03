@@ -134,23 +134,61 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 ### 2. leg_geom - Leg Physical Properties  
 **Derived from:** `leg_geometry_t` and mounting poses
 
-**Leg geometry parameters:**
+**Scope and parameter count:**
+
+- 6 legs
+- 9 float parameters per leg
+- Total: 54 parameters in `leg_geom`
+
+**Parameter pattern:**
+
+- Canonical form: `leg{0-5}_{suffix}`
+- Supported suffixes:
+  - `len_coxa`, `len_femur`, `len_tibia`
+  - `mount_x`, `mount_y`, `mount_z`, `mount_yaw`
+  - `stance_out`, `stance_fwd`
+
+**Validation constraints (from descriptor metadata):**
+
+- Link lengths: `[0.01, 1.00]` meters
+- Mount yaw: `[-6.2831853, 6.2831853]` radians
+- Mount XYZ and stance values: `[-1.0, 1.0]` meters
+
+**Examples:**
+
+- `leg0_len_coxa`
+- `leg0_mount_yaw`
+- `leg3_stance_out`
+
+**Naming to struct mapping:**
 ```c
-// Mechanical dimensions (18 parameters per leg × 6 legs = 108 total)
+// Mechanical dimensions (3 per leg)
 "leg{0-5}_len_coxa"         // leg_geometry_t.len_coxa (meters)
 "leg{0-5}_len_femur"        // leg_geometry_t.len_femur (meters)  
 "leg{0-5}_len_tibia"        // leg_geometry_t.len_tibia (meters)
 
-// Mounting poses in body frame (24 parameters per leg × 6 legs = 144 total)
+// Mounting poses in body frame (4 per leg)
 "leg{0-5}_mount_x"          // Base pose X offset (meters)
 "leg{0-5}_mount_y"          // Base pose Y offset (meters)
 "leg{0-5}_mount_z"          // Base pose Z offset (meters)  
 "leg{0-5}_mount_yaw"        // Base pose yaw rotation (radians)
 
-// Stance positions in leg-local frame
+// Stance positions in leg-local frame (2 per leg)
 "leg{0-5}_stance_out"       // Outward stance distance (meters)
 "leg{0-5}_stance_fwd"       // Forward stance distance (meters)
 ```
+
+**Persistence key shape in NVS (internal):**
+
+- `len_coxa`: `l{leg}_lc`
+- `len_femur`: `l{leg}_lf`
+- `len_tibia`: `l{leg}_lt`
+- `mount_x`: `l{leg}_mx`
+- `mount_y`: `l{leg}_my`
+- `mount_z`: `l{leg}_mz`
+- `mount_yaw`: `l{leg}_myaw`
+- `stance_out`: `l{leg}_so`
+- `stance_fwd`: `l{leg}_sf`
 
 ### 3. motion_lim - KPP Motion Parameters
 **Derived from:** `kpp_config.h` motion limits and filters
@@ -325,7 +363,7 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 
 **Total Estimated Parameters:** ~600-700 parameters
 - Joint Calibration: ~126 parameters (18 × 6 legs + extras)
-- Leg Geometry: ~108 parameters (18 × 6 legs)  
+- Leg Geometry: 54 parameters (9 × 6 legs)
 - Motion Limits: ~27 parameters
 - Servo Mapping: ~114 parameters (19 × 6 legs)
 - Controller: ~35 parameters
@@ -522,6 +560,7 @@ esp_err_t config_manager_migrate(uint16_t detected_version) {
 - **Files created:** `config_manager.h`, `config_manager.c`, `config_test.c`
 - **System namespace is implemented and wired** for core parameters (ongoing expansion expected)
 - **joint_cal namespace is implemented and wired** (defaults, load/save, parameter discovery, typed get/set)
+- **leg_geom namespace is implemented and wired** (defaults, load/save, parameter discovery, typed float get/set)
 - **NVS operations** working with automatic error handling and wear leveling
 - **Dual-method API** demonstrated: `config_set_*_memory()` vs `config_set_*_persist()`
 - **Generic parameter API** foundation created for RPC integration
