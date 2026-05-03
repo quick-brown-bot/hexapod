@@ -79,9 +79,38 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 ### 1. joint_cal - Joint Calibration Data
 **Derived from:** `robot_config_t.joint_calib[NUM_LEGS][3]`
 
-**Parameters per leg/joint:**
+**Scope and parameter count:**
+
+- 6 legs × 3 joints per leg (coxa, femur, tibia)
+- 7 parameters per joint
+- Total: 126 parameters in `joint_cal`
+
+**Parameter pattern:**
+
+- Canonical form: `leg{0-5}_{coxa|femur|tibia}_{suffix}`
+- Supported joint aliases in parser: `coxa|c`, `femur|f`, `tibia|t`
+- Parameter discovery (`list joint_cal`) emits canonical full joint names
+
+**Supported suffixes and constraints:**
+
+- `offset` (float, radians): range `[-6.28, 6.28]`
+- `invert` (int32): allowed values `-1` or `1`
+- `min` (float, radians): range `[-6.28, 6.28]`
+- `max` (float, radians): range `[-6.28, 6.28]`
+- `pwm_min` (int32, us): range `[500, 3000]`
+- `pwm_max` (int32, us): range `[500, 3000]`
+- `neutral` (int32, us): range `[500, 3000]`
+
+**Examples:**
+
+- `leg0_coxa_offset`
+- `leg2_femur_invert`
+- `leg5_tibia_pwm_min`
+- `leg1_c_neutral` (accepted by parser alias, canonical listing remains `leg1_coxa_neutral`)
+
+**Naming to struct mapping:**
 ```c
-// Joint calibration parameters (18 parameters per leg × 6 legs = 108 total)
+// Joint calibration parameters (7 per joint × 3 joints × 6 legs = 126 total)
 "leg{0-5}_coxa_offset"      // joint_calib_t.zero_offset_rad
 "leg{0-5}_coxa_invert"      // joint_calib_t.invert_sign  
 "leg{0-5}_coxa_min"         // joint_calib_t.min_rad
@@ -94,6 +123,13 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 "leg{0-5}_femur_offset", "leg{0-5}_femur_invert", etc.
 "leg{0-5}_tibia_offset", "leg{0-5}_tibia_invert", etc.
 ```
+
+**Persistence key shape in NVS (internal):**
+
+- Offset: `l{leg}_{c|f|t}_off`
+- Invert: `l{leg}_{c|f|t}_inv`
+- Min/Max: `l{leg}_{c|f|t}_min`, `l{leg}_{c|f|t}_max`
+- PWM: `l{leg}_{c|f|t}_pmin`, `l{leg}_{c|f|t}_pmax`, `l{leg}_{c|f|t}_neut`
 
 ### 2. leg_geom - Leg Physical Properties  
 **Derived from:** `leg_geometry_t` and mounting poses
