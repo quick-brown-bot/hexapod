@@ -1,13 +1,7 @@
 idf_component_register(
     SRCS
     "main.c"
-    "leg.c"
-    "gait_scheduler.c"
-    "swing_trajectory.c"
-    "whole_body_control.c"
     "robot_control.c"
-    "robot_config.c"
-    "user_command.c"
     "kpp_system.c"
     "kpp_forward_kin.c"
     "kpp_debug.c"
@@ -20,6 +14,9 @@ idf_component_register(
     hex_controller_driver_wifi_tcp
     hex_controller_driver_bt_classic
     hex_controller_core
+    hex_locomotion
+    hex_robot_config
+    hex_kinematics
     hex_config_manager
     hex_shared_types
 )

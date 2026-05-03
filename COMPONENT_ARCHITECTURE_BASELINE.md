@@ -30,22 +30,22 @@ Component: Application Bootstrap and Loop
 ### 1.2 Locomotion Pipeline
 
 Component: User Command Mapping
-- Files: `main/user_command.c`, `components/hex_controller_core/user_command.h`
+- Files: `components/hex_locomotion/user_command.c`, `components/hex_controller_core/user_command.h`
 - Consumes: `controller` channel/state abstraction.
 - Produces: normalized `user_command_t`.
 
 Component: Gait Scheduler
-- Files: `main/gait_scheduler.c`, `main/gait_scheduler.h`
+- Files: `components/hex_locomotion/gait_scheduler.c`, `components/hex_locomotion/gait_scheduler.h`
 - Consumes: `user_command_t`, `dt`.
 - Produces: per-leg support/swing states and gait phase.
 
 Component: Swing Trajectory Generator
-- Files: `main/swing_trajectory.c`, `main/swing_trajectory.h`
+- Files: `components/hex_locomotion/swing_trajectory.c`, `components/hex_locomotion/swing_trajectory.h`
 - Consumes: scheduler state + user command.
 - Produces: body-frame foot targets per leg.
 
 Component: Whole Body Control
-- Files: `main/whole_body_control.c`, `main/whole_body_control.h`
+- Files: `components/hex_locomotion/whole_body_control.c`, `components/hex_locomotion/whole_body_control.h`
 - Consumes: desired foot targets + robot mounting config.
 - Uses: per-leg IK solver from `leg`.
 - Produces: joint-angle command set for all legs.
@@ -66,14 +66,14 @@ Component: Robot Control (Actuation)
 - Produces: servo PWM output.
 
 Component: Robot Static and Runtime Configuration
-- Files: `main/robot_config.c`, `main/robot_config.h`
+- Files: `components/hex_robot_config/robot_config.c`, `components/hex_robot_config/robot_config.h`
 - Responsibilities:
 	- geometry and mount poses,
 	- servo mapping and driver selection,
 	- joint calibration accessors.
 
 Component: Leg IK Library
-- Files: `main/leg.c`, `main/leg.h`
+- Files: `components/hex_kinematics/leg.c`, `components/hex_kinematics/leg.h`
 - Responsibilities:
 	- pure 3-DOF IK solve in leg-local frame.
 - Notes:
@@ -394,6 +394,11 @@ Progress note:
 	- `rpc_transport` extracted to `components/hex_rpc_transport`
 	- `rpc_commands` extracted to `components/hex_rpc_core`
 - Step 2 is implemented as `components/hex_config_manager`.
+- Step 3 is implemented using merged controller core and interfaces in `components/hex_controller_core`, with controller drivers extracted as dedicated components.
+- Step 4 is implemented in `components/hex_locomotion`.
+- Foundational dependencies were extracted to support Step 4 include boundaries:
+	- `components/hex_kinematics`
+	- `components/hex_robot_config`
 
 ## 5. Definition of Done for Architecture Refactor Base
 
