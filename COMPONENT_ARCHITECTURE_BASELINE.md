@@ -10,7 +10,7 @@ Goals:
 - define dependency boundaries,
 - provide a practical target split into ESP-IDF components.
 
-This baseline is intentionally implementation-oriented and aligned with files currently compiled from `main/CMakeLists.txt`.
+This baseline is intentionally implementation-oriented and aligned with the current multi-component ESP-IDF layout rooted in `main` plus `components/*`.
 
 ## 1. Current Component Inventory
 
@@ -91,16 +91,16 @@ Component: Controller Core Abstraction
 
 Component: Controller Drivers
 - Files:
-	- `main/controller_flysky_ibus.c`,
-	- `main/controller_wifi_tcp.c`,
-	- `main/controller_bt_classic.c`.
+	- `components/hex_controller_driver_flysky_ibus/controller_flysky_ibus.c`,
+	- `components/hex_controller_driver_wifi_tcp/controller_wifi_tcp.c`,
+	- `components/hex_controller_driver_bt_classic/controller_bt_classic.c`.
 - Responsibilities:
 	- ingest transport-specific input,
 	- map to canonical channel format,
 	- forward text/RPC frames to RPC transport where needed.
 
 Component: WiFi AP Service
-- Files: `main/wifi_ap.c`, `main/wifi_ap.h`
+- Files: `components/hex_wifi_ap/wifi_ap.c`, `components/hex_wifi_ap/wifi_ap.h`
 - Responsibilities:
 	- AP setup and naming policy,
 	- startup network availability for TCP diagnostics/control.
@@ -115,21 +115,29 @@ Component: RPC Command Engine
 	- async task consuming RX queue.
 
 Component: RPC Transport Abstraction
-- Files: `main/rpc_transport.c`, `main/rpc_transport.h`
+- Files: `components/hex_rpc_transport/rpc_transport.c`, `components/hex_rpc_transport/rpc_transport.h`
 - Responsibilities:
 	- RX queue (controllers -> RPC),
 	- TX queue (RPC -> transport sender),
 	- per-transport sender registration.
 
 Component: Configuration Manager
-- Files: `main/config_manager.c`, `main/config_manager.h`
+- Files: `components/hex_config_manager/config_manager.c`, `components/hex_config_manager/config_manager.h`
 - Responsibilities:
 	- NVS-backed namespaces,
 	- memory-only and persistent parameter writes,
 	- system and joint calibration parameter APIs.
 
+Component: Shared Cross-Module Types
+- Files:
+	- `components/hex_shared_types/controller_driver_types.h`
+	- `components/hex_shared_types/types/joint_types.h`
+- Responsibilities:
+	- provide canonical, single-source enum/type definitions used by main, config, and controller-driver components,
+	- prevent duplicate local header copies and include-path coupling.
+
 Important observation:
-- `main/rpc_system.h` exists but is currently empty. The functional RPC subsystem is in `rpc_commands` and `rpc_transport`.
+- `main/rpc_system.h` exists but is currently empty. The functional RPC subsystem is in `rpc_commands` and `components/hex_rpc_transport/rpc_transport.*`.
 
 ## 2. Current Runtime Interaction Diagrams
 
@@ -284,13 +292,13 @@ This section proposes a concrete decomposition into `components/` packages.
 - role: normalized channel state, failsafe, driver dispatch interface.
 - owns: `controller` public API plus refined internal interfaces.
 
-8. `hex_controller_flysky`
+8. `hex_controller_driver_flysky_ibus`
 - role: FlySky iBUS driver.
 
-9. `hex_controller_wifi_tcp`
+9. `hex_controller_driver_wifi_tcp`
 - role: WiFi TCP controller driver.
 
-10. `hex_controller_bt_classic`
+10. `hex_controller_driver_bt_classic`
 - role: Bluetooth Classic controller driver.
 
 11. `hex_wifi_ap`
@@ -304,7 +312,7 @@ This section proposes a concrete decomposition into `components/` packages.
 - role: transport queue abstraction and sender registry.
 - owns: `rpc_transport`.
 
-14. `hex_config`
+14. `hex_config_manager`
 - role: NVS persistence and parameter APIs.
 - owns: `config_manager`.
 
@@ -321,14 +329,14 @@ flowchart LR
 		RCfg[hex_robot_config]
 
 		CCore[hex_controller_core]
-		CFly[hex_controller_flysky]
-		CWifi[hex_controller_wifi_tcp]
-		CBt[hex_controller_bt_classic]
+		CFly[hex_controller_driver_flysky_ibus]
+		CWifi[hex_controller_driver_wifi_tcp]
+		CBt[hex_controller_driver_bt_classic]
 		WAP[hex_wifi_ap]
 
 		RpcCore[hex_rpc_core]
 		RpcTx[hex_rpc_transport]
-		Cfg[hex_config]
+		Cfg[hex_config_manager]
 
 		Core --> Loc
 		Core --> Lim
@@ -359,7 +367,7 @@ flowchart LR
 ### 4.3 Initial Refactor Sequence
 
 1. Extract `rpc_transport` and `rpc_commands` into separate components with unchanged C APIs.
-2. Extract `config_manager` as `hex_config` and keep call sites unchanged.
+2. Extract `config_manager` as `hex_config_manager` and keep call sites unchanged.
 3. Split controller core from each driver implementation into separate components.
 4. Extract locomotion pipeline (`user_command`, `gait_scheduler`, `swing_trajectory`, `whole_body_control`) as one cohesive unit.
 5. Extract `robot_control` as actuation component.
@@ -386,7 +394,7 @@ Execution strategy update:
 Recommended order:
 1. `hex_rpc_transport`
 2. `hex_wifi_ap`
-3. controller leaf drivers (`hex_controller_flysky`, `hex_controller_wifi_tcp`, `hex_controller_bt_classic`)
+3. controller leaf drivers (`hex_controller_driver_flysky_ibus`, `hex_controller_driver_wifi_tcp`, `hex_controller_driver_bt_classic`)
 4. config platform refactor (`hex_config_api`, `hex_config_runtime`, `hex_config_registry`, `hex_config_storage_nvs`, `hex_config_migration`, domain modules)
 5. locomotion, actuation, kinematics, and motion limits components
 

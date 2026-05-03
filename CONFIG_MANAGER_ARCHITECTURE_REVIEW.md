@@ -2,7 +2,21 @@
 
 ## Scope
 
-This review analyzes the current implementation in [main/config_manager.h](main/config_manager.h) and [main/config_manager.c](main/config_manager.c), lists its responsibilities, and proposes a separable architecture for a shared settings platform usable by all components.
+This review analyzes the current implementation in [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h) and [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c), lists its responsibilities, and proposes a separable architecture for a shared settings platform usable by all components.
+
+## Current Implementation Status (2026-05-03)
+
+Recent refactor progress reflected in codebase:
+- Config manager implementation has been extracted from `main` into the dedicated component:
+    - [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h)
+    - [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c)
+- Main application now consumes config via component dependency instead of compiling config sources directly:
+    - [main/CMakeLists.txt](main/CMakeLists.txt)
+- Shared cross-component types were separated into a dedicated component to remove temporary include coupling:
+    - [components/hex_shared_types/controller_driver_types.h](components/hex_shared_types/controller_driver_types.h)
+    - [components/hex_shared_types/types/joint_types.h](components/hex_shared_types/types/joint_types.h)
+
+This document keeps the original responsibility analysis and phase plan, but file references now point to extracted component paths.
 
 ## Current Responsibility Inventory
 
@@ -17,10 +31,10 @@ Responsibilities:
 - open and hold NVS handles for each namespace.
 
 Evidence:
-- [main/config_manager.c](main/config_manager.c#L643)
-- [main/config_manager.c](main/config_manager.c#L669)
-- [main/config_manager.c](main/config_manager.c#L687)
-- [main/config_manager.c](main/config_manager.c#L699)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L643)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L669)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L687)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L699)
 
 ### 2. Global Manager Runtime State
 
@@ -31,9 +45,9 @@ Responsibilities:
 - expose manager state snapshot.
 
 Evidence:
-- [main/config_manager.c](main/config_manager.c#L40)
-- [main/config_manager.h](main/config_manager.h#L74)
-- [main/config_manager.c](main/config_manager.c#L762)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L40)
+- [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h#L74)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L762)
 
 ### 3. Schema Versioning and Migration
 
@@ -44,11 +58,11 @@ Responsibilities:
 - enforce no downgrade policy.
 
 Evidence:
-- [main/config_manager.c](main/config_manager.c#L173)
-- [main/config_manager.c](main/config_manager.c#L185)
-- [main/config_manager.c](main/config_manager.c#L321)
-- [main/config_manager.c](main/config_manager.c#L335)
-- [main/config_manager.c](main/config_manager.c#L358)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L173)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L185)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L321)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L335)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L358)
 
 ### 4. Namespace Cache Ownership
 
@@ -59,12 +73,12 @@ Responsibilities:
 - load persisted values into cache.
 
 Evidence:
-- [main/config_manager.c](main/config_manager.c#L43)
-- [main/config_manager.c](main/config_manager.c#L46)
-- [main/config_manager.c](main/config_manager.c#L389)
-- [main/config_manager.c](main/config_manager.c#L485)
-- [main/config_manager.c](main/config_manager.c#L1819)
-- [main/config_manager.c](main/config_manager.c#L1860)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L43)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L46)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L389)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L485)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1819)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1860)
 
 ### 5. Serialization and NVS Key Mapping
 
@@ -75,10 +89,10 @@ Responsibilities:
 - serialize and deserialize complete namespaces.
 
 Evidence:
-- [main/config_manager.c](main/config_manager.c#L52)
-- [main/config_manager.c](main/config_manager.c#L72)
-- [main/config_manager.c](main/config_manager.c#L569)
-- [main/config_manager.c](main/config_manager.c#L609)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L52)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L72)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L569)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L609)
 
 ### 6. Parameter Name Parsing and Dynamic Addressing
 
@@ -88,9 +102,9 @@ Responsibilities:
 - translate between short and full joint names.
 
 Evidence:
-- [main/config_manager.c](main/config_manager.c#L111)
-- [main/config_manager.c](main/config_manager.c#L1288)
-- [main/config_manager.c](main/config_manager.c#L1349)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L111)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1288)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1349)
 
 ### 7. Type-Specific Access API Layer
 
@@ -100,9 +114,9 @@ Responsibilities:
 - apply namespace routing and per-type validation.
 
 Evidence:
-- [main/config_manager.h](main/config_manager.h#L269)
-- [main/config_manager.c](main/config_manager.c#L1355)
-- [main/config_manager.c](main/config_manager.c#L1589)
+- [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h#L269)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1355)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1589)
 
 ### 8. Metadata and Discovery API
 
@@ -113,11 +127,11 @@ Responsibilities:
 - maintain metadata tables for system and joint_cal domains.
 
 Evidence:
-- [main/config_manager.h](main/config_manager.h#L379)
-- [main/config_manager.c](main/config_manager.c#L1663)
-- [main/config_manager.c](main/config_manager.c#L1715)
-- [main/config_manager.c](main/config_manager.c#L1768)
-- [main/config_manager.c](main/config_manager.c#L1090)
+- [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h#L379)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1663)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1715)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1768)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1090)
 
 ### 9. Domain Defaults and Factory Reset
 
@@ -127,10 +141,10 @@ Responsibilities:
 - erase all namespaces and restore in-memory defaults.
 
 Evidence:
-- [main/config_manager.c](main/config_manager.c#L251)
-- [main/config_manager.c](main/config_manager.c#L1819)
-- [main/config_manager.c](main/config_manager.c#L1860)
-- [main/config_manager.c](main/config_manager.c#L1881)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L251)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1819)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1860)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1881)
 
 ### 10. Cross-Partition WiFi Utility
 
@@ -138,8 +152,8 @@ Responsibilities:
 - read credentials from default WiFi partition using ESP-IDF keys.
 
 Evidence:
-- [main/config_manager.h](main/config_manager.h#L489)
-- [main/config_manager.c](main/config_manager.c#L1978)
+- [components/hex_config_manager/config_manager.h](components/hex_config_manager/config_manager.h#L489)
+- [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1978)
 
 ## Separation Feasibility
 
@@ -364,12 +378,12 @@ Exit criteria for Phase 2:
 2. Static buffer in metadata builder
 - build_joint_param_info uses a static name buffer.
 - impact: not safe for concurrent callers and can be overwritten on next call.
-- evidence: [main/config_manager.c](main/config_manager.c#L1295)
+- evidence: [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1295)
 
 3. Static buffer in parameter listing
 - config_list_parameters for joint_cal uses static buffers and capped output.
 - impact: partial discovery and potential confusion for clients.
-- evidence: [main/config_manager.c](main/config_manager.c#L1738)
+- evidence: [components/hex_config_manager/config_manager.c](components/hex_config_manager/config_manager.c#L1738)
 
 4. Configuration and robot calibration ownership overlap
 - settings exist in config manager while robot_config also owns calibration-facing behavior.
