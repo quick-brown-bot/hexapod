@@ -345,7 +345,6 @@ flowchart LR
 		RCfg[hex_robot_config]
 
 		CCore[hex_controller_core]
-		CIface[hex_controller_core]
 		CFly[hex_controller_driver_flysky_ibus]
 		CWifi[hex_controller_driver_wifi_tcp]
 		CBt[hex_controller_driver_bt_classic]
@@ -359,7 +358,6 @@ flowchart LR
 		Core --> Lim
 		Core --> Act
 		Core --> CCore
-		Core --> CIface
 		Core --> RpcCore
 		Core --> WAP
 		Core --> RCfg
@@ -370,11 +368,8 @@ flowchart LR
 		Act --> RCfg
 
 		CFly --> CCore
-		CFly --> CIface
 		CWifi --> CCore
-		CWifi --> CIface
 		CBt --> CCore
-		CBt --> CIface
 		CWifi --> RpcTx
 		CBt --> RpcTx
 		WAP --> CWifi
@@ -382,7 +377,6 @@ flowchart LR
 		RpcCore --> RpcTx
 		RpcCore --> Cfg
 		RpcCore --> CCore
-		RpcCore --> CIface
 ```
 
 ### 4.3 Initial Refactor Sequence
