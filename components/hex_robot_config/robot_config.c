@@ -61,11 +61,9 @@ void robot_config_init_default(void) {
         g_cfg.servo_driver_sel[LEG_RIGHT_REAR][j] = 1;   // LEDC (example second leg)
     }
 
-    // Default geometry for all 6 legs.
-    // NOTE: Units must match usage across the project. Our swing_trajectory uses meters,
-    // so we set lengths in meters as placeholders.
-    // TODO(ESP-Storage): Replace with values loaded from storage per leg.
-    const leg_geometry_t geom = {
+    // Default geometry fallback for all 6 legs.
+    // Units are meters/radians and match leg_configure expectations.
+    const leg_geometry_t fallback_geom = {
         .len_coxa = 0.068f,  // 68 mm
         .len_femur = 0.088f, // 88 mm
         .len_tibia = 0.127f, // 127 mm
@@ -74,9 +72,26 @@ void robot_config_init_default(void) {
         .tibia_offset_rad = 1.0160719600939494f,
     };
 
+    const leg_geometry_config_t* stored_geom = NULL;
+    config_manager_state_t cfg_state = {0};
+    bool use_stored_geom = false;
+
+    if (config_manager_get_state(&cfg_state) == ESP_OK &&
+        cfg_state.initialized &&
+        cfg_state.namespace_loaded[CONFIG_NS_LEG_GEOMETRY]) {
+        stored_geom = config_get_leg_geometry();
+        use_stored_geom = (stored_geom != NULL);
+    }
+
     for (int i = 0; i < NUM_LEGS; ++i) {
-        (void)leg_configure(&geom, &g_cfg.legs[i]);
-        // TODO: Consider per-leg geometry differences (mirrors, tolerances) via stored config
+        leg_geometry_t leg_geom = fallback_geom;
+        if (use_stored_geom) {
+            leg_geom.len_coxa = stored_geom->len_coxa[i];
+            leg_geom.len_femur = stored_geom->len_femur[i];
+            leg_geom.len_tibia = stored_geom->len_tibia[i];
+        }
+
+        (void)leg_configure(&leg_geom, &g_cfg.legs[i]);
     }
 
     // --- Joint calibration ---
@@ -144,6 +159,18 @@ void robot_config_init_default(void) {
     g_base_y[LEG_RIGHT_REAR] = Y_OFF_RIGHT;  
     g_base_z[LEG_RIGHT_REAR] = Z_OFF;   
     g_base_yaw[LEG_RIGHT_REAR] = YAW_RIGHT - QANGLE;
+
+    // If leg geometry namespace is loaded, override mount and stance defaults.
+    if (use_stored_geom) {
+        for (int i = 0; i < NUM_LEGS; ++i) {
+            g_base_x[i] = stored_geom->mount_x[i];
+            g_base_y[i] = stored_geom->mount_y[i];
+            g_base_z[i] = stored_geom->mount_z[i];
+            g_base_yaw[i] = stored_geom->mount_yaw[i];
+            g_stance_out[i] = stored_geom->stance_out[i];
+            g_stance_fwd[i] = stored_geom->stance_fwd[i];
+        }
+    }
 
     // --- Future hardware settings (not applied here; live in robot_control) ---
     // - Servo pins and MCPWM mapping
