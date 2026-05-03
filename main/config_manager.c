@@ -366,6 +366,11 @@ static const config_namespace_descriptor_t g_joint_namespace_descriptor = {
     .set_string = NULL
 };
 
+static const config_namespace_descriptor_t* g_namespace_descriptors[] = {
+    &g_system_namespace_descriptor,
+    &g_joint_namespace_descriptor,
+};
+
 static bool g_namespace_registry_initialized = false;
 
 static esp_err_t build_registered_namespace_name_table(const char* namespace_names[CONFIG_NS_COUNT]) {
@@ -407,16 +412,15 @@ static esp_err_t ensure_namespace_registry_initialized(void) {
     }
 
     config_namespace_registry_reset();
-    esp_err_t err = config_namespace_registry_register(&g_system_namespace_descriptor, NULL);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to register namespace %s: %s", g_system_namespace_descriptor.ns_name, esp_err_to_name(err));
-        return err;
-    }
 
-    err = config_namespace_registry_register(&g_joint_namespace_descriptor, NULL);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to register namespace %s: %s", g_joint_namespace_descriptor.ns_name, esp_err_to_name(err));
-        return err;
+    size_t descriptor_count = sizeof(g_namespace_descriptors) / sizeof(g_namespace_descriptors[0]);
+    for (size_t i = 0; i < descriptor_count; i++) {
+        const config_namespace_descriptor_t* descriptor = g_namespace_descriptors[i];
+        esp_err_t err = config_namespace_registry_register(descriptor, NULL);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to register namespace %s: %s", descriptor->ns_name, esp_err_to_name(err));
+            return err;
+        }
     }
 
     g_namespace_registry_initialized = true;
@@ -1134,63 +1138,6 @@ esp_err_t config_factory_reset(void) {
     
     ESP_LOGI(TAG, "Factory reset completed");
     return ESP_OK;
-}
-
-// =============================================================================
-// Legacy Generic Parameter API (reimplemented using new system)
-// =============================================================================
-
-esp_err_t config_get_parameter(const char* namespace_str, const char* key, 
-                               void* value_out, size_t value_size) {
-    if (!namespace_str || !key || !value_out) {
-        return ESP_ERR_INVALID_ARG;
-    }
-    
-    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
-    if (!reg || !reg->descriptor || !reg->descriptor->get_raw) {
-        return ESP_ERR_NOT_FOUND;
-    }
-
-    return reg->descriptor->get_raw(reg->context, key, value_out, value_size);
-}
-
-esp_err_t config_set_parameter(const char* namespace_str, const char* key,
-                               const void* value, size_t value_size, bool persist) {
-    if (!namespace_str || !key || !value) {
-        return ESP_ERR_INVALID_ARG;
-    }
-    
-    const config_namespace_registration_t* reg = find_namespace_registration(namespace_str);
-    if (!reg || !reg->descriptor || !reg->descriptor->get_parameter_info) {
-        return ESP_ERR_NOT_FOUND;
-    }
-
-    config_param_info_t param;
-    esp_err_t info_err = reg->descriptor->get_parameter_info(reg->context, key, &param);
-    if (info_err != ESP_OK) {
-        return info_err;
-    }
-
-    if (value_size != param.size) {
-        return ESP_ERR_INVALID_SIZE;
-    }
-
-    switch (param.type) {
-        case CONFIG_TYPE_BOOL:
-            return hexapod_config_set_bool(namespace_str, key, *(const bool*)value, persist);
-        case CONFIG_TYPE_INT32:
-            return hexapod_config_set_int32(namespace_str, key, *(const int32_t*)value, persist);
-        case CONFIG_TYPE_UINT32:
-            return hexapod_config_set_uint32(namespace_str, key, *(const uint32_t*)value, persist);
-        case CONFIG_TYPE_UINT16:
-            return hexapod_config_set_uint32(namespace_str, key, *(const uint16_t*)value, persist);
-        case CONFIG_TYPE_FLOAT:
-            return hexapod_config_set_float(namespace_str, key, *(const float*)value, persist);
-        case CONFIG_TYPE_STRING:
-            return hexapod_config_set_string(namespace_str, key, (const char*)value, persist);
-        default:
-            return ESP_ERR_NOT_SUPPORTED;
-    }
 }
 
 // =============================================================================

@@ -435,39 +435,6 @@ esp_err_t config_get_parameter_info(const char* namespace_str, const char* param
                                    config_param_info_t* info);
 
 // =============================================================================
-// Legacy Generic Parameter API (kept for backward compatibility)
-// =============================================================================
-
-/**
- * @brief Get parameter value by string key (generic void* interface)
- * 
- * @param namespace_str Namespace name
- * @param key Parameter key
- * @param value_out Buffer for value (must be large enough for parameter type)
- * @param value_size Size of value buffer
- * @return ESP_OK on success, error code on failure
- * 
- * @note Prefer type-specific functions (hexapod_config_get_bool, hexapod_config_get_int32, hexapod_config_get_uint32, etc.)
- */
-esp_err_t config_get_parameter(const char* namespace_str, const char* key, 
-                               void* value_out, size_t value_size);
-
-/**
- * @brief Set parameter value by string key (generic void* interface)
- * 
- * @param namespace_str Namespace name
- * @param key Parameter key
- * @param value Pointer to new value
- * @param value_size Size of value
- * @param persist true to save to NVS, false for memory-only
- * @return ESP_OK on success, error code on failure
- * 
- * @note Prefer type-specific functions (hexapod_config_set_bool, hexapod_config_set_int32, hexapod_config_set_uint32, etc.)
- */
-esp_err_t config_set_parameter(const char* namespace_str, const char* key,
-                               const void* value, size_t value_size, bool persist);
-
-// =============================================================================
 // Configuration Defaults and Factory Reset
 // =============================================================================
 

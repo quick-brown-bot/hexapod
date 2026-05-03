@@ -350,6 +350,10 @@ Notes where it matters:
 - At step 6: no hardcoded namespace literals in generic paths except controlled compatibility shims.
 - At step 7: compatibility facade can translate old behavior, but should call generic registry-driven core.
 
+Phase 2 progress note (2026-05-03):
+- Namespace descriptors are now registered through a descriptor table plus loop, so onboarding a new namespace is reduced to adding a domain descriptor and one table entry.
+- Descriptor lifecycle hooks are wired for defaults, load-from-NVS, and write-defaults-to-NVS flows, and manager initialization/migration uses those hooks.
+
 Exit criteria for Phase 2:
 - all old config APIs still callable,
 - domain registration works for system and joint_cal,
