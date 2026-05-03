@@ -19,3 +19,15 @@ WiFi Access Point bootstrap utility for local robot connectivity.
 ## Integration
 - Used by the WiFi TCP controller driver to provide an AP for command/control sessions.
 - Keeps AP bring-up logic outside controller and RPC core modules.
+
+## SDKConfig Requirements (Current Project)
+- WiFi stack enabled:
+  - CONFIG_ESP_WIFI_ENABLED=y
+  - CONFIG_ESP_WIFI_SOFTAP_SUPPORT=y
+  - CONFIG_ESP_WIFI_NVS_ENABLED=y
+- Network interface and TCP/IP stack enabled:
+  - CONFIG_ESP_NETIF_TCPIP_LWIP=y
+  - CONFIG_ESP_NETIF_USES_TCPIP_WITH_BSD_API=y
+- DHCP server support for SoftAP clients:
+  - CONFIG_LWIP_DHCPS=y
+  - CONFIG_LWIP_DHCPS_MAX_STATION_NUM=8

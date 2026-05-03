@@ -18,3 +18,9 @@ FlySky iBUS controller input driver.
 - Registered by controller core through driver selection.
 - Uses controller_internal helpers for connection state and failsafe behavior.
 - Uses hex_rpc_transport to inject internal command messages.
+
+## SDKConfig Requirements (Current Project)
+- No FlySky iBUS specific Kconfig option is set in this project.
+- This module relies on standard ESP-IDF UART driver support for ESP32 and FreeRTOS runtime support.
+- Timing behavior depends on kernel tick configuration:
+  - CONFIG_FREERTOS_HZ=100

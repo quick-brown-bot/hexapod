@@ -21,3 +21,9 @@ Queue-based transport abstraction for RPC message flow.
 - Producers (controller transport drivers) push incoming bytes to the RX queue.
 - RPC command layer consumes RX queue messages and pushes responses to TX queue.
 - Transport sender callbacks deliver TX data over Bluetooth, WiFi TCP, serial, or internal channels.
+
+## SDKConfig Requirements (Current Project)
+- No transport-specific Kconfig flag is required by this module itself.
+- This module depends on FreeRTOS task and queue support provided by the current project configuration, including:
+  - CONFIG_FREERTOS_HZ=100
+  - CONFIG_FREERTOS_NUMBER_OF_CORES=2
