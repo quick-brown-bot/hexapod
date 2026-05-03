@@ -4,7 +4,6 @@
 #include <math.h>
 #include <assert.h>
 #include "esp_log.h"
-#include "esp_timer.h"
 
 // Frame bridging:
 // - swing_trajectory outputs body-frame foot targets (meters):
@@ -16,10 +15,6 @@
 //   remain +90 deg for left side outward, -90 deg for right side outward in RH frame.
 
 static const char *TAG = "wbc";
-
-static inline int is_right_leg(int idx) {
-    return (idx >= 3); // 0,1,2 left; 3,4,5 right
-}
 
 void whole_body_control_compute(const swing_trajectory_t *trajectory, whole_body_cmd_t *cmds) {
     assert(trajectory != NULL);

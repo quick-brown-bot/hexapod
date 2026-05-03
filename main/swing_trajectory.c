@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "robot_config.h"
-#include "esp_log.h"
-static const char *TAG = "swing_traj";
 
 void swing_trajectory_init(swing_trajectory_t *trajectory, float step_length, float clearance_height) {
     trajectory->step_length = step_length;

@@ -7,10 +7,7 @@
 #include <math.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
-#include "esp_log.h"
 #include "controller.h"
-
-static const char *TAG_CTRL = "controller";
 
 // Global runtime configuration (opaque driver_cfg pointer)
 static controller_config_t g_cfg = {
