@@ -9,12 +9,7 @@ idf_component_register(
     "robot_config.c"
     "user_command.c"
     "controller.c"
-    "controller_flysky_ibus.c"
-    "controller_wifi_tcp.c"
-    "controller_bt_classic.c"
     "rpc_commands.c"
-    "rpc_transport.c"
-    "wifi_ap.c"
     "kpp_system.c"
     "kpp_forward_kin.c"
     "kpp_debug.c"
@@ -28,4 +23,10 @@ idf_component_register(
     "config_domain_joint_access.c"
     "config_manager.c"
     INCLUDE_DIRS "."
+    REQUIRES
+    hex_rpc_transport
+    hex_wifi_ap
+    hex_controller_driver_flysky_ibus
+    hex_controller_driver_wifi_tcp
+    hex_controller_driver_bt_classic
 )
