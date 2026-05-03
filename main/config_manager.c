@@ -27,6 +27,8 @@ static const char *TAG = "config_mgr";
 // Global configuration version key (stored in system namespace for now)
 #define GLOBAL_CONFIG_VERSION_KEY "global_ver"  // Max 15 chars for NVS
 
+static esp_err_t ensure_namespace_registry_initialized(void);
+
 // =============================================================================
 // Global State
 // =============================================================================
@@ -46,18 +48,27 @@ static joint_calib_config_t g_joint_calib_config = {0};
 
 static esp_err_t migrate_v0_to_v1(void) {
     ESP_LOGI(TAG, "Migrating v0 -> v1: Initializing fresh configuration");
-    
-    // Initialize all namespaces with defaults
-    ESP_ERROR_CHECK(config_domain_system_write_defaults_to_nvs(
-        g_manager_state.nvs_handles[CONFIG_NS_SYSTEM],
-        CONFIG_SCHEMA_VERSION
-    ));
-    ESP_ERROR_CHECK(config_domain_joint_cal_write_defaults_to_nvs(
-        g_manager_state.nvs_handles[CONFIG_NS_JOINT_CALIB]
-    ));
-    
-    // Future: Add other namespace initialization here
-    // ESP_ERROR_CHECK(init_motion_limits_defaults_to_nvs());
+
+    esp_err_t err = ensure_namespace_registry_initialized();
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    size_t ns_count = config_namespace_registry_count();
+    for (size_t i = 0; i < ns_count; i++) {
+        const config_namespace_registration_t* reg = config_namespace_registry_get_at(i);
+        if (!reg || !reg->descriptor || !reg->descriptor->write_defaults_to_nvs) {
+            continue;
+        }
+
+        err = reg->descriptor->write_defaults_to_nvs(reg->context);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to initialize defaults for namespace %s during migration: %s",
+                     reg->descriptor->ns_name,
+                     esp_err_to_name(err));
+            return err;
+        }
+    }
     
     ESP_LOGI(TAG, "Migration v0 -> v1 completed");
     return ESP_OK;
@@ -159,6 +170,43 @@ static esp_err_t save_joint_calib_config_to_nvs(void) {
     ESP_LOGI(TAG, "Joint calibration configuration saved successfully");
     
     return ESP_OK;
+}
+
+static esp_err_t system_ns_load_defaults(void* ctx) {
+    (void)ctx;
+    config_load_system_defaults(&g_system_config);
+    return ESP_OK;
+}
+
+static esp_err_t joint_ns_load_defaults(void* ctx) {
+    (void)ctx;
+    config_load_joint_calib_defaults(&g_joint_calib_config);
+    return ESP_OK;
+}
+
+static esp_err_t system_ns_load_from_nvs(void* ctx) {
+    (void)ctx;
+    return load_system_config_from_nvs();
+}
+
+static esp_err_t joint_ns_load_from_nvs(void* ctx) {
+    (void)ctx;
+    return load_joint_calib_config_from_nvs();
+}
+
+static esp_err_t system_ns_write_defaults_to_nvs(void* ctx) {
+    (void)ctx;
+    return config_domain_system_write_defaults_to_nvs(
+        g_manager_state.nvs_handles[CONFIG_NS_SYSTEM],
+        CONFIG_SCHEMA_VERSION
+    );
+}
+
+static esp_err_t joint_ns_write_defaults_to_nvs(void* ctx) {
+    (void)ctx;
+    return config_domain_joint_cal_write_defaults_to_nvs(
+        g_manager_state.nvs_handles[CONFIG_NS_JOINT_CALIB]
+    );
 }
 
 static esp_err_t system_ns_save(void* ctx) {
@@ -277,6 +325,9 @@ static esp_err_t system_ns_set_string(void* ctx, const char* param_name, const c
 static const config_namespace_descriptor_t g_system_namespace_descriptor = {
     .ns_id = CONFIG_NS_SYSTEM,
     .ns_name = "system",
+    .load_defaults = system_ns_load_defaults,
+    .load_from_nvs = system_ns_load_from_nvs,
+    .write_defaults_to_nvs = system_ns_write_defaults_to_nvs,
     .save = system_ns_save,
     .list_parameters = system_ns_list_parameters,
     .get_parameter_info = system_ns_get_param_info,
@@ -296,6 +347,9 @@ static const config_namespace_descriptor_t g_system_namespace_descriptor = {
 static const config_namespace_descriptor_t g_joint_namespace_descriptor = {
     .ns_id = CONFIG_NS_JOINT_CALIB,
     .ns_name = "joint_cal",
+    .load_defaults = joint_ns_load_defaults,
+    .load_from_nvs = joint_ns_load_from_nvs,
+    .write_defaults_to_nvs = joint_ns_write_defaults_to_nvs,
     .save = joint_ns_save,
     .list_parameters = joint_ns_list_parameters,
     .get_parameter_info = joint_ns_get_param_info,
@@ -313,7 +367,6 @@ static const config_namespace_descriptor_t g_joint_namespace_descriptor = {
 };
 
 static bool g_namespace_registry_initialized = false;
-static esp_err_t ensure_namespace_registry_initialized(void);
 
 static esp_err_t build_registered_namespace_name_table(const char* namespace_names[CONFIG_NS_COUNT]) {
     if (ensure_namespace_registry_initialized() != ESP_OK) {
@@ -465,21 +518,38 @@ esp_err_t config_manager_init(void) {
         ESP_LOGI(TAG, "No migration needed - configuration up to date");
     }
     
-    // STEP 3: Load default configurations into memory cache
-    config_load_system_defaults(&g_system_config);
-    config_load_joint_calib_defaults(&g_joint_calib_config);
-    
-    // STEP 4: Load configurations from NVS (guaranteed correct schema now)
-    err = load_system_config_from_nvs();
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to load system config from NVS: %s", esp_err_to_name(err));
-        goto fail;
+    size_t ns_count = config_namespace_registry_count();
+
+    // STEP 3: Load namespace defaults into memory cache
+    for (size_t i = 0; i < ns_count; i++) {
+        const config_namespace_registration_t* reg = config_namespace_registry_get_at(i);
+        if (!reg || !reg->descriptor || !reg->descriptor->load_defaults) {
+            continue;
+        }
+
+        err = reg->descriptor->load_defaults(reg->context);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to load defaults for namespace %s: %s",
+                     reg->descriptor->ns_name,
+                     esp_err_to_name(err));
+            goto fail;
+        }
     }
-    
-    err = load_joint_calib_config_from_nvs();
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to load joint calibration config from NVS: %s", esp_err_to_name(err));
-        goto fail;
+
+    // STEP 4: Load namespace data from NVS (guaranteed correct schema now)
+    for (size_t i = 0; i < ns_count; i++) {
+        const config_namespace_registration_t* reg = config_namespace_registry_get_at(i);
+        if (!reg || !reg->descriptor || !reg->descriptor->load_from_nvs) {
+            continue;
+        }
+
+        err = reg->descriptor->load_from_nvs(reg->context);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to load namespace %s from NVS: %s",
+                     reg->descriptor->ns_name,
+                     esp_err_to_name(err));
+            goto fail;
+        }
     }
     
     g_manager_state.initialized = true;
@@ -1032,9 +1102,21 @@ esp_err_t config_factory_reset(void) {
         }
     }
     
-    // Reload defaults
-    config_load_system_defaults(&g_system_config);
-    config_load_joint_calib_defaults(&g_joint_calib_config);
+    // Reload defaults through namespace descriptors
+    for (size_t i = 0; i < ns_count; i++) {
+        const config_namespace_registration_t* reg = config_namespace_registry_get_at(i);
+        if (!reg || !reg->descriptor || !reg->descriptor->load_defaults) {
+            continue;
+        }
+
+        esp_err_t err = reg->descriptor->load_defaults(reg->context);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to reload defaults for namespace %s: %s",
+                     reg->descriptor->ns_name,
+                     esp_err_to_name(err));
+            return err;
+        }
+    }
     
     // Clear dirty flags
     for (size_t i = 0; i < ns_count; i++) {

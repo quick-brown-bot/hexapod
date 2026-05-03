@@ -20,6 +20,9 @@ typedef struct {
     config_namespace_t ns_id;
     const char* ns_name;
 
+    esp_err_t (*load_defaults)(void* ctx);
+    esp_err_t (*load_from_nvs)(void* ctx);
+    esp_err_t (*write_defaults_to_nvs)(void* ctx);
     esp_err_t (*save)(void* ctx);
     esp_err_t (*list_parameters)(void* ctx, const char** param_names, size_t max_params, size_t* count);
     esp_err_t (*get_parameter_info)(void* ctx, const char* param_name, config_param_info_t* info);
