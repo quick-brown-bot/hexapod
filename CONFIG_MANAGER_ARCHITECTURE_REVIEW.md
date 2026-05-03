@@ -310,6 +310,30 @@ The sequence below follows small components first while making config redesign a
 
 Why first: these are narrower modules with lower cross-cutting data ownership.
 
+### Phase 1 Completion Note (2026-05-03)
+
+Status: completed.
+
+Completed checklist:
+- hex_rpc_transport extracted into dedicated component:
+    - [components/hex_rpc_transport/CMakeLists.txt](components/hex_rpc_transport/CMakeLists.txt)
+    - [components/hex_rpc_transport/rpc_transport.c](components/hex_rpc_transport/rpc_transport.c)
+- hex_wifi_ap extracted into dedicated component:
+    - [components/hex_wifi_ap/CMakeLists.txt](components/hex_wifi_ap/CMakeLists.txt)
+    - [components/hex_wifi_ap/wifi_ap.c](components/hex_wifi_ap/wifi_ap.c)
+- Controller drivers extracted as leaf components:
+    - [components/hex_controller_driver_flysky_ibus/CMakeLists.txt](components/hex_controller_driver_flysky_ibus/CMakeLists.txt)
+    - [components/hex_controller_driver_wifi_tcp/CMakeLists.txt](components/hex_controller_driver_wifi_tcp/CMakeLists.txt)
+    - [components/hex_controller_driver_bt_classic/CMakeLists.txt](components/hex_controller_driver_bt_classic/CMakeLists.txt)
+- Controller core kept in main and remains driver-agnostic:
+    - [main/controller.c](main/controller.c)
+- main component now depends on extracted components instead of compiling those sources directly:
+    - [main/CMakeLists.txt](main/CMakeLists.txt)
+
+Notes:
+- Extracted source/header duplicates were removed from [main](main).
+- Full project builds passed after extraction cutover.
+
 ### Phase 2 Must-Have Config Architecture Refactor
 
 1. Extract hex_config_storage_nvs from existing config_manager NVS code.
