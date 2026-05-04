@@ -15,15 +15,26 @@ When creating a new namespace in `hex_config_manager`, follow this checklist in 
 
 ## 1) Namespace ID and Core Types
 
-- Add a new enum entry in `config_namespace_t` in `config_manager.h` before `CONFIG_NS_COUNT`.
-- Add or update config struct type(s) in `config_manager.h` for the namespace cache.
-- Add public API accessors for bulk get/set if needed.
+- Add a new enum entry in `config_namespace_t` in `config_manager_core_types.h` before `CONFIG_NS_COUNT`.
+- Add or update namespace-specific config struct type(s) in namespace API headers (not manager core headers).
+- Keep manager-facing API generic through `config_manager_runtime_api.h` and `config_manager_param_api.h`.
 
-## 2) Descriptor Module (One File Per Namespace)
+## 2) Namespace Folder Contract
 
-- Create a dedicated descriptor header/source pair:
+- Create one dedicated namespace folder under `components/hex_config_manager/namespaces/<namespace>/`.
+- Keep all namespace-owned implementation files in that folder.
+- Required minimum files:
   - `config_ns_<namespace>.h`
   - `config_ns_<namespace>.c`
+  - `config_ns_<namespace>_api.h` (if namespace exposes public types/accessors)
+  - namespace defaults/persistence/access files as needed
+- Do not place namespace functional logic in root-level manager files.
+
+## 3) Descriptor Module (One Namespace Per Functional File)
+
+- Create a dedicated descriptor header/source pair:
+  - `namespaces/<namespace>/config_ns_<namespace>.h`
+  - `namespaces/<namespace>/config_ns_<namespace>.c`
 - Add a namespace context struct in the header with:
   - `nvs_handle_t*`
   - `namespace_dirty` pointer
@@ -38,31 +49,25 @@ When creating a new namespace in `hex_config_manager`, follow this checklist in 
   - typed get/set handlers relevant to the namespace
   - parameter listing and parameter info handlers
 
-## 3) Register Descriptor in Config Manager
+## 4) Register Descriptor in Namespace Catalog
 
-- Add include for the new descriptor header in `config_manager.c`.
-- Add namespace cache state in `config_manager.c`.
-- Add namespace context instance in `config_manager.c`.
-- Append descriptor/context entry to `g_namespace_registration_entries`.
-- Ensure registration happens through `config_namespace_registry_register(descriptor, context)`.
+- Add include for the new descriptor header in `config_namespace_catalog.c`.
+- Append descriptor/context entry in catalog registration order.
+- Ensure registration continues through `config_namespace_registry_register(descriptor, context)`.
+- Do not add namespace globals or descriptor wiring to `config_manager.c`.
 
-## 4) Defaults Layer
+## 5) Defaults Layer
 
-- Add default loader declaration in `config_domain_defaults.h`.
-- Implement default initialization in `config_domain_defaults.c`.
+- Implement namespace defaults in namespace-local files inside `namespaces/<namespace>/`.
 - Keep defaults aligned with existing runtime behavior used elsewhere in the project.
 
-## 5) NVS Persistence Layer
+## 6) NVS Persistence Layer
 
-- Add declarations in `config_domain_persistence_nvs.h` for:
-  - write defaults
-  - load
-  - save
-- Implement all three in `config_domain_persistence_nvs.c`.
+- Implement write defaults/load/save in namespace-local persistence file(s) under `namespaces/<namespace>/`.
 - Use compact key formats and keep key naming consistent.
 - Commit writes with `nvs_commit` in save/default initialization paths.
 
-## 6) Parameter Discovery and Metadata
+## 7) Parameter Discovery and Metadata
 
 - If namespace is generic/typed, implement:
   - parameter list generation
@@ -71,12 +76,13 @@ When creating a new namespace in `hex_config_manager`, follow this checklist in 
 - Ensure `config_list_parameters` and `config_get_parameter_info` work for the namespace.
 - Enforce validation ranges in set handlers.
 
-## 7) Build Wiring
+## 8) Build Wiring
 
-- Add new namespace source file(s) to `components/hex_config_manager/CMakeLists.txt`.
+- Add new namespace source file(s) in `components/hex_config_manager/CMakeLists.txt` under the matching `namespaces/<namespace>/` path.
+- Ensure new namespace folder is available through component include directories when public headers are consumed externally.
 - Verify the new module is compiled in build output.
 
-## 8) Runtime Listing and Save Path Validation
+## 9) Runtime Listing and Save Path Validation
 
 - Confirm `list namespaces` includes new namespace.
 - Confirm `save <namespace>` works via `config_manager_save_namespace_by_name`.
@@ -85,19 +91,20 @@ When creating a new namespace in `hex_config_manager`, follow this checklist in 
 - If a subsystem still uses compile-time constants or local defaults, wire it to the config manager namespace before considering the namespace complete.
 - If namespace still does not appear at runtime, verify flashed firmware is current (not stale binary).
 
-## 8.1) Runtime Configuration Contract (Fail Fast)
+## 9.1) Runtime Configuration Contract (Fail Fast)
 
 - Do not assume hardcoded defaults are acceptable when configuration is expected to come from NVS/config manager.
 - For critical runtime subsystems, fail fast with clear logs if required namespace data is missing, unloaded, or invalid.
 - Validate initialization order so config manager loads before subsystems that consume persisted configuration.
 - Log the configuration source at startup (for example namespace-backed vs fallback) and prefer namespace-backed only for completed integrations.
 
-## 9) Documentation Sync
+## 10) Documentation Sync
 
 - Update design docs and examples to the short namespace string name.
 - Keep RPC examples aligned with real namespace strings and parameter names.
+- Keep folder-path examples aligned with `namespaces/<namespace>/` structure.
 
-## 10) Verification Checklist
+## 11) Verification Checklist
 
 - Build succeeds with no new errors.
 - `list namespaces` includes the new namespace.
@@ -106,3 +113,7 @@ When creating a new namespace in `hex_config_manager`, follow this checklist in 
 - `setpersist` and `save <namespace>` persist and survive reboot.
 - Runtime subsystem behavior changes when namespace values change (proves real consumption path).
 - Startup fails clearly (or blocks subsystem start) when required namespace config cannot be loaded for strict integrations.
+- Adding a namespace only required:
+  - new files in one namespace folder
+  - one registration edit in `config_namespace_catalog.c`
+  - optional docs/tests updates

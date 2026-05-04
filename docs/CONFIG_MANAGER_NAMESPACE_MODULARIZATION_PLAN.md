@@ -5,7 +5,7 @@
 - Branch created: `refactor/config-manager-namespace-plan`
 - This document now tracks both plan and implementation progress.
 - Phases 1-4: completed and build-validated.
-- Phase 5: in progress.
+- Phase 5: folderization completed and build-validated.
 
 ## Implementation Progress (Current)
 
@@ -22,16 +22,14 @@ Completed:
   - Call sites in consuming components updated.
   - Compatibility aggregate header removed.
 
-Remaining for Phase 5:
-- Move each namespace into its own folder under `components/hex_config_manager/namespaces/*`.
-- Enforce one-namespace-per-functional-file rule by directory structure, not only naming.
-- Validate dummy namespace add flow requires only:
-  - new namespace folder/files
-  - single catalog registration edit
-  - optional tests/docs
+Phase 5 completed:
+- Namespace files moved under `components/hex_config_manager/namespaces/*`.
+- One-namespace-per-functional-file enforced via folder structure.
+- Build wiring updated to compile from namespace folders.
+- Checklist instruction file updated for catalog-based, folderized flow.
+
+Remaining validation follow-up:
 - Run runtime validation checklist (`list`, `get`, `set`, `setpersist`, `save`, reboot persistence).
-- Update checklist instruction file:
-  - `c:\code\hexapod\.github\instructions\config-manager-namespace-checklist.instructions.md`
 
 ## Goals
 
@@ -226,13 +224,12 @@ Architecture is accepted when all are true:
 
 ## Finalization Follow-Up
 
-After completing the refactor, update the namespace implementation checklist instruction file to reflect the new architecture and lessons learned:
+After completing the refactor, keep the namespace implementation checklist instruction file aligned with architecture and lessons learned:
 
 - File to update:
   - `c:\code\hexapod\.github\instructions\config-manager-namespace-checklist.instructions.md`
 - Required updates:
-  - Replace old steps that assume edits in shared multi-namespace files.
-  - Document the new single registration-catalog flow.
-  - Document the per-namespace file/folder contract and common interface expectations.
-  - Add validation checks that enforce no cross-namespace functional files and no shim-based migrations.
-  - Refresh examples and terminology so future namespace additions follow the modularized architecture by default.
+  - Keep steps aligned to single registration-catalog flow.
+  - Keep per-namespace file/folder contract and common interface expectations current.
+  - Keep validation checks enforcing no cross-namespace functional files and no shim-based migrations.
+  - Refresh examples and terminology when namespace APIs evolve.
