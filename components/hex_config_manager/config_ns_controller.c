@@ -26,6 +26,28 @@ controller_config_namespace_t* config_controller_namespace_config(void) {
     return &g_controller_namespace_config;
 }
 
+const controller_config_namespace_t* config_get_controller(void) {
+    return &g_controller_namespace_config;
+}
+
+esp_err_t config_set_controller(const controller_config_namespace_t* config) {
+    if (!config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_controller_namespace_config = *config;
+    if (g_controller_namespace_context.namespace_dirty) {
+        *g_controller_namespace_context.namespace_dirty = true;
+    }
+
+    esp_err_t err = config_manager_save_namespace(CONFIG_NS_CONTROLLER);
+    if (err == ESP_OK && g_controller_namespace_context.namespace_dirty) {
+        *g_controller_namespace_context.namespace_dirty = false;
+    }
+
+    return err;
+}
+
 static config_controller_namespace_context_t* controller_ctx(void* ctx) {
     return (config_controller_namespace_context_t*)ctx;
 }

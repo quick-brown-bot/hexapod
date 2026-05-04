@@ -26,6 +26,28 @@ wifi_config_namespace_t* config_wifi_namespace_config(void) {
     return &g_wifi_namespace_config;
 }
 
+const wifi_config_namespace_t* config_get_wifi(void) {
+    return &g_wifi_namespace_config;
+}
+
+esp_err_t config_set_wifi(const wifi_config_namespace_t* config) {
+    if (!config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_wifi_namespace_config = *config;
+    if (g_wifi_namespace_context.namespace_dirty) {
+        *g_wifi_namespace_context.namespace_dirty = true;
+    }
+
+    esp_err_t err = config_manager_save_namespace(CONFIG_NS_WIFI);
+    if (err == ESP_OK && g_wifi_namespace_context.namespace_dirty) {
+        *g_wifi_namespace_context.namespace_dirty = false;
+    }
+
+    return err;
+}
+
 static config_wifi_namespace_context_t* wifi_ctx(void* ctx) {
     return (config_wifi_namespace_context_t*)ctx;
 }

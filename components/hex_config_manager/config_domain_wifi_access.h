@@ -9,6 +9,7 @@
 #include <stddef.h>
 
 #include "config_manager.h"
+#include "config_ns_wifi_api.h"
 #include "esp_err.h"
 
 #ifdef __cplusplus

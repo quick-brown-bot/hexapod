@@ -27,6 +27,144 @@ joint_calib_config_t* config_joint_namespace_config(void) {
     return &g_joint_namespace_config;
 }
 
+const joint_calib_config_t* config_get_joint_calib(void) {
+    return &g_joint_namespace_config;
+}
+
+esp_err_t config_set_joint_calib(const joint_calib_config_t* config) {
+    if (!config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_joint_namespace_config = *config;
+    if (g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = true;
+    }
+
+    esp_err_t err = config_manager_save_namespace(CONFIG_NS_JOINT_CALIB);
+    if (err == ESP_OK && g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = false;
+    }
+
+    return err;
+}
+
+esp_err_t config_get_joint_calib_data(int leg_index, int joint, joint_calib_t* calib_data) {
+    if (!calib_data || leg_index < 0 || leg_index >= NUM_LEGS || joint < 0 || joint >= NUM_JOINTS_PER_LEG) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    *calib_data = g_joint_namespace_config.joints[leg_index][joint];
+    return ESP_OK;
+}
+
+esp_err_t config_set_joint_calib_data_memory(int leg_index, int joint, const joint_calib_t* calib_data) {
+    if (!calib_data || leg_index < 0 || leg_index >= NUM_LEGS || joint < 0 || joint >= NUM_JOINTS_PER_LEG) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_joint_namespace_config.joints[leg_index][joint] = *calib_data;
+    if (g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = true;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t config_set_joint_calib_data_persist(int leg_index, int joint, const joint_calib_t* calib_data) {
+    esp_err_t err = config_set_joint_calib_data_memory(leg_index, joint, calib_data);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    err = config_manager_save_namespace(CONFIG_NS_JOINT_CALIB);
+    if (err == ESP_OK && g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = false;
+    }
+    return err;
+}
+
+esp_err_t config_set_joint_offset_memory(int leg_index, int joint, float offset_rad) {
+    if (leg_index < 0 || leg_index >= NUM_LEGS || joint < 0 || joint >= NUM_JOINTS_PER_LEG) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_joint_namespace_config.joints[leg_index][joint].zero_offset_rad = offset_rad;
+    if (g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = true;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t config_set_joint_offset_persist(int leg_index, int joint, float offset_rad) {
+    esp_err_t err = config_set_joint_offset_memory(leg_index, joint, offset_rad);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    err = config_manager_save_namespace(CONFIG_NS_JOINT_CALIB);
+    if (err == ESP_OK && g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = false;
+    }
+    return err;
+}
+
+esp_err_t config_set_joint_limits_memory(int leg_index, int joint, float min_rad, float max_rad) {
+    if (leg_index < 0 || leg_index >= NUM_LEGS || joint < 0 || joint >= NUM_JOINTS_PER_LEG) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_joint_namespace_config.joints[leg_index][joint].min_rad = min_rad;
+    g_joint_namespace_config.joints[leg_index][joint].max_rad = max_rad;
+    if (g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = true;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t config_set_joint_limits_persist(int leg_index, int joint, float min_rad, float max_rad) {
+    esp_err_t err = config_set_joint_limits_memory(leg_index, joint, min_rad, max_rad);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    err = config_manager_save_namespace(CONFIG_NS_JOINT_CALIB);
+    if (err == ESP_OK && g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = false;
+    }
+    return err;
+}
+
+esp_err_t config_set_joint_pwm_memory(int leg_index, int joint, int32_t pwm_min_us, int32_t pwm_max_us, int32_t pwm_neutral_us) {
+    if (leg_index < 0 || leg_index >= NUM_LEGS || joint < 0 || joint >= NUM_JOINTS_PER_LEG) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_joint_namespace_config.joints[leg_index][joint].pwm_min_us = pwm_min_us;
+    g_joint_namespace_config.joints[leg_index][joint].pwm_max_us = pwm_max_us;
+    g_joint_namespace_config.joints[leg_index][joint].neutral_us = pwm_neutral_us;
+    if (g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = true;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t config_set_joint_pwm_persist(int leg_index, int joint, int32_t pwm_min_us, int32_t pwm_max_us, int32_t pwm_neutral_us) {
+    esp_err_t err = config_set_joint_pwm_memory(leg_index, joint, pwm_min_us, pwm_max_us, pwm_neutral_us);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    err = config_manager_save_namespace(CONFIG_NS_JOINT_CALIB);
+    if (err == ESP_OK && g_joint_namespace_context.namespace_dirty) {
+        *g_joint_namespace_context.namespace_dirty = false;
+    }
+    return err;
+}
+
 static config_joint_calib_namespace_context_t* joint_ctx(void* ctx) {
     return (config_joint_calib_namespace_context_t*)ctx;
 }

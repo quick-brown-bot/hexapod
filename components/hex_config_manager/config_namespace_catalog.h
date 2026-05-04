@@ -9,6 +9,12 @@
 #include <stdint.h>
 
 #include "config_manager.h"
+#include "config_ns_controller_api.h"
+#include "config_ns_joint_api.h"
+#include "config_ns_leg_geometry_api.h"
+#include "config_ns_motion_limits_api.h"
+#include "config_ns_system_api.h"
+#include "config_ns_wifi_api.h"
 #include "esp_err.h"
 
 #ifdef __cplusplus

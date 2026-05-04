@@ -15,6 +15,7 @@
 #include "rpc_commands.h"
 #include "rpc_transport.h"
 #include "config_manager.h"
+#include "config_ns_system_api.h"
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_err.h"

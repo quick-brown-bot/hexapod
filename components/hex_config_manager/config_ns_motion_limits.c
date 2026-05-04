@@ -72,6 +72,28 @@ motion_limits_config_t* config_motion_limits_namespace_config(void) {
     return &g_motion_limits_namespace_config;
 }
 
+const motion_limits_config_t* config_get_motion_limits(void) {
+    return &g_motion_limits_namespace_config;
+}
+
+esp_err_t config_set_motion_limits(const motion_limits_config_t* config) {
+    if (!config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_motion_limits_namespace_config = *config;
+    if (g_motion_limits_namespace_context.namespace_dirty) {
+        *g_motion_limits_namespace_context.namespace_dirty = true;
+    }
+
+    esp_err_t err = config_manager_save_namespace(CONFIG_NS_MOTION_LIMITS);
+    if (err == ESP_OK && g_motion_limits_namespace_context.namespace_dirty) {
+        *g_motion_limits_namespace_context.namespace_dirty = false;
+    }
+
+    return err;
+}
+
 static config_motion_limits_namespace_context_t* motion_ctx(void* ctx) {
     return (config_motion_limits_namespace_context_t*)ctx;
 }

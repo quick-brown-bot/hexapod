@@ -9,6 +9,7 @@
 #include "kpp_system.h"
 #include "kpp_config.h"
 #include "config_manager.h"
+#include "config_ns_motion_limits_api.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include <string.h>

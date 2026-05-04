@@ -1,5 +1,7 @@
 #include "robot_config.h"
 #include "config_manager.h"
+#include "config_ns_joint_api.h"
+#include "config_ns_leg_geometry_api.h"
 #include <string.h>
 #include <math.h>
 #include "esp_log.h"

@@ -7,6 +7,7 @@
 #include <stdbool.h>
 
 #include "config_manager.h"
+#include "config_ns_motion_limits_api.h"
 #include "config_namespace_registry.h"
 
 #ifdef __cplusplus

@@ -57,6 +57,28 @@ leg_geometry_config_t* config_leg_geometry_namespace_config(void) {
     return &g_leg_geometry_namespace_config;
 }
 
+const leg_geometry_config_t* config_get_leg_geometry(void) {
+    return &g_leg_geometry_namespace_config;
+}
+
+esp_err_t config_set_leg_geometry(const leg_geometry_config_t* config) {
+    if (!config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_leg_geometry_namespace_config = *config;
+    if (g_leg_geometry_namespace_context.namespace_dirty) {
+        *g_leg_geometry_namespace_context.namespace_dirty = true;
+    }
+
+    esp_err_t err = config_manager_save_namespace(CONFIG_NS_LEG_GEOMETRY);
+    if (err == ESP_OK && g_leg_geometry_namespace_context.namespace_dirty) {
+        *g_leg_geometry_namespace_context.namespace_dirty = false;
+    }
+
+    return err;
+}
+
 static config_leg_geometry_namespace_context_t* leg_geom_ctx(void* ctx) {
     return (config_leg_geometry_namespace_context_t*)ctx;
 }

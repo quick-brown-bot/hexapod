@@ -24,6 +24,9 @@
 #include "controller_wifi_tcp.h"
 #include "kpp_system.h"
 #include "config_manager.h"
+#include "config_ns_system_api.h"
+#include "config_ns_controller_api.h"
+#include "config_ns_wifi_api.h"
 #include "rpc_commands.h"
 
 static const char *TAG = "main";

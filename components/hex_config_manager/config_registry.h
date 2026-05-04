@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include "esp_err.h"
 #include "config_manager.h"
+#include "config_ns_joint_api.h"
 
 #ifdef __cplusplus
 extern "C" {

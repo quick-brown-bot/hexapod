@@ -30,6 +30,28 @@ system_config_t* config_system_namespace_config(void) {
     return &g_system_config;
 }
 
+const system_config_t* config_get_system(void) {
+    return &g_system_config;
+}
+
+esp_err_t config_set_system(const system_config_t* config) {
+    if (!config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    g_system_config = *config;
+    if (g_system_namespace_context.namespace_dirty) {
+        *g_system_namespace_context.namespace_dirty = true;
+    }
+
+    esp_err_t err = config_manager_save_namespace(CONFIG_NS_SYSTEM);
+    if (err == ESP_OK && g_system_namespace_context.namespace_dirty) {
+        *g_system_namespace_context.namespace_dirty = false;
+    }
+
+    return err;
+}
+
 static config_system_namespace_context_t* system_ctx(void* ctx) {
     return (config_system_namespace_context_t*)ctx;
 }
