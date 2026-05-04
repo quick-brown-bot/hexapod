@@ -117,10 +117,26 @@ void app_main(void)
     
     // Initialize RPC system
     rpc_init();
+
+    // Load WiFi namespace-backed options for AP and TCP controller transport.
+    const wifi_config_namespace_t* wifi_ns_cfg = config_get_wifi();
+    if (!wifi_ns_cfg) {
+        ESP_LOGE(TAG, "WiFi namespace unavailable");
+        return;
+    }
+
+    wifi_ap_options_t ap_opts = {
+        .mode = (wifi_ns_cfg->ap_ssid_mode <= 2U) ? (wifi_ap_ssid_mode_e)wifi_ns_cfg->ap_ssid_mode : WIFI_AP_SSID_MAC_SUFFIX,
+        .fixed_prefix = wifi_ns_cfg->ap_fixed_prefix,
+        .fixed_ssid = wifi_ns_cfg->ap_fixed_ssid,
+        .password = (wifi_ns_cfg->ap_password[0] != '\0') ? wifi_ns_cfg->ap_password : NULL,
+        .channel = (uint8_t)wifi_ns_cfg->ap_channel,
+        .max_clients = (uint8_t)wifi_ns_cfg->ap_max_clients,
+    };
     
     // Bring up WiFi AP early so that network-based controller drivers or diagnostics
-    // can connect even if later initialization stalls. Uses default options (MAC suffix).
-    wifi_ap_init_once();
+    // can connect even if later initialization stalls.
+    wifi_ap_init_with_options(&ap_opts);
     
     // Initialize robot configuration
     robot_config_init_default();
@@ -142,7 +158,7 @@ void app_main(void)
 
     // Assign driver-specific configuration if needed
     controller_flysky_ibus_cfg_t flysky_cfg;
-    controller_wifi_tcp_cfg_t wifi_cfg;
+    controller_wifi_tcp_cfg_t wifi_tcp_cfg;
     if (ctrl_cfg.driver_type == CONTROLLER_DRIVER_FLYSKY_IBUS) {
         flysky_cfg.uart_port = controller_cfg->flysky_uart_port;
         flysky_cfg.tx_gpio = controller_cfg->flysky_tx_gpio;
@@ -153,9 +169,10 @@ void app_main(void)
         ctrl_cfg.driver_cfg = &flysky_cfg;
         ctrl_cfg.driver_cfg_size = sizeof(flysky_cfg);
     } else if (ctrl_cfg.driver_type == CONTROLLER_DRIVER_WIFI_TCP) {
-        wifi_cfg = controller_wifi_tcp_default();
-        ctrl_cfg.driver_cfg = &wifi_cfg;
-        ctrl_cfg.driver_cfg_size = sizeof(wifi_cfg);
+        wifi_tcp_cfg.listen_port = (uint16_t)wifi_ns_cfg->tcp_listen_port;
+        wifi_tcp_cfg.connection_timeout_ms = (uint16_t)wifi_ns_cfg->tcp_connection_timeout_ms;
+        ctrl_cfg.driver_cfg = &wifi_tcp_cfg;
+        ctrl_cfg.driver_cfg_size = sizeof(wifi_tcp_cfg);
     }
     
     controller_init(&ctrl_cfg);
@@ -164,10 +181,13 @@ void app_main(void)
     // This provides network-based diagnostics and control regardless of primary controller type
     if (ctrl_cfg.driver_type != CONTROLLER_DRIVER_WIFI_TCP) {
         ESP_LOGI(TAG, "Initializing WiFi TCP controller as secondary RPC interface");
-        controller_wifi_tcp_cfg_t wifi_rpc_cfg = controller_wifi_tcp_default();
+        controller_wifi_tcp_cfg_t wifi_rpc_cfg = {
+            .listen_port = (uint16_t)wifi_ns_cfg->tcp_listen_port,
+            .connection_timeout_ms = (uint16_t)wifi_ns_cfg->tcp_connection_timeout_ms,
+        };
         controller_config_t wifi_ctrl_cfg = {
             .driver_type = CONTROLLER_DRIVER_WIFI_TCP,
-            .task_stack = 4096,
+            .task_stack = controller_cfg->task_stack, // Use same stack size as primary controller
             .task_prio = 8,  // Lower priority than primary controller
             .driver_cfg = &wifi_rpc_cfg,
             .driver_cfg_size = sizeof(wifi_rpc_cfg),

@@ -12,6 +12,7 @@
 #include "config_ns_leg_geometry.h"
 #include "config_ns_motion_limits.h"
 #include "config_ns_system.h"
+#include "config_ns_wifi.h"
 #include "config_migration.h"
 #include "config_namespace_registry.h"
 #include "config_storage_nvs.h"
@@ -51,6 +52,9 @@ static motion_limits_config_t g_motion_limits_config = {0};
 // Configuration cache - controller namespace
 static controller_config_namespace_t g_controller_config = {0};
 
+// Configuration cache - wifi namespace
+static wifi_config_namespace_t g_wifi_config = {0};
+
 static config_system_namespace_context_t g_system_namespace_ctx = {
     .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_SYSTEM],
     .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM],
@@ -86,6 +90,13 @@ static config_controller_namespace_context_t g_controller_namespace_ctx = {
     .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_CONTROLLER],
     .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_CONTROLLER],
     .config = &g_controller_config
+};
+
+static config_wifi_namespace_context_t g_wifi_namespace_ctx = {
+    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_WIFI],
+    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_WIFI],
+    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_WIFI],
+    .config = &g_wifi_config
 };
 
 // =============================================================================
@@ -158,6 +169,7 @@ static namespace_registration_entry_t g_namespace_registration_entries[] = {
     { &g_leg_geometry_namespace_descriptor, &g_leg_geometry_namespace_ctx },
     { &g_motion_limits_namespace_descriptor, &g_motion_limits_namespace_ctx },
     { &g_controller_namespace_descriptor, &g_controller_namespace_ctx },
+    { &g_wifi_namespace_descriptor, &g_wifi_namespace_ctx },
 };
 
 static bool g_namespace_registry_initialized = false;
@@ -457,6 +469,10 @@ const motion_limits_config_t* config_get_motion_limits(void) {
 
 const controller_config_namespace_t* config_get_controller(void) {
     return &g_controller_config;
+}
+
+const wifi_config_namespace_t* config_get_wifi(void) {
+    return &g_wifi_config;
 }
 
 esp_err_t config_set_leg_geometry(const leg_geometry_config_t* config) {
@@ -991,6 +1007,21 @@ esp_err_t config_set_controller(const controller_config_namespace_t* config) {
     esp_err_t err = config_manager_save_namespace(CONFIG_NS_CONTROLLER);
     if (err == ESP_OK) {
         g_manager_state.namespace_dirty[CONFIG_NS_CONTROLLER] = false;
+    }
+    return err;
+}
+
+esp_err_t config_set_wifi(const wifi_config_namespace_t* config) {
+    if (!config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    memcpy(&g_wifi_config, config, sizeof(wifi_config_namespace_t));
+    g_manager_state.namespace_dirty[CONFIG_NS_WIFI] = true;
+
+    esp_err_t err = config_manager_save_namespace(CONFIG_NS_WIFI);
+    if (err == ESP_OK) {
+        g_manager_state.namespace_dirty[CONFIG_NS_WIFI] = false;
     }
     return err;
 }

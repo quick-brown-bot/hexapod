@@ -32,6 +32,7 @@ typedef enum {
     CONFIG_NS_LEG_GEOMETRY = 2,  // Leg geometry and mounting poses
     CONFIG_NS_MOTION_LIMITS = 3, // KPP motion limits and estimation filters
     CONFIG_NS_CONTROLLER = 4,    // Input device controller configuration
+    CONFIG_NS_WIFI = 5,          // WiFi AP and network controller settings
     CONFIG_NS_COUNT              // Keep this last
 } config_namespace_t;
 
@@ -124,6 +125,21 @@ typedef struct {
     int32_t flysky_cts_gpio;
     int32_t flysky_baud_rate;
 } controller_config_namespace_t;
+
+// =============================================================================
+// WiFi Configuration Structure
+// =============================================================================
+
+typedef struct {
+    uint32_t ap_ssid_mode;
+    char ap_fixed_prefix[32];
+    char ap_fixed_ssid[33];
+    char ap_password[65];
+    uint32_t ap_channel;
+    uint32_t ap_max_clients;
+    uint32_t tcp_listen_port;
+    uint32_t tcp_connection_timeout_ms;
+} wifi_config_namespace_t;
 
 // =============================================================================
 // System Configuration Structure
@@ -394,6 +410,25 @@ const controller_config_namespace_t* config_get_controller(void);
 esp_err_t config_set_controller(const controller_config_namespace_t* config);
 
 // =============================================================================
+// WiFi Configuration API
+// =============================================================================
+
+/**
+ * @brief Get WiFi configuration (from memory cache)
+ *
+ * @return Pointer to WiFi configuration structure (read-only)
+ */
+const wifi_config_namespace_t* config_get_wifi(void);
+
+/**
+ * @brief Set complete WiFi configuration structure (always persistent)
+ *
+ * @param config Pointer to WiFi configuration structure
+ * @return ESP_OK on success, error code on NVS write failure
+ */
+esp_err_t config_set_wifi(const wifi_config_namespace_t* config);
+
+// =============================================================================
 // Parameter Types and Metadata
 // =============================================================================
 
@@ -604,6 +639,13 @@ void config_load_motion_limits_defaults(motion_limits_config_t* config);
  * @param config Pointer to controller config structure to fill with defaults
  */
 void config_load_controller_defaults(controller_config_namespace_t* config);
+
+/**
+ * @brief Load factory default WiFi configuration
+ *
+ * @param config Pointer to WiFi config structure to fill with defaults
+ */
+void config_load_wifi_defaults(wifi_config_namespace_t* config);
 
 /**
  * @brief Factory reset - restore all configuration to defaults
