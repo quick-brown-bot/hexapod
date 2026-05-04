@@ -609,6 +609,7 @@ esp_err_t config_manager_migrate(uint16_t detected_version) {
 - **joint_cal namespace is implemented and wired** (defaults, load/save, parameter discovery, typed get/set)
 - **leg_geom namespace is implemented and wired** (defaults, load/save, parameter discovery, typed float get/set)
 - **motion_lim namespace is implemented and wired** (defaults, load/save, parameter discovery, typed float get/set)
+- **controller namespace is implemented and wired** (defaults, load/save, parameter discovery, typed int/uint get/set)
 - **KPP runtime now consumes `motion_lim` at startup** and fails fast if required configuration is unavailable/invalid.
 - **NVS operations** working with automatic error handling and wear leveling
 - **Dual-method API** demonstrated: `config_set_*_memory()` vs `config_set_*_persist()`

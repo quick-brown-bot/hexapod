@@ -31,6 +31,7 @@ typedef enum {
     CONFIG_NS_JOINT_CALIB = 1,   // Joint calibration per leg/joint
     CONFIG_NS_LEG_GEOMETRY = 2,  // Leg geometry and mounting poses
     CONFIG_NS_MOTION_LIMITS = 3, // KPP motion limits and estimation filters
+    CONFIG_NS_CONTROLLER = 4,    // Input device controller configuration
     CONFIG_NS_COUNT              // Keep this last
 } config_namespace_t;
 
@@ -105,6 +106,24 @@ typedef struct {
     float body_offset_y;
     float body_offset_z;
 } motion_limits_config_t;
+
+// =============================================================================
+// Controller Configuration Structure
+// =============================================================================
+
+typedef struct {
+    controller_driver_type_e driver_type;
+    uint32_t task_stack;
+    uint32_t task_priority;
+
+    // FlySky iBUS driver options
+    int32_t flysky_uart_port;
+    int32_t flysky_tx_gpio;
+    int32_t flysky_rx_gpio;
+    int32_t flysky_rts_gpio;
+    int32_t flysky_cts_gpio;
+    int32_t flysky_baud_rate;
+} controller_config_namespace_t;
 
 // =============================================================================
 // System Configuration Structure
@@ -356,6 +375,25 @@ const motion_limits_config_t* config_get_motion_limits(void);
 esp_err_t config_set_motion_limits(const motion_limits_config_t* config);
 
 // =============================================================================
+// Controller Configuration API
+// =============================================================================
+
+/**
+ * @brief Get controller configuration (from memory cache)
+ *
+ * @return Pointer to controller configuration structure (read-only)
+ */
+const controller_config_namespace_t* config_get_controller(void);
+
+/**
+ * @brief Set complete controller configuration structure (always persistent)
+ *
+ * @param config Pointer to controller configuration structure
+ * @return ESP_OK on success, error code on NVS write failure
+ */
+esp_err_t config_set_controller(const controller_config_namespace_t* config);
+
+// =============================================================================
 // Parameter Types and Metadata
 // =============================================================================
 
@@ -559,6 +597,13 @@ void config_load_leg_geometry_defaults(leg_geometry_config_t* config);
  * @param config Pointer to motion limits config structure to fill with defaults
  */
 void config_load_motion_limits_defaults(motion_limits_config_t* config);
+
+/**
+ * @brief Load factory default controller configuration
+ *
+ * @param config Pointer to controller config structure to fill with defaults
+ */
+void config_load_controller_defaults(controller_config_namespace_t* config);
 
 /**
  * @brief Factory reset - restore all configuration to defaults

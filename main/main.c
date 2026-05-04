@@ -17,6 +17,7 @@
 #include "robot_config.h"
 #include "user_command.h"
 #include "controller.h"
+#include "controller_flysky_ibus.h"
 #include <string.h>
 #include "wifi_ap.h"
 #include "controller_bt_classic.h"
@@ -124,16 +125,34 @@ void app_main(void)
     // Initialize robot configuration
     robot_config_init_default();
     
-    // Initialize the primary controller from system configuration
+    // Initialize the primary controller from configuration namespaces.
+    const controller_config_namespace_t* controller_cfg = config_get_controller();
+    if (!controller_cfg) {
+        ESP_LOGE(TAG, "Controller namespace unavailable");
+        return;
+    }
+
     controller_config_t ctrl_cfg = {
-        .driver_type = sys_config->controller_type,
-        .task_stack = 4096,
-        .task_prio = 10,
+        .driver_type = controller_cfg->driver_type,
+        .task_stack = (int)controller_cfg->task_stack,
+        .task_prio = (int)controller_cfg->task_priority,
+        .driver_cfg = NULL,
+        .driver_cfg_size = 0,
     };
 
     // Assign driver-specific configuration if needed
+    controller_flysky_ibus_cfg_t flysky_cfg;
     controller_wifi_tcp_cfg_t wifi_cfg;
-    if (ctrl_cfg.driver_type == CONTROLLER_DRIVER_WIFI_TCP) {
+    if (ctrl_cfg.driver_type == CONTROLLER_DRIVER_FLYSKY_IBUS) {
+        flysky_cfg.uart_port = controller_cfg->flysky_uart_port;
+        flysky_cfg.tx_gpio = controller_cfg->flysky_tx_gpio;
+        flysky_cfg.rx_gpio = controller_cfg->flysky_rx_gpio;
+        flysky_cfg.rts_gpio = controller_cfg->flysky_rts_gpio;
+        flysky_cfg.cts_gpio = controller_cfg->flysky_cts_gpio;
+        flysky_cfg.baud_rate = controller_cfg->flysky_baud_rate;
+        ctrl_cfg.driver_cfg = &flysky_cfg;
+        ctrl_cfg.driver_cfg_size = sizeof(flysky_cfg);
+    } else if (ctrl_cfg.driver_type == CONTROLLER_DRIVER_WIFI_TCP) {
         wifi_cfg = controller_wifi_tcp_default();
         ctrl_cfg.driver_cfg = &wifi_cfg;
         ctrl_cfg.driver_cfg_size = sizeof(wifi_cfg);
