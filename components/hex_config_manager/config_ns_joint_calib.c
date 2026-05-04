@@ -5,6 +5,28 @@
 #include "config_domain_persistence_nvs.h"
 #include "config_registry.h"
 
+static joint_calib_config_t g_joint_namespace_config = {0};
+static config_joint_calib_namespace_context_t g_joint_namespace_context = {0};
+
+void config_joint_namespace_bind(
+    nvs_handle_t* nvs_handle,
+    bool* namespace_dirty,
+    bool* namespace_loaded
+) {
+    g_joint_namespace_context.nvs_handle = nvs_handle;
+    g_joint_namespace_context.namespace_dirty = namespace_dirty;
+    g_joint_namespace_context.namespace_loaded = namespace_loaded;
+    g_joint_namespace_context.config = &g_joint_namespace_config;
+}
+
+void* config_joint_namespace_context(void) {
+    return &g_joint_namespace_context;
+}
+
+joint_calib_config_t* config_joint_namespace_config(void) {
+    return &g_joint_namespace_config;
+}
+
 static config_joint_calib_namespace_context_t* joint_ctx(void* ctx) {
     return (config_joint_calib_namespace_context_t*)ctx;
 }

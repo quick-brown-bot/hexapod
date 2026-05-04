@@ -35,6 +35,27 @@ static const char* LEG_GEOM_PARAM_SUFFIXES[LEG_GEOM_PARAM_COUNT] = {
 };
 
 static char g_leg_geom_param_names[LEG_GEOM_PARAM_NAME_CAPACITY][32];
+static leg_geometry_config_t g_leg_geometry_namespace_config = {0};
+static config_leg_geometry_namespace_context_t g_leg_geometry_namespace_context = {0};
+
+void config_leg_geometry_namespace_bind(
+    nvs_handle_t* nvs_handle,
+    bool* namespace_dirty,
+    bool* namespace_loaded
+) {
+    g_leg_geometry_namespace_context.nvs_handle = nvs_handle;
+    g_leg_geometry_namespace_context.namespace_dirty = namespace_dirty;
+    g_leg_geometry_namespace_context.namespace_loaded = namespace_loaded;
+    g_leg_geometry_namespace_context.config = &g_leg_geometry_namespace_config;
+}
+
+void* config_leg_geometry_namespace_context(void) {
+    return &g_leg_geometry_namespace_context;
+}
+
+leg_geometry_config_t* config_leg_geometry_namespace_config(void) {
+    return &g_leg_geometry_namespace_config;
+}
 
 static config_leg_geometry_namespace_context_t* leg_geom_ctx(void* ctx) {
     return (config_leg_geometry_namespace_context_t*)ctx;

@@ -4,6 +4,28 @@
 #include "config_domain_defaults.h"
 #include "config_domain_persistence_nvs.h"
 
+static controller_config_namespace_t g_controller_namespace_config = {0};
+static config_controller_namespace_context_t g_controller_namespace_context = {0};
+
+void config_controller_namespace_bind(
+    nvs_handle_t* nvs_handle,
+    bool* namespace_dirty,
+    bool* namespace_loaded
+) {
+    g_controller_namespace_context.nvs_handle = nvs_handle;
+    g_controller_namespace_context.namespace_dirty = namespace_dirty;
+    g_controller_namespace_context.namespace_loaded = namespace_loaded;
+    g_controller_namespace_context.config = &g_controller_namespace_config;
+}
+
+void* config_controller_namespace_context(void) {
+    return &g_controller_namespace_context;
+}
+
+controller_config_namespace_t* config_controller_namespace_config(void) {
+    return &g_controller_namespace_config;
+}
+
 static config_controller_namespace_context_t* controller_ctx(void* ctx) {
     return (config_controller_namespace_context_t*)ctx;
 }

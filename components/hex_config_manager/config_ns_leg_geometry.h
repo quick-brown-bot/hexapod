@@ -22,6 +22,15 @@ typedef struct {
 
 extern const config_namespace_descriptor_t g_leg_geometry_namespace_descriptor;
 
+void config_leg_geometry_namespace_bind(
+    nvs_handle_t* nvs_handle,
+    bool* namespace_dirty,
+    bool* namespace_loaded
+);
+
+void* config_leg_geometry_namespace_context(void);
+leg_geometry_config_t* config_leg_geometry_namespace_config(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -22,6 +22,15 @@ typedef struct {
 
 extern const config_namespace_descriptor_t g_controller_namespace_descriptor;
 
+void config_controller_namespace_bind(
+    nvs_handle_t* nvs_handle,
+    bool* namespace_dirty,
+    bool* namespace_loaded
+);
+
+void* config_controller_namespace_context(void);
+controller_config_namespace_t* config_controller_namespace_config(void);
+
 #ifdef __cplusplus
 }
 #endif

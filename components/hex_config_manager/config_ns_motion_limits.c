@@ -50,6 +50,28 @@ static const motion_param_meta_t g_motion_param_table[] = {
 
 #define MOTION_PARAM_COUNT (sizeof(g_motion_param_table) / sizeof(g_motion_param_table[0]))
 
+static motion_limits_config_t g_motion_limits_namespace_config = {0};
+static config_motion_limits_namespace_context_t g_motion_limits_namespace_context = {0};
+
+void config_motion_limits_namespace_bind(
+    nvs_handle_t* nvs_handle,
+    bool* namespace_dirty,
+    bool* namespace_loaded
+) {
+    g_motion_limits_namespace_context.nvs_handle = nvs_handle;
+    g_motion_limits_namespace_context.namespace_dirty = namespace_dirty;
+    g_motion_limits_namespace_context.namespace_loaded = namespace_loaded;
+    g_motion_limits_namespace_context.config = &g_motion_limits_namespace_config;
+}
+
+void* config_motion_limits_namespace_context(void) {
+    return &g_motion_limits_namespace_context;
+}
+
+motion_limits_config_t* config_motion_limits_namespace_config(void) {
+    return &g_motion_limits_namespace_config;
+}
+
 static config_motion_limits_namespace_context_t* motion_ctx(void* ctx) {
     return (config_motion_limits_namespace_context_t*)ctx;
 }

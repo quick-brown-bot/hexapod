@@ -4,6 +4,28 @@
 #include "config_domain_persistence_nvs.h"
 #include "config_domain_wifi_access.h"
 
+static wifi_config_namespace_t g_wifi_namespace_config = {0};
+static config_wifi_namespace_context_t g_wifi_namespace_context = {0};
+
+void config_wifi_namespace_bind(
+    nvs_handle_t* nvs_handle,
+    bool* namespace_dirty,
+    bool* namespace_loaded
+) {
+    g_wifi_namespace_context.nvs_handle = nvs_handle;
+    g_wifi_namespace_context.namespace_dirty = namespace_dirty;
+    g_wifi_namespace_context.namespace_loaded = namespace_loaded;
+    g_wifi_namespace_context.config = &g_wifi_namespace_config;
+}
+
+void* config_wifi_namespace_context(void) {
+    return &g_wifi_namespace_context;
+}
+
+wifi_config_namespace_t* config_wifi_namespace_config(void) {
+    return &g_wifi_namespace_config;
+}
+
 static config_wifi_namespace_context_t* wifi_ctx(void* ctx) {
     return (config_wifi_namespace_context_t*)ctx;
 }

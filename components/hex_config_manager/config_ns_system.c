@@ -4,6 +4,32 @@
 #include "config_domain_persistence_nvs.h"
 #include "config_domain_system_access.h"
 
+static system_config_t g_system_config = {0};
+static config_system_namespace_context_t g_system_namespace_context = {0};
+
+void config_system_namespace_bind(
+    nvs_handle_t* nvs_handle,
+    bool* namespace_dirty,
+    bool* namespace_loaded,
+    uint16_t schema_version,
+    controller_driver_type_e fallback_controller_type
+) {
+    g_system_namespace_context.nvs_handle = nvs_handle;
+    g_system_namespace_context.namespace_dirty = namespace_dirty;
+    g_system_namespace_context.namespace_loaded = namespace_loaded;
+    g_system_namespace_context.config = &g_system_config;
+    g_system_namespace_context.schema_version = schema_version;
+    g_system_namespace_context.fallback_controller_type = fallback_controller_type;
+}
+
+void* config_system_namespace_context(void) {
+    return &g_system_namespace_context;
+}
+
+system_config_t* config_system_namespace_config(void) {
+    return &g_system_config;
+}
+
 static config_system_namespace_context_t* system_ctx(void* ctx) {
     return (config_system_namespace_context_t*)ctx;
 }

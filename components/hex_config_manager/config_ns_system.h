@@ -25,6 +25,17 @@ typedef struct {
 
 extern const config_namespace_descriptor_t g_system_namespace_descriptor;
 
+void config_system_namespace_bind(
+    nvs_handle_t* nvs_handle,
+    bool* namespace_dirty,
+    bool* namespace_loaded,
+    uint16_t schema_version,
+    controller_driver_type_e fallback_controller_type
+);
+
+void* config_system_namespace_context(void);
+system_config_t* config_system_namespace_config(void);
+
 #ifdef __cplusplus
 }
 #endif
