@@ -6,7 +6,8 @@
  * License: Apache-2.0
  */
 
-#include "config_manager.h"
+#include "config_manager_runtime_api.h"
+#include "config_manager_param_api.h"
 #include "config_migration.h"
 #include "config_namespace_catalog.h"
 #include "config_namespace_registry.h"

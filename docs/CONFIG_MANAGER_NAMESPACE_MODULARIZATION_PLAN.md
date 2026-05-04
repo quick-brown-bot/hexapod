@@ -3,7 +3,35 @@
 ## Status
 
 - Branch created: `refactor/config-manager-namespace-plan`
-- Scope of this document: plan only, no code changes in this step.
+- This document now tracks both plan and implementation progress.
+- Phases 1-4: completed and build-validated.
+- Phase 5: in progress.
+
+## Implementation Progress (Current)
+
+Completed:
+- Phase 1: registration/wiring extracted to namespace catalog.
+- Phase 2: namespace state ownership moved out of `config_manager.c` into namespace modules.
+- Phase 3: defaults and persistence split by namespace; multi-namespace persistence hub removed.
+- Phase 4: header/API modularization completed.
+  - Namespace-specific types/APIs moved to namespace headers.
+  - Core API split into:
+    - `config_manager_core_types.h`
+    - `config_manager_runtime_api.h`
+    - `config_manager_param_api.h`
+  - Call sites in consuming components updated.
+  - Compatibility aggregate header removed.
+
+Remaining for Phase 5:
+- Move each namespace into its own folder under `components/hex_config_manager/namespaces/*`.
+- Enforce one-namespace-per-functional-file rule by directory structure, not only naming.
+- Validate dummy namespace add flow requires only:
+  - new namespace folder/files
+  - single catalog registration edit
+  - optional tests/docs
+- Run runtime validation checklist (`list`, `get`, `set`, `setpersist`, `save`, reboot persistence).
+- Update checklist instruction file:
+  - `c:\code\hexapod\.github\instructions\config-manager-namespace-checklist.instructions.md`
 
 ## Goals
 
@@ -26,7 +54,9 @@ Target outcomes:
 Primary growth hotspots today:
 - `components/hex_config_manager/config_manager.c`
 - `components/hex_config_manager/config_domain_persistence_nvs.c`
-- `components/hex_config_manager/config_manager.h`
+- `components/hex_config_manager/config_manager_runtime_api.h`
+- `components/hex_config_manager/config_manager_param_api.h`
+- `components/hex_config_manager/config_manager_core_types.h`
 - `components/hex_config_manager/config_domain_defaults.c`
 
 Reasons these grow each namespace:
@@ -84,11 +114,13 @@ Catalog responsibilities:
 
 ### 4. Header Boundary Cleanup
 
-Split `config_manager.h` into:
-- Core manager API and generic typed/discovery API.
+Split the core API surface into:
+- `config_manager_core_types.h` for shared enums/state/metadata structs.
+- `config_manager_runtime_api.h` for lifecycle and persistence operations.
+- `config_manager_param_api.h` for typed get/set and parameter discovery APIs.
 - Namespace-specific types moved to namespace headers.
 
-No monolithic namespace type hub in core header.
+No monolithic namespace type hub in manager-facing headers.
 
 ### 5. Build System
 
@@ -142,7 +174,9 @@ Deliverables:
 - Remove replaced declarations from core header directly.
 
 Expected edits:
-- `config_manager.h`
+- `config_manager_core_types.h`
+- `config_manager_runtime_api.h`
+- `config_manager_param_api.h`
 - namespace headers
 - call sites in consuming components
 
@@ -150,6 +184,7 @@ Expected edits:
 
 Deliverables:
 - Enforce one-namespace-per-functional-file rule.
+- Enforce one-namespace-per-folder layout under `namespaces/*`.
 - Validate adding a dummy namespace only touches:
   - new namespace folder files
   - single registration catalog file
