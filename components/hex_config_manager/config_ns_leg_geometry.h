@@ -6,7 +6,7 @@
 
 #include <stdbool.h>
 
-#include "config_manager.h"
+#include "config_manager_core_types.h"
 #include "config_ns_leg_geometry_api.h"
 #include "config_namespace_registry.h"
 

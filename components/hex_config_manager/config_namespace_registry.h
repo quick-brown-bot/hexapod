@@ -9,7 +9,7 @@
 
 #include <stddef.h>
 
-#include "config_manager.h"
+#include "config_manager_core_types.h"
 #include "esp_err.h"
 
 #ifdef __cplusplus

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "config_manager.h"
+#include "config_manager_core_types.h"
 #include "config_ns_joint_api.h"
 #include "esp_err.h"
 

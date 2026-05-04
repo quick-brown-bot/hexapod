@@ -1,6 +1,7 @@
 #include "config_ns_wifi.h"
 
 #include "config_domain_defaults.h"
+#include "config_manager.h"
 #include "config_domain_persistence_nvs.h"
 #include "config_domain_wifi_access.h"
 

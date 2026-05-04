@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "config_manager.h"
+#include "config_manager_core_types.h"
 #include "config_ns_system_api.h"
 #include "config_namespace_registry.h"
 

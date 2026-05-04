@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "config_manager.h"
 #include "config_ns_controller_api.h"
 #include "config_ns_joint_api.h"
 #include "config_ns_leg_geometry_api.h"

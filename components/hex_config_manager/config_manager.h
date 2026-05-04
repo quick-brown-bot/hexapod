@@ -13,37 +13,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "config_manager_core_types.h"
 #include "esp_err.h"
-#include "nvs_flash.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// =============================================================================
-// Configuration Namespaces
-// =============================================================================
-
-typedef enum {
-    CONFIG_NS_SYSTEM = 0,        // System-wide settings and safety
-    CONFIG_NS_JOINT_CALIB = 1,   // Joint calibration per leg/joint
-    CONFIG_NS_LEG_GEOMETRY = 2,  // Leg geometry and mounting poses
-    CONFIG_NS_MOTION_LIMITS = 3, // KPP motion limits and estimation filters
-    CONFIG_NS_CONTROLLER = 4,    // Input device controller configuration
-    CONFIG_NS_WIFI = 5,          // WiFi AP and network controller settings
-    CONFIG_NS_COUNT              // Keep this last
-} config_namespace_t;
-
-// =============================================================================
-// Configuration Manager State
-// =============================================================================
-
-typedef struct {
-    bool namespace_dirty[CONFIG_NS_COUNT];   // Which namespaces have unsaved changes
-    bool namespace_loaded[CONFIG_NS_COUNT];  // Which namespaces are in memory cache
-    bool initialized;                        // Manager initialization state
-    nvs_handle_t nvs_handles[CONFIG_NS_COUNT]; // NVS handles per namespace
-} config_manager_state_t;
 
 // =============================================================================
 // Core Configuration Manager API
@@ -89,33 +64,6 @@ esp_err_t config_manager_save_namespace(config_namespace_t ns);
  * @return ESP_OK on success, ESP_ERR_NOT_FOUND if name is unknown, error code on failure
  */
 esp_err_t config_manager_save_namespace_by_name(const char* namespace_str);
-
-// =============================================================================
-// Parameter Types and Metadata
-// =============================================================================
-
-typedef enum {
-    CONFIG_TYPE_BOOL = 0,
-    CONFIG_TYPE_INT32,
-    CONFIG_TYPE_UINT16,
-    CONFIG_TYPE_UINT32,
-    CONFIG_TYPE_FLOAT,
-    CONFIG_TYPE_STRING,
-    CONFIG_TYPE_COUNT
-} config_param_type_t;
-
-typedef struct {
-    const char* name;                   // Parameter name (e.g., "emergency_stop_enabled")
-    config_param_type_t type;          // Data type
-    size_t offset;                     // Offset in config struct
-    size_t size;                       // Size in bytes
-    union {
-        struct { int32_t min, max; } int_range;
-        struct { uint32_t min, max; } uint_range;
-        struct { float min, max; } float_range;
-        struct { size_t max_length; } string;
-    } constraints;
-} config_param_info_t;
 
 // =============================================================================
 // Hybrid Parameter API (Approach B - Individual Parameters)
