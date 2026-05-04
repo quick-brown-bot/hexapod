@@ -5,6 +5,8 @@ This document outlines the implementation plan for adding a Kinematic Pose Posit
 
 **Status Update (October 25, 2025)**: The KPP system has been successfully implemented and integrated into the hexapod control system. System still needs testing.
 
+**Status Update (May 4, 2026)**: KPP runtime configuration now loads from persisted `motion_lim` values via `config_manager` during `kpp_init`. Startup is fail-fast if required configuration is unavailable or invalid.
+
 ## Current System Analysis
 
 ### Existing Architecture
@@ -218,7 +220,8 @@ motion_limits_t default_limits = {
 };
 
 // Configuration: Compile-time constants implemented in kpp_config.h ✅
-// Future: NVS storage for runtime tuning (Phase 3 - Configuration System)
+// Runtime configuration source: motion_lim namespace via config_manager at kpp_init ✅
+// Fail-fast startup: kpp_init aborts if config_manager/motion_lim is unavailable or invalid ✅
 ```
 
 ### Integration with Existing Control Loop ✅ **IMPLEMENTED**
@@ -260,7 +263,7 @@ void gait_framework_main(void *arg) {
 
 ### ✅ Resolved Decisions:
 1. ✅ **Motion Modes**: Started with Normal mode only (S-curve, jerk-limited) - **IMPLEMENTED**
-2. ✅ **Configuration**: Compile-time constants in `kpp_config.h` - **IMPLEMENTED**
+2. ✅ **Configuration Source**: Runtime persisted `motion_lim` values loaded through `config_manager` at startup - **IMPLEMENTED**
 3. ✅ **Logging**: KPP state logged with ESP_LOGD() for debugging - **IMPLEMENTED**
 4. ✅ **Filter Type**: Exponential filtering strategy - **IMPLEMENTED**
 5. ✅ **Motion Profile**: Normal walk profile with limits (5.0 rad/s, 600 rad/s², 3500 rad/s³) - **IMPLEMENTED**

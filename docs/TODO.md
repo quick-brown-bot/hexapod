@@ -55,16 +55,19 @@
 ## 🔧 Existing Code TODOs
 
 ### Configuration & Storage
-- [ ] **NVS Storage Implementation** (`kpp_config.h`, `robot_config.h`)
-  - Add NVS storage for runtime tuning parameters
-  - Persist robot configuration fields in NVS
-  - Load configuration values at boot
-  - Add NVS storage keys for runtime parameter tuning
+- [x] **NVS Storage Foundation** (`hex_config_manager`, `hex_motion_limits`, `robot_config`)
+  - Implemented namespace-based NVS persistence for `system`, `joint_cal`, `leg_geom`, and `motion_lim`
+  - Implemented boot-time load/default/migration pipeline in config manager
+  - Implemented KPP runtime consumption of `motion_lim` during `kpp_init` with fail-fast behavior
+
+- [ ] **NVS Scope Expansion**
+  - Extend persisted namespaces to `servo_map`, `controller`, `gait`, `debug`, and `wifi` as needed
+  - Add explicit coverage tracking for remaining parameter schemas
 
 - [ ] **Per-leg Configuration** (`robot_config.c`)
-  - Replace hardcoded values with storage-loaded values per leg
+  - [x] Replace geometry/mount/stance hardcoded defaults with storage-loaded values when `leg_geom` is loaded
   - Consider per-leg geometry differences (mirrors, tolerances)
-  - Add leg-specific calibration data storage
+  - [ ] Remove remaining fallback paths once strict source-of-truth policy is finalized (`joint_cal` still has fallback defaults)
 
 ### Motion Control System
 - [ ] **Advanced Motion Modes** (`kpp_system.h`)
@@ -234,7 +237,7 @@
 ### Phase 1: Foundation (High Priority)
 1. FlySky controller debugging and reconnection
 2. Electronics/connector improvements
-3. NVS storage implementation for configuration persistence
+3. Expand NVS coverage for remaining namespaces (foundation is complete)
 4. Error handling and safety mechanisms
 5. **Basic configurator infrastructure** (communication protocol, web framework)
 
@@ -264,4 +267,4 @@
 
 ---
 
-*Last updated: November 2, 2025*
+*Last updated: May 4, 2026*

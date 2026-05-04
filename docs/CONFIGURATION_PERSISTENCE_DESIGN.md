@@ -269,6 +269,13 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 - Geometry/limits: `fb_d`, `lr_d`, `ml_v`, `mb_v`, `ma_v`, `min_dt`, `max_dt`
 - Body offsets: `bo_x`, `bo_y`, `bo_z`
 
+**Runtime consumption contract (implemented):**
+
+- `hex_motion_limits` (`kpp_system`) loads `motion_lim` from `config_manager` during `kpp_init`.
+- No hardcoded fallback is used for completed runtime integration.
+- If `config_manager` is not initialized, `motion_lim` is not loaded, or config values are invalid, `kpp_init` fails fast and logs an error.
+- `motion_lim` is therefore a required runtime dependency for KPP startup, not an optional tuning source.
+
 ### 4. servo_map - Hardware Configuration
 **Derived from:** `robot_config_t` servo and MCPWM mappings
 
@@ -602,6 +609,7 @@ esp_err_t config_manager_migrate(uint16_t detected_version) {
 - **joint_cal namespace is implemented and wired** (defaults, load/save, parameter discovery, typed get/set)
 - **leg_geom namespace is implemented and wired** (defaults, load/save, parameter discovery, typed float get/set)
 - **motion_lim namespace is implemented and wired** (defaults, load/save, parameter discovery, typed float get/set)
+- **KPP runtime now consumes `motion_lim` at startup** and fails fast if required configuration is unavailable/invalid.
 - **NVS operations** working with automatic error handling and wear leveling
 - **Dual-method API** demonstrated: `config_set_*_memory()` vs `config_set_*_persist()`
 - **Generic parameter API** foundation created for RPC integration

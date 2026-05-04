@@ -4,7 +4,7 @@
 
 This review analyzes the current implementation in [components/hex_config_manager/config_manager.h](../components/hex_config_manager/config_manager.h) and [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c), lists its responsibilities, and proposes a separable architecture for a shared settings platform usable by all components.
 
-## Current Implementation Status (2026-05-03)
+## Current Implementation Status (2026-05-04)
 
 Recent refactor progress reflected in codebase:
 - Config manager implementation has been extracted from `main` into the dedicated component:
@@ -15,6 +15,17 @@ Recent refactor progress reflected in codebase:
 - Shared cross-component types were separated into a dedicated component to remove temporary include coupling:
     - [components/hex_shared_types/controller_driver_types.h](../components/hex_shared_types/controller_driver_types.h)
     - [components/hex_shared_types/types/joint_types.h](../components/hex_shared_types/types/joint_types.h)
+- Phase 2 refactor has progressed from monolithic file structure to internal module split inside `hex_config_manager`:
+    - [components/hex_config_manager/config_storage_nvs.c](../components/hex_config_manager/config_storage_nvs.c)
+    - [components/hex_config_manager/config_migration.c](../components/hex_config_manager/config_migration.c)
+    - [components/hex_config_manager/config_namespace_registry.c](../components/hex_config_manager/config_namespace_registry.c)
+    - [components/hex_config_manager/config_ns_system.c](../components/hex_config_manager/config_ns_system.c)
+    - [components/hex_config_manager/config_ns_joint_calib.c](../components/hex_config_manager/config_ns_joint_calib.c)
+    - [components/hex_config_manager/config_ns_leg_geometry.c](../components/hex_config_manager/config_ns_leg_geometry.c)
+    - [components/hex_config_manager/config_ns_motion_limits.c](../components/hex_config_manager/config_ns_motion_limits.c)
+- Runtime consumers now load completed namespaces directly:
+    - `leg_geom` consumed in [components/hex_robot_config/robot_config.c](../components/hex_robot_config/robot_config.c)
+    - `motion_lim` consumed in [components/hex_motion_limits/kpp_system.c](../components/hex_motion_limits/kpp_system.c)
 
 This document keeps the original responsibility analysis and phase plan, but file references now point to extracted component paths.
 
@@ -354,6 +365,17 @@ Phase 2 progress note (2026-05-03):
 - Namespace descriptors are now registered through a descriptor table plus loop, so onboarding a new namespace is reduced to adding a domain descriptor and one table entry.
 - Descriptor lifecycle hooks are wired for defaults, load-from-NVS, and write-defaults-to-NVS flows, and manager initialization/migration uses those hooks.
 
+Phase 2 completion update (2026-05-04):
+- Step 1 complete in-module: storage backend extracted to [components/hex_config_manager/config_storage_nvs.c](../components/hex_config_manager/config_storage_nvs.c).
+- Step 2 complete in-module: migration logic extracted to [components/hex_config_manager/config_migration.c](../components/hex_config_manager/config_migration.c).
+- Step 3 complete in-module: namespace registry and joint metadata extraction in:
+    - [components/hex_config_manager/config_namespace_registry.c](../components/hex_config_manager/config_namespace_registry.c)
+    - [components/hex_config_manager/config_registry.c](../components/hex_config_manager/config_registry.c)
+- Step 4 complete: descriptor contract and registration are active via namespace descriptor modules.
+- Step 5 complete for currently implemented domains: system, joint_cal, leg_geom, and motion_lim each expose descriptor modules.
+- Step 6 complete for generic runtime paths: typed generic set/get and discovery route through registry/descriptor dispatch.
+- Step 7 partial: public facade compatibility is preserved by [components/hex_config_manager/config_manager.h](../components/hex_config_manager/config_manager.h), but implementation still lives in `hex_config_manager` rather than a separately packaged `hex_config_api` component.
+
 Exit criteria for Phase 2:
 - typed and discovery config APIs remain callable,
 - domain registration works for system and joint_cal,
@@ -371,27 +393,30 @@ Exit criteria for Phase 2:
 
 ## Immediate Review Findings and Risks
 
-1. Monolithic module risk
-- single file holds storage, migration, domain logic, metadata, and API.
-- impact: high coupling and harder evolution.
+1. Residual orchestration concentration in config_manager
+- monolithic risk is reduced, but `config_manager.c` still owns manager lifecycle, cache ownership, and facade wiring.
+- impact: coupling remains moderate even after module split.
 
-2. Static buffer in metadata builder
-- build_joint_param_info uses a static name buffer.
-- impact: not safe for concurrent callers and can be overwritten on next call.
-- evidence: [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1295)
+2. Static parameter-name buffers remain in discovery paths
+- joint and leg geometry list builders use static storage for generated names.
+- impact: not concurrency-safe and can be overwritten on overlapping calls.
+- evidence:
+    - [components/hex_config_manager/config_registry.c](../components/hex_config_manager/config_registry.c)
+    - [components/hex_config_manager/config_ns_leg_geometry.c](../components/hex_config_manager/config_ns_leg_geometry.c)
 
-3. Static buffer in parameter listing
-- config_list_parameters for joint_cal uses static buffers and capped output.
-- impact: partial discovery and potential confusion for clients.
-- evidence: [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c#L1738)
+3. Config ownership overlap still partially present in robot_config
+- `robot_config` consumes config manager values for `leg_geom`, but still includes fallback behavior for calibration access.
+- impact: potential ambiguity in strict source-of-truth expectations.
+- evidence: [components/hex_robot_config/robot_config.c](../components/hex_robot_config/robot_config.c)
 
-4. Configuration and robot calibration ownership overlap
-- settings exist in config manager while robot_config also owns calibration-facing behavior.
-- impact: potential drift and unclear source of truth.
+4. Mixed persistence semantics in convenience setters
+- convenience APIs still interleave in-memory and persistent paths across many wrapper functions.
+- impact: duplicated persistence branching and harder future transaction abstraction.
+- evidence: [components/hex_config_manager/config_manager.c](../components/hex_config_manager/config_manager.c)
 
-5. Persistence strategy mixed into setter paths
-- persistent and in-memory behavior interleaved across many setters.
-- impact: duplicated logic and inconsistent transaction semantics.
+5. Target component split not yet fully materialized as separate ESP-IDF components
+- current extraction is strongly improved but remains inside one `hex_config_manager` component.
+- impact: boundaries are architectural/logical today, not packaging boundaries yet.
 
 ## Recommendation
 
