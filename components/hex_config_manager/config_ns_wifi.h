@@ -1,0 +1,27 @@
+/*
+ * WiFi namespace descriptor and context.
+ */
+
+#pragma once
+
+#include <stdbool.h>
+
+#include "config_manager.h"
+#include "config_namespace_registry.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct {
+    nvs_handle_t* nvs_handle;
+    bool* namespace_dirty;
+    bool* namespace_loaded;
+    wifi_config_namespace_t* config;
+} config_wifi_namespace_context_t;
+
+extern const config_namespace_descriptor_t g_wifi_namespace_descriptor;
+
+#ifdef __cplusplus
+}
+#endif
