@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "config_domain_defaults.h"
-#include "config_manager.h"
+#include "config_manager_runtime_api.h"
 #include "config_domain_persistence_nvs.h"
 
 typedef struct {

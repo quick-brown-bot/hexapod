@@ -2,7 +2,7 @@
 
 #include "config_domain_controller_access.h"
 #include "config_domain_defaults.h"
-#include "config_manager.h"
+#include "config_manager_runtime_api.h"
 #include "config_domain_persistence_nvs.h"
 
 static controller_config_namespace_t g_controller_namespace_config = {0};

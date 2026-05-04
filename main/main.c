@@ -23,7 +23,7 @@
 #include "controller_bt_classic.h"
 #include "controller_wifi_tcp.h"
 #include "kpp_system.h"
-#include "config_manager.h"
+#include "config_manager_runtime_api.h"
 #include "config_ns_system_api.h"
 #include "config_ns_controller_api.h"
 #include "config_ns_wifi_api.h"

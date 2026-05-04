@@ -3,7 +3,7 @@
 #include "config_domain_defaults.h"
 #include "config_domain_joint_access.h"
 #include "config_domain_persistence_nvs.h"
-#include "config_manager.h"
+#include "config_manager_runtime_api.h"
 #include "config_registry.h"
 
 static joint_calib_config_t g_joint_namespace_config = {0};

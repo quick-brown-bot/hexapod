@@ -3,7 +3,7 @@
 #include "config_domain_defaults.h"
 #include "config_domain_persistence_nvs.h"
 #include "config_domain_system_access.h"
-#include "config_manager.h"
+#include "config_manager_runtime_api.h"
 
 static system_config_t g_system_config = {0};
 static config_system_namespace_context_t g_system_namespace_context = {0};
