@@ -3,6 +3,7 @@ idf_component_register(
     "config_storage_nvs.c"
     "config_registry.c"
     "config_namespace_registry.c"
+    "config_namespace_catalog.c"
     "config_migration.c"
     "config_manager.c"
     "config_ns_system.c"

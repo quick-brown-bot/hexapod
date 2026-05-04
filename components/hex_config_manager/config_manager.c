@@ -7,13 +7,8 @@
  */
 
 #include "config_manager.h"
-#include "config_ns_controller.h"
-#include "config_ns_joint_calib.h"
-#include "config_ns_leg_geometry.h"
-#include "config_ns_motion_limits.h"
-#include "config_ns_system.h"
-#include "config_ns_wifi.h"
 #include "config_migration.h"
+#include "config_namespace_catalog.h"
 #include "config_namespace_registry.h"
 #include "config_storage_nvs.h"
 #include "esp_log.h"
@@ -36,68 +31,6 @@ static esp_err_t ensure_namespace_registry_initialized(void);
 
 // Global manager state
 static config_manager_state_t g_manager_state = {0};
-
-// Configuration cache - system namespace
-static system_config_t g_system_config = {0};
-
-// Configuration cache - joint calibration namespace
-static joint_calib_config_t g_joint_calib_config = {0};
-
-// Configuration cache - leg geometry namespace
-static leg_geometry_config_t g_leg_geometry_config = {0};
-
-// Configuration cache - motion limits namespace
-static motion_limits_config_t g_motion_limits_config = {0};
-
-// Configuration cache - controller namespace
-static controller_config_namespace_t g_controller_config = {0};
-
-// Configuration cache - wifi namespace
-static wifi_config_namespace_t g_wifi_config = {0};
-
-static config_system_namespace_context_t g_system_namespace_ctx = {
-    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_SYSTEM],
-    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM],
-    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_SYSTEM],
-    .config = &g_system_config,
-    .schema_version = CONFIG_SCHEMA_VERSION,
-    .fallback_controller_type = CONTROLLER_DRIVER_FLYSKY_IBUS
-};
-
-static config_joint_calib_namespace_context_t g_joint_namespace_ctx = {
-    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_JOINT_CALIB],
-    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB],
-    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_JOINT_CALIB],
-    .config = &g_joint_calib_config
-};
-
-static config_leg_geometry_namespace_context_t g_leg_geometry_namespace_ctx = {
-    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_LEG_GEOMETRY],
-    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_LEG_GEOMETRY],
-    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_LEG_GEOMETRY],
-    .config = &g_leg_geometry_config
-};
-
-static config_motion_limits_namespace_context_t g_motion_limits_namespace_ctx = {
-    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_MOTION_LIMITS],
-    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_MOTION_LIMITS],
-    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_MOTION_LIMITS],
-    .config = &g_motion_limits_config
-};
-
-static config_controller_namespace_context_t g_controller_namespace_ctx = {
-    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_CONTROLLER],
-    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_CONTROLLER],
-    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_CONTROLLER],
-    .config = &g_controller_config
-};
-
-static config_wifi_namespace_context_t g_wifi_namespace_ctx = {
-    .nvs_handle = &g_manager_state.nvs_handles[CONFIG_NS_WIFI],
-    .namespace_dirty = &g_manager_state.namespace_dirty[CONFIG_NS_WIFI],
-    .namespace_loaded = &g_manager_state.namespace_loaded[CONFIG_NS_WIFI],
-    .config = &g_wifi_config
-};
 
 // =============================================================================
 // Migration System
@@ -158,20 +91,6 @@ static esp_err_t config_migrate_version(uint16_t from, uint16_t to) {
 // Helper Functions  
 // =============================================================================
 
-typedef struct {
-    const config_namespace_descriptor_t* descriptor;
-    void* context;
-} namespace_registration_entry_t;
-
-static namespace_registration_entry_t g_namespace_registration_entries[] = {
-    { &g_system_namespace_descriptor, &g_system_namespace_ctx },
-    { &g_joint_namespace_descriptor, &g_joint_namespace_ctx },
-    { &g_leg_geometry_namespace_descriptor, &g_leg_geometry_namespace_ctx },
-    { &g_motion_limits_namespace_descriptor, &g_motion_limits_namespace_ctx },
-    { &g_controller_namespace_descriptor, &g_controller_namespace_ctx },
-    { &g_wifi_namespace_descriptor, &g_wifi_namespace_ctx },
-};
-
 static bool g_namespace_registry_initialized = false;
 
 static esp_err_t build_registered_namespace_name_table(const char* namespace_names[CONFIG_NS_COUNT]) {
@@ -212,17 +131,14 @@ static esp_err_t ensure_namespace_registry_initialized(void) {
         return ESP_OK;
     }
 
-    config_namespace_registry_reset();
-
-    size_t descriptor_count = sizeof(g_namespace_registration_entries) / sizeof(g_namespace_registration_entries[0]);
-    for (size_t i = 0; i < descriptor_count; i++) {
-        const config_namespace_descriptor_t* descriptor = g_namespace_registration_entries[i].descriptor;
-        void* context = g_namespace_registration_entries[i].context;
-        esp_err_t err = config_namespace_registry_register(descriptor, context);
-        if (err != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to register namespace %s: %s", descriptor->ns_name, esp_err_to_name(err));
-            return err;
-        }
+    esp_err_t err = config_namespace_catalog_register_all(
+        &g_manager_state,
+        CONFIG_SCHEMA_VERSION,
+        CONTROLLER_DRIVER_FLYSKY_IBUS
+    );
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to register namespace catalog: %s", esp_err_to_name(err));
+        return err;
     }
 
     g_namespace_registry_initialized = true;
@@ -448,7 +364,7 @@ esp_err_t config_manager_save_namespace_by_name(const char* namespace_str) {
 // =============================================================================
 
 const system_config_t* config_get_system(void) {
-    return &g_system_config;
+    return config_namespace_catalog_system_config();
 }
 
 // =============================================================================
@@ -456,23 +372,23 @@ const system_config_t* config_get_system(void) {
 // =============================================================================
 
 const joint_calib_config_t* config_get_joint_calib(void) {
-    return &g_joint_calib_config;
+    return config_namespace_catalog_joint_calib_config();
 }
 
 const leg_geometry_config_t* config_get_leg_geometry(void) {
-    return &g_leg_geometry_config;
+    return config_namespace_catalog_leg_geometry_config();
 }
 
 const motion_limits_config_t* config_get_motion_limits(void) {
-    return &g_motion_limits_config;
+    return config_namespace_catalog_motion_limits_config();
 }
 
 const controller_config_namespace_t* config_get_controller(void) {
-    return &g_controller_config;
+    return config_namespace_catalog_controller_config();
 }
 
 const wifi_config_namespace_t* config_get_wifi(void) {
-    return &g_wifi_config;
+    return config_namespace_catalog_wifi_config();
 }
 
 esp_err_t config_set_leg_geometry(const leg_geometry_config_t* config) {
@@ -480,7 +396,7 @@ esp_err_t config_set_leg_geometry(const leg_geometry_config_t* config) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    memcpy(&g_leg_geometry_config, config, sizeof(leg_geometry_config_t));
+    memcpy(config_namespace_catalog_leg_geometry_config(), config, sizeof(leg_geometry_config_t));
     g_manager_state.namespace_dirty[CONFIG_NS_LEG_GEOMETRY] = true;
 
     esp_err_t err = config_manager_save_namespace(CONFIG_NS_LEG_GEOMETRY);
@@ -495,7 +411,7 @@ esp_err_t config_set_joint_calib(const joint_calib_config_t* config) {
         return ESP_ERR_INVALID_ARG;
     }
     
-    memcpy(&g_joint_calib_config, config, sizeof(joint_calib_config_t));
+    memcpy(config_namespace_catalog_joint_calib_config(), config, sizeof(joint_calib_config_t));
     g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB] = true;
     
     esp_err_t err = config_manager_save_namespace(CONFIG_NS_JOINT_CALIB);
@@ -510,7 +426,8 @@ esp_err_t config_get_joint_calib_data(int leg_index, int joint, joint_calib_t* c
         return ESP_ERR_INVALID_ARG;
     }
     
-    *calib_data = g_joint_calib_config.joints[leg_index][joint];
+    const joint_calib_config_t* joint_cfg = config_namespace_catalog_joint_calib_config();
+    *calib_data = joint_cfg->joints[leg_index][joint];
     return ESP_OK;
 }
 
@@ -519,7 +436,8 @@ esp_err_t config_set_joint_calib_data_memory(int leg_index, int joint, const joi
         return ESP_ERR_INVALID_ARG;
     }
     
-    g_joint_calib_config.joints[leg_index][joint] = *calib_data;
+    joint_calib_config_t* joint_cfg = config_namespace_catalog_joint_calib_config();
+    joint_cfg->joints[leg_index][joint] = *calib_data;
     g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB] = true;
     
     return ESP_OK;
@@ -543,7 +461,8 @@ esp_err_t config_set_joint_offset_memory(int leg_index, int joint, float offset_
         return ESP_ERR_INVALID_ARG;
     }
     
-    g_joint_calib_config.joints[leg_index][joint].zero_offset_rad = offset_rad;
+    joint_calib_config_t* joint_cfg = config_namespace_catalog_joint_calib_config();
+    joint_cfg->joints[leg_index][joint].zero_offset_rad = offset_rad;
     g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB] = true;
     
     return ESP_OK;
@@ -569,8 +488,9 @@ esp_err_t config_set_joint_limits_memory(int leg_index, int joint, float min_rad
         return ESP_ERR_INVALID_ARG;
     }
     
-    g_joint_calib_config.joints[leg_index][joint].min_rad = min_rad;
-    g_joint_calib_config.joints[leg_index][joint].max_rad = max_rad;
+    joint_calib_config_t* joint_cfg = config_namespace_catalog_joint_calib_config();
+    joint_cfg->joints[leg_index][joint].min_rad = min_rad;
+    joint_cfg->joints[leg_index][joint].max_rad = max_rad;
     g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB] = true;
     
     return ESP_OK;
@@ -594,9 +514,10 @@ esp_err_t config_set_joint_pwm_memory(int leg_index, int joint, int32_t pwm_min_
         return ESP_ERR_INVALID_ARG;
     }
     
-    g_joint_calib_config.joints[leg_index][joint].pwm_min_us = pwm_min_us;
-    g_joint_calib_config.joints[leg_index][joint].pwm_max_us = pwm_max_us;
-    g_joint_calib_config.joints[leg_index][joint].neutral_us = pwm_neutral_us;
+    joint_calib_config_t* joint_cfg = config_namespace_catalog_joint_calib_config();
+    joint_cfg->joints[leg_index][joint].pwm_min_us = pwm_min_us;
+    joint_cfg->joints[leg_index][joint].pwm_max_us = pwm_max_us;
+    joint_cfg->joints[leg_index][joint].neutral_us = pwm_neutral_us;
     g_manager_state.namespace_dirty[CONFIG_NS_JOINT_CALIB] = true;
     
     return ESP_OK;
@@ -624,7 +545,7 @@ esp_err_t config_set_system(const system_config_t* config) {
         return ESP_ERR_INVALID_ARG;
     }
     
-    memcpy(&g_system_config, config, sizeof(system_config_t));
+    memcpy(config_namespace_catalog_system_config(), config, sizeof(system_config_t));
     g_manager_state.namespace_dirty[CONFIG_NS_SYSTEM] = true;
     
     esp_err_t err = config_manager_save_namespace(CONFIG_NS_SYSTEM);
@@ -986,7 +907,7 @@ esp_err_t config_set_motion_limits(const motion_limits_config_t* config) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    memcpy(&g_motion_limits_config, config, sizeof(motion_limits_config_t));
+    memcpy(config_namespace_catalog_motion_limits_config(), config, sizeof(motion_limits_config_t));
     g_manager_state.namespace_dirty[CONFIG_NS_MOTION_LIMITS] = true;
 
     esp_err_t err = config_manager_save_namespace(CONFIG_NS_MOTION_LIMITS);
@@ -1001,7 +922,7 @@ esp_err_t config_set_controller(const controller_config_namespace_t* config) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    memcpy(&g_controller_config, config, sizeof(controller_config_namespace_t));
+    memcpy(config_namespace_catalog_controller_config(), config, sizeof(controller_config_namespace_t));
     g_manager_state.namespace_dirty[CONFIG_NS_CONTROLLER] = true;
 
     esp_err_t err = config_manager_save_namespace(CONFIG_NS_CONTROLLER);
@@ -1016,7 +937,7 @@ esp_err_t config_set_wifi(const wifi_config_namespace_t* config) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    memcpy(&g_wifi_config, config, sizeof(wifi_config_namespace_t));
+    memcpy(config_namespace_catalog_wifi_config(), config, sizeof(wifi_config_namespace_t));
     g_manager_state.namespace_dirty[CONFIG_NS_WIFI] = true;
 
     esp_err_t err = config_manager_save_namespace(CONFIG_NS_WIFI);
