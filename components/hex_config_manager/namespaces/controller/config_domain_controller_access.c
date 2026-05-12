@@ -11,6 +11,7 @@ typedef struct {
     union {
         struct { int32_t min, max; } int_range;
         struct { uint32_t min, max; } uint_range;
+        struct { float min, max; } float_range;
     } constraints;
 } controller_param_meta_t;
 
@@ -35,6 +36,73 @@ static const controller_param_meta_t g_controller_param_table[] = {
         .offset = offsetof(controller_config_namespace_t, task_priority),
         .size = sizeof(uint32_t),
         .constraints = { .uint_range = { 1, 24 } }
+    },
+    {
+        .name = "stick_deadband",
+        .type = CONFIG_TYPE_FLOAT,
+        .offset = offsetof(controller_config_namespace_t, stick_deadband),
+        .size = sizeof(float),
+        .constraints = { .float_range = { 0.0f, 0.3f } }
+    },
+    {
+        .name = "failsafe_vx",
+        .type = CONFIG_TYPE_FLOAT,
+        .offset = offsetof(controller_config_namespace_t, failsafe_vx),
+        .size = sizeof(float),
+        .constraints = { .float_range = { -1.0f, 1.0f } }
+    },
+    {
+        .name = "failsafe_wz",
+        .type = CONFIG_TYPE_FLOAT,
+        .offset = offsetof(controller_config_namespace_t, failsafe_wz),
+        .size = sizeof(float),
+        .constraints = { .float_range = { -1.0f, 1.0f } }
+    },
+    {
+        .name = "failsafe_z_target",
+        .type = CONFIG_TYPE_FLOAT,
+        .offset = offsetof(controller_config_namespace_t, failsafe_z_target),
+        .size = sizeof(float),
+        .constraints = { .float_range = { -1.0f, 1.0f } }
+    },
+    {
+        .name = "failsafe_y_offset",
+        .type = CONFIG_TYPE_FLOAT,
+        .offset = offsetof(controller_config_namespace_t, failsafe_y_offset),
+        .size = sizeof(float),
+        .constraints = { .float_range = { -1.0f, 1.0f } }
+    },
+    {
+        .name = "failsafe_step_scale",
+        .type = CONFIG_TYPE_FLOAT,
+        .offset = offsetof(controller_config_namespace_t, failsafe_step_scale),
+        .size = sizeof(float),
+        .constraints = { .float_range = { 0.0f, 1.0f } }
+    },
+    {
+        .name = "failsafe_gait",
+        .type = CONFIG_TYPE_INT32,
+        .offset = offsetof(controller_config_namespace_t, failsafe_gait),
+        .size = sizeof(int32_t),
+        .constraints = { .int_range = { 0, 2 } }
+    },
+    {
+        .name = "failsafe_enable",
+        .type = CONFIG_TYPE_BOOL,
+        .offset = offsetof(controller_config_namespace_t, failsafe_enable),
+        .size = sizeof(bool),
+    },
+    {
+        .name = "failsafe_pose_mode",
+        .type = CONFIG_TYPE_BOOL,
+        .offset = offsetof(controller_config_namespace_t, failsafe_pose_mode),
+        .size = sizeof(bool),
+    },
+    {
+        .name = "failsafe_terrain_climb",
+        .type = CONFIG_TYPE_BOOL,
+        .offset = offsetof(controller_config_namespace_t, failsafe_terrain_climb),
+        .size = sizeof(bool),
     },
     {
         .name = "flysky_uart_port",
@@ -143,6 +211,9 @@ esp_err_t config_domain_controller_get_param_info(
     if (param->type == CONFIG_TYPE_INT32) {
         info->constraints.int_range.min = param->constraints.int_range.min;
         info->constraints.int_range.max = param->constraints.int_range.max;
+    } else if (param->type == CONFIG_TYPE_FLOAT) {
+        info->constraints.float_range.min = param->constraints.float_range.min;
+        info->constraints.float_range.max = param->constraints.float_range.max;
     } else {
         info->constraints.uint_range.min = param->constraints.uint_range.min;
         info->constraints.uint_range.max = param->constraints.uint_range.max;
@@ -238,5 +309,81 @@ esp_err_t config_domain_controller_set_uint32(
         *(uint32_t*)get_param_ptr(config, param) = value;
     }
 
+    return ESP_OK;
+}
+
+esp_err_t config_domain_controller_get_float(
+    const controller_config_namespace_t* config,
+    const char* param_name,
+    float* value
+) {
+    if (!config || !param_name || !value) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    const controller_param_meta_t* param = find_controller_param(param_name);
+    if (!param || param->type != CONFIG_TYPE_FLOAT) {
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    *value = *(const float*)get_const_param_ptr(config, param);
+    return ESP_OK;
+}
+
+esp_err_t config_domain_controller_set_float(
+    controller_config_namespace_t* config,
+    const char* param_name,
+    float value
+) {
+    if (!config || !param_name) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    const controller_param_meta_t* param = find_controller_param(param_name);
+    if (!param || param->type != CONFIG_TYPE_FLOAT) {
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    if (value < param->constraints.float_range.min || value > param->constraints.float_range.max) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    *(float*)get_param_ptr(config, param) = value;
+    return ESP_OK;
+}
+
+esp_err_t config_domain_controller_get_bool(
+    const controller_config_namespace_t* config,
+    const char* param_name,
+    bool* value
+) {
+    if (!config || !param_name || !value) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    const controller_param_meta_t* param = find_controller_param(param_name);
+    if (!param || param->type != CONFIG_TYPE_BOOL) {
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    *value = *(const bool*)get_const_param_ptr(config, param);
+    return ESP_OK;
+}
+
+esp_err_t config_domain_controller_set_bool(
+    controller_config_namespace_t* config,
+    const char* param_name,
+    bool value
+) {
+    if (!config || !param_name) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    const controller_param_meta_t* param = find_controller_param(param_name);
+    if (!param || param->type != CONFIG_TYPE_BOOL) {
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    *(bool*)get_param_ptr(config, param) = value;
     return ESP_OK;
 }

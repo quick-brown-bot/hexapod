@@ -130,6 +130,24 @@ static esp_err_t controller_ns_get_int32(void* ctx, const char* param_name, int3
     return config_domain_controller_get_int32(c->config, param_name, value);
 }
 
+static esp_err_t controller_ns_get_bool(void* ctx, const char* param_name, bool* value) {
+    config_controller_namespace_context_t* c = controller_ctx(ctx);
+    if (!c || !c->config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    return config_domain_controller_get_bool(c->config, param_name, value);
+}
+
+static esp_err_t controller_ns_set_bool(void* ctx, const char* param_name, bool value) {
+    config_controller_namespace_context_t* c = controller_ctx(ctx);
+    if (!c || !c->config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    return config_domain_controller_set_bool(c->config, param_name, value);
+}
+
 static esp_err_t controller_ns_set_int32(void* ctx, const char* param_name, int32_t value) {
     config_controller_namespace_context_t* c = controller_ctx(ctx);
     if (!c || !c->config) {
@@ -157,6 +175,24 @@ static esp_err_t controller_ns_set_uint32(void* ctx, const char* param_name, uin
     return config_domain_controller_set_uint32(c->config, param_name, value);
 }
 
+static esp_err_t controller_ns_get_float(void* ctx, const char* param_name, float* value) {
+    config_controller_namespace_context_t* c = controller_ctx(ctx);
+    if (!c || !c->config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    return config_domain_controller_get_float(c->config, param_name, value);
+}
+
+static esp_err_t controller_ns_set_float(void* ctx, const char* param_name, float value) {
+    config_controller_namespace_context_t* c = controller_ctx(ctx);
+    if (!c || !c->config) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    return config_domain_controller_set_float(c->config, param_name, value);
+}
+
 const config_namespace_descriptor_t g_controller_namespace_descriptor = {
     .ns_id = CONFIG_NS_CONTROLLER,
     .ns_name = "controller",
@@ -167,14 +203,14 @@ const config_namespace_descriptor_t g_controller_namespace_descriptor = {
     .list_parameters = controller_ns_list_parameters,
     .get_parameter_info = controller_ns_get_param_info,
     .get_raw = NULL,
-    .get_bool = NULL,
-    .set_bool = NULL,
+    .get_bool = controller_ns_get_bool,
+    .set_bool = controller_ns_set_bool,
     .get_int32 = controller_ns_get_int32,
     .set_int32 = controller_ns_set_int32,
     .get_uint32 = controller_ns_get_uint32,
     .set_uint32 = controller_ns_set_uint32,
-    .get_float = NULL,
-    .set_float = NULL,
+    .get_float = controller_ns_get_float,
+    .set_float = controller_ns_set_float,
     .get_string = NULL,
     .set_string = NULL
 };

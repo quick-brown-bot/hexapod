@@ -97,6 +97,56 @@ set motion_lim max_velocity_coxa 4.5
 setpersist motion_lim max_velocity_coxa 4.5
 ```
 
+### Tune gait trajectory parameters
+
+```text
+list gait
+get gait cycle_time_s
+get gait step_length_m
+set gait step_length_m 0.09
+setpersist gait max_yaw_per_cycle_rad 0.35
+setpersist gait turn_direction 1.0
+save gait
+```
+
+Notes:
+- `cycle_time_s`, `step_length_m`, and `clearance_height_m` control high-level gait timing and swing shape.
+- `y_range_m`, `z_min_m`, and `z_max_m` control pose-to-foot target mapping.
+- `max_yaw_per_cycle_rad` and `turn_direction` control turning behavior.
+
+### Tune controller stick deadband
+
+```text
+get controller stick_deadband
+set controller stick_deadband 0.03
+setpersist controller stick_deadband 0.03
+save controller
+```
+
+Notes:
+- `stick_deadband` is clamped and validated in range `0.0 .. 0.3`.
+- Lower values increase stick sensitivity near center; higher values suppress noise.
+
+### Tune controller failsafe command profile
+
+```text
+list controller
+get controller failsafe_enable
+set controller failsafe_enable 1
+set controller failsafe_gait 2
+set controller failsafe_step_scale 0.4
+setpersist controller failsafe_vx 0.0
+setpersist controller failsafe_wz 0.0
+setpersist controller failsafe_z_target -0.1
+setpersist controller failsafe_pose_mode 1
+save controller
+```
+
+Notes:
+- Failsafe profile is applied when controller input is unavailable.
+- `failsafe_gait` values are `0=wave`, `1=ripple`, `2=tripod`.
+- Float constraints: `failsafe_vx`, `failsafe_wz`, `failsafe_z_target`, `failsafe_y_offset` in `-1.0 .. 1.0`, `failsafe_step_scale` in `0.0 .. 1.0`.
+
 ### Save all dirty namespaces
 
 ```text

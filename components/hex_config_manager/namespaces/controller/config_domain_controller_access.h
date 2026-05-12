@@ -51,6 +51,30 @@ esp_err_t config_domain_controller_set_uint32(
     uint32_t value
 );
 
+esp_err_t config_domain_controller_get_float(
+    const controller_config_namespace_t* config,
+    const char* param_name,
+    float* value
+);
+
+esp_err_t config_domain_controller_set_float(
+    controller_config_namespace_t* config,
+    const char* param_name,
+    float value
+);
+
+esp_err_t config_domain_controller_get_bool(
+    const controller_config_namespace_t* config,
+    const char* param_name,
+    bool* value
+);
+
+esp_err_t config_domain_controller_set_bool(
+    controller_config_namespace_t* config,
+    const char* param_name,
+    bool value
+);
+
 #ifdef __cplusplus
 }
 #endif

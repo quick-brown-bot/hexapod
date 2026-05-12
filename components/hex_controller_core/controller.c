@@ -8,6 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "controller.h"
+#include "config_ns_controller_api.h"
 
 // Global runtime configuration (opaque driver_cfg pointer)
 static controller_config_t g_cfg = {
@@ -147,14 +148,18 @@ void controller_decode(const int16_t ch[CONTROLLER_MAX_CHANNELS], controller_sta
     if (!ch || !out) {
         return;
     }
-    // Apply small deadband to sticks to reject noise near center
-    // TODO: Make DEAD_BAND configurable via Kconfig or runtime configuration
-    const float DEAD_BAND = 0.04f; // ~4%
+    const controller_config_namespace_t* cfg = config_get_controller();
+    float dead_band = 0.04f;
+    if (cfg) {
+        dead_band = cfg->stick_deadband;
+        if (dead_band < 0.0f) dead_band = 0.0f;
+        if (dead_band > 0.3f) dead_band = 0.3f;
+    }
 
-    out->right_horiz = apply_deadband(map_signed_norm(ch[0]), DEAD_BAND); // CH1: Right Horiz -> lateral shift
-    out->left_vert   = apply_deadband(map_signed_norm(ch[1]), DEAD_BAND); // CH2: Left Vert -> forward speed
-    out->right_vert  = apply_deadband(map_signed_norm(ch[2]), DEAD_BAND); // CH3: Right Vert -> z_target
-    out->left_horiz  = apply_deadband(map_signed_norm(ch[3]), DEAD_BAND); // CH4: Left Horiz -> yaw rate
+    out->right_horiz = apply_deadband(map_signed_norm(ch[0]), dead_band); // CH1: Right Horiz -> lateral shift
+    out->left_vert   = apply_deadband(map_signed_norm(ch[1]), dead_band); // CH2: Left Vert -> forward speed
+    out->right_vert  = apply_deadband(map_signed_norm(ch[2]), dead_band); // CH3: Right Vert -> z_target
+    out->left_horiz  = apply_deadband(map_signed_norm(ch[3]), dead_band); // CH4: Left Horiz -> yaw rate
 
     // Switch style channels now treated as signed int16 where positive => true.
     out->swa_arm  = ch[4] > 0;            // CH5: SWA

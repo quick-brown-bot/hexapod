@@ -4,6 +4,8 @@
 #include "controller_flysky_ibus.h"
 #include "controller_wifi_tcp.h"
 #include "controller_bt_classic.h"
+#include "config_manager_runtime_api.h"
+#include "namespaces/controller/config_ns_controller_api.h"
 #include "esp_log.h"
 
 static const char* TAG = "user_command";
@@ -55,17 +57,38 @@ void user_command_poll(user_command_t *cmd) {
             case GAIT_MODE_TRIPOD: default: cmd->gait = GAIT_TRIPOD; break;
         }
     } else {                   
-        // safe defaults if no data
-        cmd->vx = 0.0f;
-        cmd->wz = 0.0f;  
-        cmd->z_target = 0.0f;
-        cmd->y_offset = 0.0f;
-        cmd->gait = GAIT_TRIPOD;
-        cmd->enable = false;
-        cmd->pose_mode = false;
-        cmd->terrain_climb = false;
-        cmd->step_scale = 0.5f;
+        // Use configured controller failsafe profile when no data is available.
+        const controller_config_namespace_t *cfg = config_get_controller();
+        if (cfg) {
+            cmd->vx = cfg->failsafe_vx;
+            cmd->wz = cfg->failsafe_wz;
+            cmd->z_target = cfg->failsafe_z_target;
+            cmd->y_offset = cfg->failsafe_y_offset;
+            cmd->enable = cfg->failsafe_enable;
+            cmd->pose_mode = cfg->failsafe_pose_mode;
+            cmd->terrain_climb = cfg->failsafe_terrain_climb;
+            cmd->step_scale = cfg->failsafe_step_scale;
 
-        ESP_LOGI(TAG, "No controller data available, using defaults");
+            switch (cfg->failsafe_gait) {
+                case 0: cmd->gait = GAIT_WAVE; break;
+                case 1: cmd->gait = GAIT_RIPPLE; break;
+                case 2:
+                default:
+                    cmd->gait = GAIT_TRIPOD;
+                    break;
+            }
+        } else {
+            cmd->vx = 0.0f;
+            cmd->wz = 0.0f;
+            cmd->z_target = 0.0f;
+            cmd->y_offset = 0.0f;
+            cmd->gait = GAIT_TRIPOD;
+            cmd->enable = false;
+            cmd->pose_mode = false;
+            cmd->terrain_climb = false;
+            cmd->step_scale = 0.5f;
+        }
+
+        ESP_LOGI(TAG, "No controller data available, using failsafe profile");
     }
 }
