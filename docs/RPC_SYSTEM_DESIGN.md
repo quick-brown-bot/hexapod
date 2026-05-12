@@ -4,9 +4,24 @@
 
 This document outlines the design for a Remote Procedure Call (RPC) system for the hexapod robot, inspired by Betaflight's MSP (MultiWii Serial Protocol) and CLI systems. The RPC system will provide real-time parameter tuning, robot control, and debugging capabilities.
 
+## Implementation Reality Check (2026-05)
+
+The following items are confirmed in source code:
+
+- Implemented transports:
+    - Bluetooth Classic SPP via `hex_controller_driver_bt_classic`
+    - WiFi TCP via `hex_controller_driver_wifi_tcp`
+- Transport abstraction and routing:
+    - Queue-based RX/TX transport layer in `hex_rpc_transport`
+    - Transport-tagged responses routed back through the active transport in `rpc_commands.c`
+- Defined but not yet implemented transport endpoint:
+    - `RPC_TRANSPORT_SERIAL` enum exists, but no serial transport driver is currently wired.
+- Implemented config namespaces visible through RPC `list namespaces`:
+    - `system`, `joint_cal`, `leg_geom`, `motion_lim`, `controller`, `wifi`
+
 ## Goals
 
-1. **✅ Multi-transport implementation**: Bluetooth Classic and WiFi TCP implemented with abstraction layer
+1. **✅ Multi-transport implementation (current)**: Bluetooth Classic and WiFi TCP implemented with abstraction layer
 2. **✅ Task-based operation**: Queue-based RPC processing with dedicated tasks on Core 1  
 3. **✅ Betaflight-inspired commands**: Simple, text-based commands for ease of use
 4. **✅ Configuration integration**: Seamless integration with the hybrid configuration system
@@ -58,6 +73,7 @@ typedef enum {
     RPC_TRANSPORT_BLUETOOTH = 0,
     RPC_TRANSPORT_WIFI_TCP,
     RPC_TRANSPORT_SERIAL,
+    RPC_TRANSPORT_INTERNAL,
     RPC_TRANSPORT_COUNT
 } rpc_transport_type_t;
 
@@ -99,8 +115,8 @@ esp_err_t rpc_transport_register_sender(rpc_transport_type_t transport, rpc_tran
 ### 4. 🔲 Serial UART (Planned)
 
 - **Protocol**: Standard UART (115200 baud default)
-- **Integration**: Will use same queue-based transport abstraction
-- **Detection**: Simple ASCII/binary detection (no sync pattern needed)
+- **Integration target**: Will use same queue-based transport abstraction
+- **Current code state**: enum and abstraction support exist; no serial RPC transport driver is registered yet
 
 ## Command Protocol Design
 
@@ -110,38 +126,35 @@ esp_err_t rpc_transport_register_sender(rpc_transport_type_t transport, rpc_tran
 <command> [<parameter1>] [<parameter2>] ... [<parameterN>]\r\n
 ```
 
+Implementation note:
+- WiFi TCP driver buffers bytes until CR/LF and submits one command line to RPC.
+- Bluetooth SPP driver submits received chunks to RPC transport; commands should still be sent as line-based text.
+
 **Examples:**
 ```
 get system emergency_stop_enabled
 set system emergency_stop_enabled true
 save
-status
-leg 0 move 100 50 -20
-joint 0 0 1500
+set controller 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 ```
 
 ### 2. Response Format
 
 ```
-# Command successful
-<command>: <result_data>
-OK
+# Command successful (single line)
+<result_data>
 
-# Command failed  
-<command>: ERROR - <error_message>
-
-# Multi-line response
-<command>:
-<line1>
-<line2>
-...
-<lineN>
-OK
+# Command failed (single line)
+ERROR <details>
 ```
+
+Implementation note:
+- Current RPC implementation returns CRLF-terminated response lines and does not emit an additional trailing `OK` marker.
+- `set controller` intentionally emits no response for high-frequency input updates.
 
 ### 3. Command Categories
 
-#### ✅ Configuration Commands (Implemented)
+#### ✅ Implemented Commands
 ```bash
 # Individual parameter access  
 ✅ get <namespace> <parameter>           # Get single parameter
@@ -150,19 +163,26 @@ OK
 
 # Bulk operations
 ✅ export <namespace>                    # Get all parameters in a portable form  
-🔲 import <namespace> <data>             # Set all parameters from provided data
 
 # Management
 ✅ save [<namespace>]                    # Save namespace(s) to NVS
-🔲 reload [<namespace>]                  # Reload namespace(s) from NVS
 ✅ factory-reset                         # Factory reset (explicit destructive operation)
 ✅ list namespaces                       # List all available namespaces
 ✅ list <namespace>                      # List parameters in namespace  
-🔲 info <namespace> <parameter>          # Get parameter metadata
 
 # System information
 ✅ help                                  # List available commands
 ✅ version                               # Firmware version and build info
+
+# Control ingress
+✅ set controller <ch0> ... <ch31>       # Update controller channels
+```
+
+#### 🔲 Planned Commands
+```bash
+🔲 import <namespace> <data>             # Set all parameters from provided data
+🔲 reload [<namespace>]                  # Reload namespace(s) from NVS
+🔲 info <namespace> <parameter>          # Get parameter metadata
 ```
 
 #### 🔲 Robot Control Commands (Planned)
@@ -181,8 +201,6 @@ OK
 🔲 gait <type> <speed>                  # Start gait pattern  
 🔲 stop                                 # Emergency stop
 🔲 home                                 # Move all legs to home position
-✅ set controller <ch0> ... <ch31>      # Update controller channels
-✅ set controller <ch0> ... <ch31>      # Update controller channels
 ```
 
 #### 🔲 System Commands (Planned)
@@ -233,20 +251,12 @@ For efficient configurator operation:
 # Fast system export (JSON format)
 export system
 # Response:
-export system:
-{
-  "emergency_stop_enabled": true,
-  "auto_disarm_timeout": 30,
-  "safety_voltage_min": 6.5,
-  ...
-}
-OK
+export system: {"emergency_stop_enabled":true,...}
 
 # Fast bulk import
 import system {"emergency_stop_enabled": false, "auto_disarm_timeout": 45}
 # Response:
-import system: 2 parameters updated
-OK
+import is planned (not implemented)
 ```
 
 ## Core Assignment Strategy (✅ Current: Queue-Based Single Core)
@@ -310,7 +320,7 @@ The current queue-based architecture makes multi-core migration straightforward:
 2. 🔲 Parameter metadata access (info command)
 3. 🔲 Namespace reload functionality  
 4. 🔲 Configuration validation and error reporting
-5. 🔲 Additional namespaces (joint_calib, motion_limits, servo_mapping)
+5. 🔲 Expand command coverage to all existing namespaces where command-specific constraints still apply
 
 ### 🔲 Phase 4: Robot Control Commands (MEDIUM PRIORITY)
 1. 🔲 Direct joint control commands (joint/jointangle)
@@ -374,7 +384,7 @@ The current queue-based architecture makes multi-core migration straightforward:
 ### Architecture Benefits Realized
 
 **✅ What We Achieved Beyond Original Design**
-1. **Multi-transport from day one**: Both Bluetooth and WiFi working simultaneously
+1. **Multi-transport architecture from day one**: Bluetooth and WiFi TCP are both implemented through one transport abstraction
 2. **Clean separation of concerns**: Transport logic completely decoupled from command processing
 3. **Scalable queue architecture**: Easy to add new transports without code changes
 4. **Robust error handling**: Queue timeouts and backpressure naturally handled
@@ -389,9 +399,9 @@ The current queue-based architecture makes multi-core migration straightforward:
 ### Testing & Validation Strategy
 
 **1. Multi-Transport Testing**
-- Test simultaneous Bluetooth + WiFi clients
+- Test Bluetooth and WiFi TCP paths independently and verify response routing by active transport
 - Verify command responses route to correct transport
-- Validate binary control frame detection on both transports
+- Validate text command framing and line termination behavior on both transports
 
 **2. Configuration Persistence Testing**  
 - Test set/setpersist behavior across reboots
