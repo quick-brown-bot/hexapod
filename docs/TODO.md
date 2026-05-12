@@ -84,16 +84,23 @@
   - Add simple body roll/pitch offsets when pose_mode is active
   - Add yaw (wz) coupling to bias per-leg x/y for turning
   - Consider exposing trajectory parameters via config or calibration struct
+  - Add C1/C2-continuous swing/stance blending to reduce velocity/acceleration discontinuities at phase boundaries
+  - Add minimum-jerk or quintic foot trajectory mode for smoother liftoff/touchdown
+  - Add configurable easing windows around liftoff/touchdown events
 
 - [ ] **Gait Scheduler Enhancements** (`gait_scheduler.c`)
   - Consider separate forward/turning components and modulate phase rate
   - Replace current groupings with well-defined groupings and exact phase windows per gait
+  - Add commanded-speed slew limiting so phase/frequency changes are gradual
+  - Add gait transition blending (tripod/ripple/wave) to avoid abrupt group switching
 
 ### Control & Safety
 - [ ] **Error Handling & Safety** (`whole_body_control.c`)
   - Add error signaling so robot_control can engage a safe stop
   - Implement comprehensive safety mechanisms
   - Add system health monitoring
+  - Add arming checks (controller link valid, config loaded, telemetry channel healthy, basic power checks)
+  - Add parameter-change safe-apply flow with timeout revert for risky live tuning updates
 
 - [ ] **Controller Configuration** (`controller.c`)
   - Make DEAD_BAND configurable via Kconfig or runtime configuration
@@ -120,6 +127,8 @@
   - Add command/response handling with error codes
   - Create parameter read/write API endpoints
   - Implement telemetry streaming protocol
+  - Split channels into command/control plane and telemetry plane to avoid tuning latency under load
+  - Add topic-based telemetry subscription with configurable publish rates
 
 - [ ] **Web Application Framework**
   - Create React/Vue.js based configurator interface
@@ -177,6 +186,9 @@
   - Battery voltage and current consumption
   - System temperature monitoring
   - Error logs and diagnostic information
+  - Per-joint plots: commanded vs limited angle/velocity/acceleration
+  - Gait plots: phase, support/swing state, foot target XYZ per leg
+  - Control-loop timing charts (dt jitter, loop overrun counters)
 
 #### 💾 **Configuration Management Tab**
 - [ ] Profile and backup management
@@ -207,6 +219,9 @@
   - System performance profiling
   - Error code lookup and troubleshooting guide
   - Log file viewer and analysis
+  - Blackbox-style ring buffer capture with event markers (failsafe, IK error, timeout)
+  - Export log bundles for offline plotting/comparison between tuning sessions
+  - Pre/post event capture windows for fault analysis
 
 ### ESP32 Firmware Support
 - [ ] **Parameter Storage System**
@@ -229,6 +244,9 @@
   - Data logging to SD card or flash memory
   - Remote logging capabilities
   - Performance metrics collection
+  - Binary telemetry encoding (MessagePack/CBOR) to reduce bandwidth and latency vs text logs
+  - Per-topic rate limiting and backpressure handling to protect control-loop timing
+  - Runtime telemetry on/off and topic filtering without reboot
 
 ---
 
@@ -240,6 +258,7 @@
 3. Expand NVS coverage for remaining namespaces (foundation is complete)
 4. Error handling and safety mechanisms
 5. **Basic configurator infrastructure** (communication protocol, web framework)
+6. **High-rate WiFi telemetry path** (non-serial observability for tuning)
 
 ### Phase 2: Enhanced Control & Configuration (Medium Priority)
 1. **Core configurator pages** (Leg Config, Motion Control, System Parameters)
@@ -248,6 +267,7 @@
 4. Advanced motion modes (Fast/Emergency)
 5. Swing trajectory improvements
 6. **Configuration management and calibration wizards**
+7. **Gait transition smoothing + phase/frequency slew limiting**
 
 ### Phase 3: Advanced Features (Lower Priority)
 1. **Advanced configurator features** (telemetry, diagnostics, live tuning)
@@ -256,6 +276,7 @@
 4. Dual camera system
 5. Computer vision capabilities
 6. Advanced sensor fusion
+7. **Blackbox-style event logging and offline analysis workflow**
 
 ---
 
@@ -267,4 +288,4 @@
 
 ---
 
-*Last updated: May 4, 2026*
+*Last updated: May 12, 2026*
