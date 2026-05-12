@@ -4,42 +4,12 @@
 
 The Hexapod firmware exposes a text-based RPC interface for runtime configuration and control ingress.
 
-Current implementation supports:
-- Bluetooth Classic SPP transport
-- WiFi TCP transport
+This guide is operational-only:
+- how to connect
+- how to send commands safely
+- practical workflows for tuning and persistence
 
-Both transports feed the same RPC parser through the queue-based `hex_rpc_transport` layer.
-
-## Current Status (2026-05)
-
-Implemented:
-- `help`, `version`
-- `list namespaces`, `list <namespace>`
-- `get <namespace> <parameter>`
-- `set <namespace> <parameter> <value>`
-- `setpersist <namespace> <parameter> <value>`
-- `save [<namespace>]`
-- `export <namespace>` (currently `system` only)
-- `factory-reset`
-- `set controller <ch0> ... <ch31>`
-
-Planned (not implemented yet):
-- `import`
-- `reload`
-- `info`
-- robot motion commands such as `joint`, `leg`, `pose`, `gait`
-
-## Available Namespaces
-
-The config manager currently registers these namespaces:
-- `system`
-- `joint_cal`
-- `leg_geom`
-- `motion_lim`
-- `controller`
-- `wifi`
-
-Use `list namespaces` to query the runtime list from firmware.
+For authoritative protocol behavior (supported commands, framing, and semantics), see `docs/RPC_SYSTEM_DESIGN.md`.
 
 ## Transport Setup
 
@@ -65,7 +35,7 @@ Notes:
 
 ## Command Format
 
-General form:
+General form (refer to canonical contract for full command semantics):
 
 ```text
 <command> [arg1] [arg2] ...
@@ -90,6 +60,9 @@ set controller <ch0> <ch1> ... <ch31>
 ```
 
 If fewer than 32 channel values are provided, missing channels are set to `0`.
+
+Tip:
+- Run `help` and `list namespaces` on the connected target to discover runtime-supported operations.
 
 ## Response Behavior
 
@@ -152,5 +125,5 @@ This erases robot configuration namespaces and reloads defaults. Use with care.
 
 ## Related Documentation
 
-- See `docs/RPC_SYSTEM_DESIGN.md` for architecture and roadmap.
+- See `docs/RPC_SYSTEM_DESIGN.md` for the canonical RPC command contract.
 - See `docs/WIFI_TCP_PROTOCOL.md` and `docs/BLUETOOTH_CLASSIC_PROTOCOL.md` for protocol deprecation context.

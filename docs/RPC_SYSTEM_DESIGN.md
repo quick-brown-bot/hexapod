@@ -4,6 +4,10 @@
 
 This document outlines the design for a Remote Procedure Call (RPC) system for the hexapod robot, inspired by Betaflight's MSP (MultiWii Serial Protocol) and CLI systems. The RPC system will provide real-time parameter tuning, robot control, and debugging capabilities.
 
+Normative scope:
+- This file is the canonical RPC command contract.
+- If other documentation conflicts with this file, this file takes precedence.
+
 ## Implementation Reality Check (2026-05)
 
 The following items are confirmed in source code:
@@ -120,6 +124,16 @@ esp_err_t rpc_transport_register_sender(rpc_transport_type_t transport, rpc_tran
 
 ## Command Protocol Design
 
+## Canonical Command Contract (P0)
+
+This section defines the contract that clients should implement against.
+
+### Contract Version
+
+- Contract version: `rpc-text-v1`
+- Encoding: ASCII/UTF-8 text
+- Framing: line-oriented commands
+
 ### 1. Command Format (Betaflight-inspired)
 
 ```
@@ -152,7 +166,30 @@ Implementation note:
 - Current RPC implementation returns CRLF-terminated response lines and does not emit an additional trailing `OK` marker.
 - `set controller` intentionally emits no response for high-frequency input updates.
 
-### 3. Command Categories
+### 3. Command Set and Support Matrix
+
+Commands in this matrix are authoritative.
+
+| Command | Support | Notes |
+| --- | --- | --- |
+| `help` | Implemented | Returns available command list |
+| `version` | Implemented | Returns firmware/IDF version string |
+| `list namespaces` | Implemented | Uses config manager runtime registry |
+| `list <namespace>` | Implemented | Returns parameters for namespace |
+| `get <namespace> <parameter>` | Implemented | Typed read via config manager |
+| `set <namespace> <parameter> <value>` | Implemented | Memory-only write |
+| `setpersist <namespace> <parameter> <value>` | Implemented | Write + persist |
+| `save [<namespace>]` | Implemented | Persist one or all namespaces |
+| `export <namespace>` | Partially implemented | `system` currently supported |
+| `factory-reset` | Implemented | Erases robot config namespaces and reloads defaults |
+| `set controller <ch0> ... <ch31>` | Implemented | High-rate ingress, no response line |
+| `import <namespace> <data>` | Planned | Not implemented |
+| `reload [<namespace>]` | Planned | Not implemented |
+| `info <namespace> <parameter>` | Planned | Not implemented |
+| `joint`, `jointangle`, `leg`, `pose`, `gait`, `stop`, `home` | Planned | Not implemented |
+| `status`, `reboot`, `cpu`, `memory`, `tasks` | Planned | Not implemented |
+
+### 4. Command Categories
 
 #### ✅ Implemented Commands
 ```bash

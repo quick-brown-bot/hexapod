@@ -18,6 +18,17 @@ Facts:
 Documentation:
 - Consolidated technical docs live in [docs/README.md](docs/README.md).
 
+### Effort Summary
+
+| Effort Area | Scope | Current Status | Notes |
+| --- | --- | --- | --- |
+| Locomotion Pipeline | Command mapping, gait scheduler, swing trajectory, whole-body IK | Implemented | Running in 100 Hz main loop with modular component split |
+| KPP Motion Limits | Jerk/accel/velocity limiting and state estimation | Implemented | Integrated into control loop with persisted `motion_lim` runtime config |
+| Controller Abstraction | Driver-agnostic core + transport-specific drivers | Implemented | FlySky, Bluetooth Classic, and WiFi TCP paths available |
+| RPC System | Queue-based command processing and config control API | Implemented (core), expanding (commands) | Multi-transport routing active; advanced control commands still planned |
+| Configuration Persistence | NVS namespaces, defaults, migration, typed access APIs | Implemented (foundation), expanding (coverage) | Namespaces include `system`, `joint_cal`, `leg_geom`, `motion_lim`, `controller`, `wifi` |
+| Configurator / UX Tooling | Betaflight-style tuning portal and live telemetry UX | Planned | Protocol and backend groundwork in place; UI remains future work |
+
 ## 2. Hardware Summary
 * MCU / Control: ESP32 module (classic dual‑core variant) running FreeRTOS via ESP‑IDF
 * Servos: 18 × high‑torque 35 kg.cm hobby servos (3 DOF per leg: coxa yaw, femur pitch, tibia)
