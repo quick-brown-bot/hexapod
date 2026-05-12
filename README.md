@@ -169,6 +169,32 @@ Classic ESP32 has limited MCPWM operator capacity. This design:
   2. Build (`idf.py build`) and flash (`idf.py flash`).
   3. Monitor logs (`idf.py monitor`) for control loop timing, servo init, and controller connection messages.
 
+## 7.1 Python Integration Tests
+
+The repository includes host-side pytest integration tests for runtime command validation.
+
+Install test dependencies:
+
+```bash
+pip install -r test/requirements.txt
+```
+
+Run general listing tests:
+
+```bash
+python -m pytest -q test/test_config_general_listing.py
+```
+
+If you see warnings like `PytestExperimentalApiWarning: record_xml_attribute is an experimental feature`, the `pytest-embedded` plugin is being auto-loaded in this environment. For host-side integration tests in `test/`, run pytest with that plugin disabled:
+
+```bash
+python -m pytest -q -p no:embedded test/test_config_general_listing.py
+```
+
+Notes:
+* These tests are intended for Windows hosts and use `winwifi` to reuse current `HEXABOT_xxx` Wi-Fi or connect to the first discovered matching network.
+* Override target endpoint if needed with environment variables: `HEXABOT_IP` and `HEXABOT_PORT`.
+
 ## 8. Visualization & Simulation
 Complementary project for iterating on gait algorithms without hardware:
 https://github.com/pgrudzien12/hexapod-visualizer
