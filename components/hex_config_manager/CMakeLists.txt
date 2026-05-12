@@ -28,6 +28,9 @@ idf_component_register(
     "namespaces/wifi/config_domain_wifi_access.c"
     "namespaces/wifi/config_domain_wifi_defaults.c"
     "namespaces/wifi/config_domain_wifi_persistence_nvs.c"
+    "namespaces/servo_map/config_ns_servo_map.c"
+    "namespaces/servo_map/config_domain_servo_map_defaults.c"
+    "namespaces/servo_map/config_domain_servo_map_persistence_nvs.c"
     "config_domain_defaults.c"
     INCLUDE_DIRS
     "."
@@ -37,6 +40,7 @@ idf_component_register(
     "namespaces/motion_lim"
     "namespaces/controller"
     "namespaces/wifi"
+    "namespaces/servo_map"
     REQUIRES
     nvs_flash
     esp_partition

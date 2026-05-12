@@ -5,6 +5,7 @@
 #include "config_ns_joint_calib.h"
 #include "config_ns_leg_geometry.h"
 #include "config_ns_motion_limits.h"
+#include "config_ns_servo_map.h"
 #include "config_ns_system.h"
 #include "config_ns_wifi.h"
 
@@ -56,6 +57,11 @@ esp_err_t config_namespace_catalog_register_all(
         &state->namespace_dirty[CONFIG_NS_WIFI],
         &state->namespace_loaded[CONFIG_NS_WIFI]
     );
+    config_servo_map_namespace_bind(
+        &state->nvs_handles[CONFIG_NS_SERVO_MAP],
+        &state->namespace_dirty[CONFIG_NS_SERVO_MAP],
+        &state->namespace_loaded[CONFIG_NS_SERVO_MAP]
+    );
 
     namespace_registration_entry_t namespace_registration_entries[] = {
         { &g_system_namespace_descriptor, config_system_namespace_context() },
@@ -64,6 +70,7 @@ esp_err_t config_namespace_catalog_register_all(
         { &g_motion_limits_namespace_descriptor, config_motion_limits_namespace_context() },
         { &g_controller_namespace_descriptor, config_controller_namespace_context() },
         { &g_wifi_namespace_descriptor, config_wifi_namespace_context() },
+        { &g_servo_map_namespace_descriptor, config_servo_map_namespace_context() },
     };
 
     config_namespace_registry_reset();
@@ -103,4 +110,8 @@ controller_config_namespace_t* config_namespace_catalog_controller_config(void) 
 
 wifi_config_namespace_t* config_namespace_catalog_wifi_config(void) {
     return config_wifi_namespace_config();
+}
+
+servo_map_config_t* config_namespace_catalog_servo_map_config(void) {
+    return config_servo_map_namespace_config();
 }

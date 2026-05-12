@@ -21,6 +21,7 @@ typedef enum {
     CONFIG_NS_MOTION_LIMITS = 3,
     CONFIG_NS_CONTROLLER = 4,
     CONFIG_NS_WIFI = 5,
+    CONFIG_NS_SERVO_MAP = 6,
     CONFIG_NS_COUNT
 } config_namespace_t;
 

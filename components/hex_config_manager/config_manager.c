@@ -19,7 +19,7 @@
 static const char *TAG = "config_mgr";
 
 // Configuration version for migration support
-#define CONFIG_SCHEMA_VERSION 1
+#define CONFIG_SCHEMA_VERSION 2
 
 // Global configuration version key (stored in system namespace for now)
 #define GLOBAL_CONFIG_VERSION_KEY "global_ver"  // Max 15 chars for NVS
@@ -65,6 +65,32 @@ static esp_err_t migrate_v0_to_v1(void) {
     return ESP_OK;
 }
 
+static esp_err_t migrate_v1_to_v2(void) {
+    ESP_LOGI(TAG, "Migrating v1 -> v2: Initializing servo map namespace defaults");
+
+    esp_err_t err = ensure_namespace_registry_initialized();
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    const config_namespace_registration_t* reg = config_namespace_registry_find_by_id(CONFIG_NS_SERVO_MAP);
+    if (!reg || !reg->descriptor || !reg->descriptor->write_defaults_to_nvs) {
+        ESP_LOGE(TAG, "Servo map namespace descriptor unavailable during migration");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    err = reg->descriptor->write_defaults_to_nvs(reg->context);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize defaults for namespace %s during migration: %s",
+                 reg->descriptor->ns_name,
+                 esp_err_to_name(err));
+        return err;
+    }
+
+    ESP_LOGI(TAG, "Migration v1 -> v2 completed");
+    return ESP_OK;
+}
+
 static esp_err_t config_migrate_version(uint16_t from, uint16_t to) {
     ESP_LOGI(TAG, "Migrating configuration schema: v%d -> v%d", from, to);
     
@@ -76,9 +102,10 @@ static esp_err_t config_migrate_version(uint16_t from, uint16_t to) {
             break;
             
         case 1:
-            // Future: v1 -> v2 migration
-            ESP_LOGW(TAG, "Migration v1 -> v%d not yet implemented", to);
-            return ESP_ERR_NOT_SUPPORTED;
+            if (to == 2) {
+                return migrate_v1_to_v2();
+            }
+            break;
             
         default:
             ESP_LOGE(TAG, "Unknown migration path: v%d -> v%d", from, to);

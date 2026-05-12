@@ -2,6 +2,7 @@
 #include "config_manager_runtime_api.h"
 #include "config_ns_joint_api.h"
 #include "config_ns_leg_geometry_api.h"
+#include "namespaces/servo_map/config_ns_servo_map_api.h"
 #include <string.h>
 #include "esp_log.h"
 
@@ -17,48 +18,6 @@ static const char* TAG = "robot_config";
 
 esp_err_t robot_config_init_default(void) {
     memset(&g_cfg, 0, sizeof(g_cfg));
-    // Default: no GPIOs assigned yet; distribute legs across two MCPWM groups (0 for legs 0..2, 1 for legs 3..5)
-    for (int i = 0; i < NUM_LEGS; ++i) {
-        g_cfg.mcpwm_group_id[i] = (i < 3) ? 0 : 1;
-        for (int j = 0; j < 3; ++j) g_cfg.servo_gpio[i][j] = -1;
-        for (int j = 0; j < 3; ++j) g_cfg.servo_driver_sel[i][j] = 0; // default MCPWM
-    }
-    // Rebalance within first three legs: move left-rear leg to group 1 so group 0 only has two legs (6 channels)
-    g_cfg.mcpwm_group_id[LEG_LEFT_REAR] = 1;
-
-    // GPIO assignments by leg index enum
-
-    g_cfg.servo_gpio[LEG_LEFT_FRONT][LEG_SERVO_COXA]  = 27;
-    g_cfg.servo_gpio[LEG_LEFT_FRONT][LEG_SERVO_FEMUR] = 13;
-    g_cfg.servo_gpio[LEG_LEFT_FRONT][LEG_SERVO_TIBIA] = 12;
-
-    g_cfg.servo_gpio[LEG_LEFT_MIDDLE][LEG_SERVO_COXA]  = 14;
-    g_cfg.servo_gpio[LEG_LEFT_MIDDLE][LEG_SERVO_FEMUR] = 26;
-    g_cfg.servo_gpio[LEG_LEFT_MIDDLE][LEG_SERVO_TIBIA] = 25;
-
-    g_cfg.servo_gpio[LEG_LEFT_REAR][LEG_SERVO_COXA]  = 23;
-    g_cfg.servo_gpio[LEG_LEFT_REAR][LEG_SERVO_FEMUR] = 32;
-    g_cfg.servo_gpio[LEG_LEFT_REAR][LEG_SERVO_TIBIA] = 33;
-
-    g_cfg.servo_gpio[LEG_RIGHT_FRONT][LEG_SERVO_COXA]  = 5;
-    g_cfg.servo_gpio[LEG_RIGHT_FRONT][LEG_SERVO_FEMUR] = 17;
-    g_cfg.servo_gpio[LEG_RIGHT_FRONT][LEG_SERVO_TIBIA] = 16;
-
-    g_cfg.servo_gpio[LEG_RIGHT_MIDDLE][LEG_SERVO_COXA]  = 4;
-    g_cfg.servo_gpio[LEG_RIGHT_MIDDLE][LEG_SERVO_FEMUR] = 2;
-    g_cfg.servo_gpio[LEG_RIGHT_MIDDLE][LEG_SERVO_TIBIA] = 15;
-
-    g_cfg.servo_gpio[LEG_RIGHT_REAR][LEG_SERVO_COXA]  = 21;
-    g_cfg.servo_gpio[LEG_RIGHT_REAR][LEG_SERVO_FEMUR] = 19;
-    g_cfg.servo_gpio[LEG_RIGHT_REAR][LEG_SERVO_TIBIA] = 18;
-
-    // Driver selection: choose LEDC for the three joints of RIGHT_MIDDLE (leg 4) and LEFT_REAR (leg 2) as example.
-    // Adjust to match pins that are LEDC-friendly if some MCPWM pins (like 32/33/34/35) cause LEDC invalid gpio errors.
-    // For now we move LEDC usage away from GPIO 32/35 which are input-only or restricted on classic ESP32.
-    for (int j = 0; j < 3; ++j) {
-        g_cfg.servo_driver_sel[LEG_RIGHT_MIDDLE][j] = 1; // LEDC
-        g_cfg.servo_driver_sel[LEG_RIGHT_REAR][j] = 1;   // LEDC (example second leg)
-    }
 
     // These offsets are kinematic-model constants used by leg_configure.
     // Lengths/mount/stance must come from the leg geometry namespace.
@@ -71,15 +30,43 @@ esp_err_t robot_config_init_default(void) {
     if (config_manager_get_state(&cfg_state) != ESP_OK ||
         !cfg_state.initialized ||
         !cfg_state.namespace_loaded[CONFIG_NS_LEG_GEOMETRY] ||
-        !cfg_state.namespace_loaded[CONFIG_NS_JOINT_CALIB]) {
+        !cfg_state.namespace_loaded[CONFIG_NS_JOINT_CALIB] ||
+        !cfg_state.namespace_loaded[CONFIG_NS_SERVO_MAP]) {
         ESP_LOGE(TAG, "Required configuration namespaces are not loaded");
         return ESP_ERR_INVALID_STATE;
     }
 
     const leg_geometry_config_t* stored_geom = config_get_leg_geometry();
+    const servo_map_config_t* stored_servo_map = config_get_servo_map();
     if (!stored_geom) {
         ESP_LOGE(TAG, "Leg geometry namespace returned NULL config");
         return ESP_ERR_INVALID_STATE;
+    }
+    if (!stored_servo_map) {
+        ESP_LOGE(TAG, "Servo map namespace returned NULL config");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    for (int i = 0; i < NUM_LEGS; ++i) {
+        g_cfg.mcpwm_group_id[i] = stored_servo_map->mcpwm_group_id[i];
+        if (g_cfg.mcpwm_group_id[i] < 0 || g_cfg.mcpwm_group_id[i] > 1) {
+            ESP_LOGE(TAG, "Invalid MCPWM group for leg %d: %d", i, g_cfg.mcpwm_group_id[i]);
+            return ESP_ERR_INVALID_STATE;
+        }
+
+        for (int j = 0; j < 3; ++j) {
+            g_cfg.servo_gpio[i][j] = stored_servo_map->servo_gpio[i][j];
+            g_cfg.servo_driver_sel[i][j] = stored_servo_map->servo_driver_sel[i][j];
+
+            if (g_cfg.servo_gpio[i][j] < -1 || g_cfg.servo_gpio[i][j] > 39) {
+                ESP_LOGE(TAG, "Invalid servo GPIO for leg %d joint %d: %d", i, j, g_cfg.servo_gpio[i][j]);
+                return ESP_ERR_INVALID_STATE;
+            }
+            if (g_cfg.servo_driver_sel[i][j] != 0 && g_cfg.servo_driver_sel[i][j] != 1) {
+                ESP_LOGE(TAG, "Invalid servo driver selection for leg %d joint %d: %d", i, j, g_cfg.servo_driver_sel[i][j]);
+                return ESP_ERR_INVALID_STATE;
+            }
+        }
     }
 
     for (int i = 0; i < NUM_LEGS; ++i) {
