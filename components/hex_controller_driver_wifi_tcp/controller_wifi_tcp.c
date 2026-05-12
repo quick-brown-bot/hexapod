@@ -103,12 +103,19 @@ static void wifi_watchdog_task(void *arg) {
 
 static void wifi_tcp_server_task(void *arg) {
     const controller_wifi_tcp_cfg_t* cfg = (const controller_wifi_tcp_cfg_t*)arg;
-
-    wifi_ap_init_once();
-    const char *ssid = wifi_ap_get_ssid();
-    if (ssid) {
-        ESP_LOGI(TAG, "WiFi AP active SSID=%s", ssid);
+    if (!cfg || cfg->listen_port == 0 || cfg->connection_timeout_ms == 0) {
+        ESP_LOGE(TAG, "Invalid WiFi TCP configuration");
+        vTaskDelete(NULL);
+        return;
     }
+
+    const char *ssid = wifi_ap_get_ssid();
+    if (!ssid) {
+        ESP_LOGE(TAG, "WiFi AP is not initialized; refusing fallback init");
+        vTaskDelete(NULL);
+        return;
+    }
+    ESP_LOGI(TAG, "WiFi AP active SSID=%s", ssid);
     
     esp_netif_t* netif = NULL;
     esp_netif_ip_info_t ip_info;
@@ -176,13 +183,26 @@ static void wifi_tcp_server_task(void *arg) {
 }
 
 void controller_driver_init_wifi_tcp(const controller_config_t *core) {
-    size_t cfg_sz = 0;
-    const void *p = controller_internal_get_driver_cfg(&cfg_sz);
+    if (!core) {
+        ESP_LOGE(TAG, "NULL controller core config");
+        return;
+    }
+
+    const void *p = core->driver_cfg;
+    size_t cfg_sz = core->driver_cfg_size;
+
     static controller_wifi_tcp_cfg_t local_cfg;
-    if (p && cfg_sz == sizeof(controller_wifi_tcp_cfg_t)) {
-        local_cfg = *(const controller_wifi_tcp_cfg_t*)p;
-    } else {
-        local_cfg = controller_wifi_tcp_default();
+    if (!p || cfg_sz != sizeof(controller_wifi_tcp_cfg_t)) {
+        ESP_LOGE(TAG, "Missing WiFi TCP driver configuration (namespace-backed cfg required)");
+        return;
+    }
+
+    local_cfg = *(const controller_wifi_tcp_cfg_t*)p;
+    if (local_cfg.listen_port == 0 || local_cfg.connection_timeout_ms == 0) {
+        ESP_LOGE(TAG, "Invalid WiFi TCP driver config: port=%u timeout_ms=%u",
+                 (unsigned)local_cfg.listen_port,
+                 (unsigned)local_cfg.connection_timeout_ms);
+        return;
     }
     
     xTaskCreate(wifi_tcp_server_task, "ctrl_wifi_srv", core->task_stack, &local_cfg, core->task_prio, NULL);

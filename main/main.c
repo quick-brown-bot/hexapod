@@ -141,17 +141,20 @@ void app_main(void)
     }
 
     wifi_ap_options_t ap_opts = {
-        .mode = (wifi_ns_cfg->ap_ssid_mode <= 2U) ? (wifi_ap_ssid_mode_e)wifi_ns_cfg->ap_ssid_mode : WIFI_AP_SSID_MAC_SUFFIX,
+        .mode = (wifi_ap_ssid_mode_e)wifi_ns_cfg->ap_ssid_mode,
         .fixed_prefix = wifi_ns_cfg->ap_fixed_prefix,
         .fixed_ssid = wifi_ns_cfg->ap_fixed_ssid,
-        .password = (wifi_ns_cfg->ap_password[0] != '\0') ? wifi_ns_cfg->ap_password : NULL,
+        .password = wifi_ns_cfg->ap_password,
         .channel = (uint8_t)wifi_ns_cfg->ap_channel,
         .max_clients = (uint8_t)wifi_ns_cfg->ap_max_clients,
     };
     
     // Bring up WiFi AP early so that network-based controller drivers or diagnostics
     // can connect even if later initialization stalls.
-    wifi_ap_init_with_options(&ap_opts);
+    if (!wifi_ap_init_with_options(&ap_opts)) {
+        ESP_LOGE(TAG, "Failed to initialize WiFi AP from namespace configuration");
+        return;
+    }
     
     // Initialize robot configuration (namespace-backed; fail fast on invalid state)
     err = robot_config_init_default();

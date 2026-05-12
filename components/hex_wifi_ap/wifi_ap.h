@@ -26,11 +26,9 @@ typedef struct {
 	uint8_t max_clients;        // default 4
 } wifi_ap_options_t;
 
-// Initialize AP once with options (if called multiple times, original config retained)
+// Initialize AP once with explicit options from configuration storage.
+// Returns false on validation or startup failure.
 bool wifi_ap_init_with_options(const wifi_ap_options_t *opt);
-
-// Convenience default initializer (calls wifi_ap_init_with_options with defaults)
-bool wifi_ap_init_once(void);
 
 // Retrieve the actual SSID in use (NULL if not started yet)
 const char *wifi_ap_get_ssid(void);

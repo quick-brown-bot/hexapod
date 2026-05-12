@@ -15,13 +15,6 @@ typedef struct {
     uint16_t connection_timeout_ms;
 } controller_wifi_tcp_cfg_t;
 
-static inline controller_wifi_tcp_cfg_t controller_wifi_tcp_default(void) {
-    return (controller_wifi_tcp_cfg_t){
-        .listen_port = 5555,
-        .connection_timeout_ms = 60000,
-    };
-}
-
 // Initialize WiFi TCP controller driver
 void controller_driver_init_wifi_tcp(const controller_config_t *core);
 
