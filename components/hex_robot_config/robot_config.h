@@ -34,12 +34,6 @@ typedef struct {
     // Servo driver selection per joint: 0 = MCPWM, 1 = LEDC (extend later if needed)
     int servo_driver_sel[NUM_LEGS][3];
 
-    // Debug/telemetry controls
-    int debug_leg_enable;          // 0/1 to enable leg debugger
-    int debug_leg_index;           // which leg to monitor
-    float debug_leg_delta_thresh;  // radians; min delta to log
-    unsigned int debug_leg_min_interval_ms; // min interval between logs
-
     // --- Planned settings to migrate to storage (comments only for now) ---
     // - Servo GPIO pins per leg/joint (coxa/femur/tibia)
     // - MCPWM group/operator/timer mapping per joint
@@ -78,11 +72,6 @@ int robot_config_get_mcpwm_group(int leg_index);
 
 // Driver selection getter: 0 -> MCPWM, 1 -> LEDC
 int robot_config_get_servo_driver(int leg_index, leg_servo_t joint);
-
-// Debug controls getters
-int robot_config_debug_enabled(void);
-int robot_config_debug_leg_index(void);
-float robot_config_debug_delta_thresh(void);
 
 // Stance getters (per leg). In leg-local axes: X_outward (+), Y_forward (+). Units: meters.
 float robot_config_get_stance_out_m(int leg_index);

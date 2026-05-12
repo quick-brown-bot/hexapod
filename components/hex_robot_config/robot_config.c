@@ -99,12 +99,6 @@ esp_err_t robot_config_init_default(void) {
     // - Per-joint limits/offsets/inversions
     // - Mount poses (position + yaw)
 
-    // --- Debug defaults ---
-    g_cfg.debug_leg_enable = 1;         // enable by default for bring-up
-    g_cfg.debug_leg_index = 0;          // monitor leg 0 by default
-    g_cfg.debug_leg_delta_thresh = 0.0174533f; // ~1 degree
-    g_cfg.debug_leg_min_interval_ms = 100;     // 100 ms between logs min
-
     return ESP_OK;
 }
 
@@ -153,16 +147,6 @@ int robot_config_get_servo_driver(int leg_index, leg_servo_t joint) {
     if (leg_index < 0 || leg_index >= NUM_LEGS) return 0;
     int j = (int)joint; if (j < 0 || j >= 3) return 0;
     return g_cfg.servo_driver_sel[leg_index][j];
-}
-
-int robot_config_debug_enabled(void) {
-    return g_cfg.debug_leg_enable;
-}
-int robot_config_debug_leg_index(void) {
-    return g_cfg.debug_leg_index;
-}
-float robot_config_debug_delta_thresh(void) {
-    return g_cfg.debug_leg_delta_thresh;
 }
 
 float robot_config_get_stance_out_m(int leg_index) {
