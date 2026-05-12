@@ -160,14 +160,14 @@ static inline float clampf(float v, float lo, float hi) {
 }
 
 static inline int map_angle_to_pwm_us(float radians, const joint_calib_t *cal) {
-    // Apply offset and inversion, then clamp
-    float q = (cal ? (float)cal->invert_sign : 1.0f) * (radians + (cal ? cal->zero_offset_rad : 0.0f));
-    float qmin = cal ? cal->min_rad : (-M_PI * 0.5f);
-    float qmax = cal ? cal->max_rad : ( M_PI * 0.5f);
+    // Calibration is required by design (no fallback defaults).
+    float q = (float)cal->invert_sign * (radians + cal->zero_offset_rad);
+    float qmin = cal->min_rad;
+    float qmax = cal->max_rad;
     float r = clampf(q, qmin, qmax);
     // Map to PWM
-    int pwm_min = cal ? cal->pwm_min_us : 500;
-    int pwm_max = cal ? cal->pwm_max_us : 2500;
+    int pwm_min = cal->pwm_min_us;
+    int pwm_max = cal->pwm_max_us;
     float t = (r - qmin) / (qmax - qmin);
     int us = (int)(pwm_min + t * (float)(pwm_max - pwm_min));
     return us;
@@ -176,6 +176,21 @@ static inline int map_angle_to_pwm_us(float radians, const joint_calib_t *cal) {
 // For now, we only log the intended PWM. Actual MCPWM output will be added later.
 esp_err_t robot_set_joint_angle_rad(int leg_index, leg_servo_t joint, float radians) {
     const joint_calib_t *cal = robot_config_get_joint_calib(leg_index, joint);
+    if (!cal) {
+        ESP_LOGE(TAG_RC, "Missing joint calibration for leg %d joint %d", leg_index, (int)joint);
+        return ESP_ERR_INVALID_STATE;
+    }
+    if (cal->max_rad <= cal->min_rad) {
+        ESP_LOGE(TAG_RC, "Invalid calibration range for leg %d joint %d: min=%.3f max=%.3f",
+                 leg_index, (int)joint, cal->min_rad, cal->max_rad);
+        return ESP_ERR_INVALID_STATE;
+    }
+    if (cal->pwm_max_us <= cal->pwm_min_us) {
+        ESP_LOGE(TAG_RC, "Invalid PWM range for leg %d joint %d: min=%d max=%d",
+                 leg_index, (int)joint, cal->pwm_min_us, cal->pwm_max_us);
+        return ESP_ERR_INVALID_STATE;
+    }
+
     int gpio = robot_config_get_servo_gpio(leg_index, joint);
     int group = robot_config_get_mcpwm_group(leg_index);
     int pwm_us = map_angle_to_pwm_us(radians, cal);
