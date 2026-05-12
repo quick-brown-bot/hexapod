@@ -10,6 +10,7 @@
 
 #include "config_manager_core_types.h"
 #include "config_ns_controller_api.h"
+#include "config_ns_gait_api.h"
 #include "config_ns_joint_api.h"
 #include "config_ns_leg_geometry_api.h"
 #include "config_ns_motion_limits_api.h"
@@ -35,6 +36,7 @@ motion_limits_config_t* config_namespace_catalog_motion_limits_config(void);
 controller_config_namespace_t* config_namespace_catalog_controller_config(void);
 wifi_config_namespace_t* config_namespace_catalog_wifi_config(void);
 servo_map_config_t* config_namespace_catalog_servo_map_config(void);
+gait_config_t* config_namespace_catalog_gait_config(void);
 
 #ifdef __cplusplus
 }

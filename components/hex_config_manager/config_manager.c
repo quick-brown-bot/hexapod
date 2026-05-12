@@ -19,7 +19,7 @@
 static const char *TAG = "config_mgr";
 
 // Configuration version for migration support
-#define CONFIG_SCHEMA_VERSION 2
+#define CONFIG_SCHEMA_VERSION 3
 
 // Global configuration version key (stored in system namespace for now)
 #define GLOBAL_CONFIG_VERSION_KEY "global_ver"  // Max 15 chars for NVS
@@ -91,6 +91,32 @@ static esp_err_t migrate_v1_to_v2(void) {
     return ESP_OK;
 }
 
+static esp_err_t migrate_v2_to_v3(void) {
+    ESP_LOGI(TAG, "Migrating v2 -> v3: Initializing gait namespace defaults");
+
+    esp_err_t err = ensure_namespace_registry_initialized();
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    const config_namespace_registration_t* reg = config_namespace_registry_find_by_id(CONFIG_NS_GAIT);
+    if (!reg || !reg->descriptor || !reg->descriptor->write_defaults_to_nvs) {
+        ESP_LOGE(TAG, "Gait namespace descriptor unavailable during migration");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    err = reg->descriptor->write_defaults_to_nvs(reg->context);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize defaults for namespace %s during migration: %s",
+                 reg->descriptor->ns_name,
+                 esp_err_to_name(err));
+        return err;
+    }
+
+    ESP_LOGI(TAG, "Migration v2 -> v3 completed");
+    return ESP_OK;
+}
+
 static esp_err_t config_migrate_version(uint16_t from, uint16_t to) {
     ESP_LOGI(TAG, "Migrating configuration schema: v%d -> v%d", from, to);
     
@@ -104,6 +130,12 @@ static esp_err_t config_migrate_version(uint16_t from, uint16_t to) {
         case 1:
             if (to == 2) {
                 return migrate_v1_to_v2();
+            }
+            break;
+
+        case 2:
+            if (to == 3) {
+                return migrate_v2_to_v3();
             }
             break;
             

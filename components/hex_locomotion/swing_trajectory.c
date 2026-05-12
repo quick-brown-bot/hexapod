@@ -8,10 +8,11 @@
 void swing_trajectory_init(swing_trajectory_t *trajectory, float step_length, float clearance_height) {
     trajectory->step_length = step_length;
     trajectory->clearance_height = clearance_height;
-    // TODO: Make these configurable via Kconfig or runtime config
     trajectory->y_range_m = 0.05f; // +/-5 cm lateral
     trajectory->z_min_m = -0.05f;   // 5 cm min body height (avoid hitting battery)
     trajectory->z_max_m = -0.15f;   // 15 cm max body height
+    trajectory->max_yaw_per_cycle_rad = 0.4f;
+    trajectory->turn_direction = 1.0f;
     for (int i = 0; i < NUM_LEGS; ++i) {
         trajectory->desired_positions[i].x = 0.0f;
         trajectory->desired_positions[i].y = 0.0f;
@@ -46,13 +47,7 @@ void swing_trajectory_generate(swing_trajectory_t *trajectory, const gait_schedu
     }
     float L = trajectory->step_length * scale * speed_mag; // effective step length (meters)
     
-    // Calculate yaw rotation per gait cycle
-    // Scale wz_n to a reasonable angular velocity (radians per cycle)
-    // TODO: Make this configurable - using 0.4 rad (~22.9 deg) as max turn per cycle
-    float max_yaw_per_cycle = 0.4f; // radians
-    // TODO: Make turn direction configurable (set to -1.0f to reverse direction)
-    float turn_direction = 1.0f; // +1.0f = normal, -1.0f = reversed
-    float yaw_rotation = wz_n * max_yaw_per_cycle * scale * turn_direction;
+    float yaw_rotation = wz_n * trajectory->max_yaw_per_cycle_rad * scale * trajectory->turn_direction;
     
     float clr = trajectory->clearance_height * (cmd->terrain_climb ? 1.5f : 1.0f);
     // Map normalized pose to meters (Z UP): z_target in [-1,1] -> [z_min_m, z_max_m]

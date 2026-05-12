@@ -27,6 +27,7 @@
 #include "config_ns_system_api.h"
 #include "config_ns_controller_api.h"
 #include "config_ns_wifi_api.h"
+#include "config_ns_gait_api.h"
 #include "rpc_commands.h"
 
 static const char *TAG = "main";
@@ -49,8 +50,19 @@ void gait_framework_main(void *arg)
     ESP_LOGI(TAG, "KPP system initialized with motion limiting enabled");
 
     // Initialize gait framework modules
-    gait_scheduler_init(&scheduler, 1.5f); // 1.5 second cycle time
-    swing_trajectory_init(&trajectory, 0.07f, 0.04f); // 7cm step, 4cm clearance
+    const gait_config_t* gait_cfg = config_get_gait();
+    if (!gait_cfg) {
+        ESP_LOGE(TAG, "Gait namespace unavailable");
+        return;
+    }
+
+    gait_scheduler_init(&scheduler, gait_cfg->cycle_time_s);
+    swing_trajectory_init(&trajectory, gait_cfg->step_length_m, gait_cfg->clearance_height_m);
+    trajectory.y_range_m = gait_cfg->y_range_m;
+    trajectory.z_min_m = gait_cfg->z_min_m;
+    trajectory.z_max_m = gait_cfg->z_max_m;
+    trajectory.max_yaw_per_cycle_rad = gait_cfg->max_yaw_per_cycle_rad;
+    trajectory.turn_direction = gait_cfg->turn_direction;
 
     const float dt = 0.01f; // 10ms loop
     while (1) {

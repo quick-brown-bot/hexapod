@@ -25,6 +25,8 @@ typedef struct {
     // Foot target heights should stay within [z_min_m, z_max_m].
     float z_min_m;     // minimum allowed foot height (closest to ground)
     float z_max_m;     // maximum allowed foot height (lift limit)
+    float max_yaw_per_cycle_rad;
+    float turn_direction;
 } swing_trajectory_t;
 
 void swing_trajectory_init(swing_trajectory_t *trajectory, float step_length, float clearance_height);

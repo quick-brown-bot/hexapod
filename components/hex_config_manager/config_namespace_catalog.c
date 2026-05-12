@@ -2,6 +2,7 @@
 
 #include "config_namespace_registry.h"
 #include "config_ns_controller.h"
+#include "config_ns_gait.h"
 #include "config_ns_joint_calib.h"
 #include "config_ns_leg_geometry.h"
 #include "config_ns_motion_limits.h"
@@ -62,6 +63,11 @@ esp_err_t config_namespace_catalog_register_all(
         &state->namespace_dirty[CONFIG_NS_SERVO_MAP],
         &state->namespace_loaded[CONFIG_NS_SERVO_MAP]
     );
+    config_gait_namespace_bind(
+        &state->nvs_handles[CONFIG_NS_GAIT],
+        &state->namespace_dirty[CONFIG_NS_GAIT],
+        &state->namespace_loaded[CONFIG_NS_GAIT]
+    );
 
     namespace_registration_entry_t namespace_registration_entries[] = {
         { &g_system_namespace_descriptor, config_system_namespace_context() },
@@ -71,6 +77,7 @@ esp_err_t config_namespace_catalog_register_all(
         { &g_controller_namespace_descriptor, config_controller_namespace_context() },
         { &g_wifi_namespace_descriptor, config_wifi_namespace_context() },
         { &g_servo_map_namespace_descriptor, config_servo_map_namespace_context() },
+        { &g_gait_namespace_descriptor, config_gait_namespace_context() },
     };
 
     config_namespace_registry_reset();
@@ -114,4 +121,8 @@ wifi_config_namespace_t* config_namespace_catalog_wifi_config(void) {
 
 servo_map_config_t* config_namespace_catalog_servo_map_config(void) {
     return config_servo_map_namespace_config();
+}
+
+gait_config_t* config_namespace_catalog_gait_config(void) {
+    return config_gait_namespace_config();
 }
