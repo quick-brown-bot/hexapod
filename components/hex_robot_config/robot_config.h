@@ -3,6 +3,7 @@
 
 #include "leg.h"
 #include "types/joint_types.h"
+#include "esp_err.h"
 
 #define NUM_LEGS 6
 
@@ -53,7 +54,7 @@ typedef struct {
 
 // Initialize a process-wide default config with placeholder geometry.
 // Call this once at startup before using whole_body_control/robot_control.
-void robot_config_init_default(void);
+esp_err_t robot_config_init_default(void);
 
 // Access per-leg IK handle (geometry). Returns NULL if not initialized.
 leg_handle_t robot_config_get_leg(int leg_index);

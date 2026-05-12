@@ -3,11 +3,7 @@
 #include "config_ns_joint_api.h"
 #include "config_ns_leg_geometry_api.h"
 #include <string.h>
-#include <math.h>
 #include "esp_log.h"
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 // Single static instance for now. In the future, load/save to NVS.
 static robot_config_t g_cfg;
@@ -17,8 +13,9 @@ static float g_base_z[NUM_LEGS];
 static float g_base_yaw[NUM_LEGS];
 static float g_stance_out[NUM_LEGS]; // leg-local outward (+)
 static float g_stance_fwd[NUM_LEGS]; // leg-local forward (+)
+static const char* TAG = "robot_config";
 
-void robot_config_init_default(void) {
+esp_err_t robot_config_init_default(void) {
     memset(&g_cfg, 0, sizeof(g_cfg));
     // Default: no GPIOs assigned yet; distribute legs across two MCPWM groups (0 for legs 0..2, 1 for legs 3..5)
     for (int i = 0; i < NUM_LEGS; ++i) {
@@ -63,36 +60,37 @@ void robot_config_init_default(void) {
         g_cfg.servo_driver_sel[LEG_RIGHT_REAR][j] = 1;   // LEDC (example second leg)
     }
 
-    // Default geometry fallback for all 6 legs.
-    // Units are meters/radians and match leg_configure expectations.
-    const leg_geometry_t fallback_geom = {
-        .len_coxa = 0.068f,  // 68 mm
-        .len_femur = 0.088f, // 88 mm
-        .len_tibia = 0.127f, // 127 mm
-        .coxa_offset_rad = 0*-0.017453292519943295f,
-        .femur_offset_rad = 0.5396943301595464f,
-        .tibia_offset_rad = 1.0160719600939494f,
-    };
+    // These offsets are kinematic-model constants used by leg_configure.
+    // Lengths/mount/stance must come from the leg geometry namespace.
+    const float coxa_offset_rad = 0.0f;
+    const float femur_offset_rad = 0.5396943301595464f;
+    const float tibia_offset_rad = 1.0160719600939494f;
 
-    const leg_geometry_config_t* stored_geom = NULL;
     config_manager_state_t cfg_state = {0};
-    bool use_stored_geom = false;
 
-    if (config_manager_get_state(&cfg_state) == ESP_OK &&
-        cfg_state.initialized &&
-        cfg_state.namespace_loaded[CONFIG_NS_LEG_GEOMETRY]) {
-        stored_geom = config_get_leg_geometry();
-        use_stored_geom = (stored_geom != NULL);
+    if (config_manager_get_state(&cfg_state) != ESP_OK ||
+        !cfg_state.initialized ||
+        !cfg_state.namespace_loaded[CONFIG_NS_LEG_GEOMETRY] ||
+        !cfg_state.namespace_loaded[CONFIG_NS_JOINT_CALIB]) {
+        ESP_LOGE(TAG, "Required configuration namespaces are not loaded");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    const leg_geometry_config_t* stored_geom = config_get_leg_geometry();
+    if (!stored_geom) {
+        ESP_LOGE(TAG, "Leg geometry namespace returned NULL config");
+        return ESP_ERR_INVALID_STATE;
     }
 
     for (int i = 0; i < NUM_LEGS; ++i) {
-        leg_geometry_t leg_geom = fallback_geom;
-        if (use_stored_geom) {
-            leg_geom.len_coxa = stored_geom->len_coxa[i];
-            leg_geom.len_femur = stored_geom->len_femur[i];
-            leg_geom.len_tibia = stored_geom->len_tibia[i];
-        }
-
+        leg_geometry_t leg_geom = {
+            .len_coxa = stored_geom->len_coxa[i],
+            .len_femur = stored_geom->len_femur[i],
+            .len_tibia = stored_geom->len_tibia[i],
+            .coxa_offset_rad = coxa_offset_rad,
+            .femur_offset_rad = femur_offset_rad,
+            .tibia_offset_rad = tibia_offset_rad,
+        };
         (void)leg_configure(&leg_geom, &g_cfg.legs[i]);
     }
 
@@ -100,78 +98,13 @@ void robot_config_init_default(void) {
     // Joint calibration is now handled directly by config_manager.
     // No caching needed - robot_config_get_joint_calib() calls config_manager on-demand.
 
-    // --- Mount poses (defaults) ---
-    // Indexing convention (example): 0..2 left front->rear, 3..5 right front->rear.
-    // Body frame: x forward (+), y left (+), z up (+).
-    // User defaults:
-    //  - Front/back legs offset in x by ±0.08 m (front +0.08, back -0.08)
-    //  - All legs offset in y by ±0.05 m (left +0.05, right -0.05)
-    //  - Mount height z ~ 0.0 m baseline (adjust if topological zero differs)
-    //  - Base yaw chosen so that neutral servo points outward:
-    //      left side: +90° (pi/2) from body forward to left (outward)
-    //      right side: -90° (-pi/2) from body forward to right (outward)
-    // NOTE: If your neutral servo mechanically points outward with zero angle, you might set these to 0/π and
-    // then account for the 90° rotation in the leg’s joint zero offset at the actuator layer. We choose +/−90° here
-    // to absorb the chassis-to-leg frame rotation so IK gets a consistent leg-local frame.
-
-    const float X_OFF_FRONT = 0.08f;
-    const float X_OFF_REAR  = -0.08f;
-    const float Y_OFF_LEFT  = 0.05f;
-    const float Y_OFF_RIGHT = -0.05f;
-    const float Z_OFF       = 0.0f;
-    const float YAW_LEFT    = (float)M_PI * 0.5f;   // +90 deg
-    const float YAW_RIGHT   = (float)-M_PI * 0.5f;  // -90 deg
-    
-    const float QANGLE = (float)M_PI * 0.25f;   // +45 deg
-    const float STD_STANCE_OUT = 0.15f; // meters
-    const float STD_STANCE_FWD = 0.0f;  // meters
-
     for (int i = 0; i < NUM_LEGS; ++i) {
-        g_stance_out[i] = STD_STANCE_OUT;
-        g_stance_fwd[i] = STD_STANCE_FWD;
-    }
-
-    // Leg mount poses by enum
-    g_base_x[LEG_LEFT_FRONT] = X_OFF_FRONT;  
-    g_base_y[LEG_LEFT_FRONT] = Y_OFF_LEFT;  
-    g_base_z[LEG_LEFT_FRONT] = Z_OFF;  
-    g_base_yaw[LEG_LEFT_FRONT] = YAW_LEFT - QANGLE;
-
-    g_base_x[LEG_LEFT_MIDDLE] = 0.0f;
-    g_base_y[LEG_LEFT_MIDDLE] = Y_OFF_LEFT; 
-    g_base_z[LEG_LEFT_MIDDLE] = Z_OFF;
-    g_base_yaw[LEG_LEFT_MIDDLE] = YAW_LEFT;
-
-    g_base_x[LEG_LEFT_REAR] = X_OFF_REAR;  
-    g_base_y[LEG_LEFT_REAR] = Y_OFF_LEFT; 
-    g_base_z[LEG_LEFT_REAR] = Z_OFF;  
-    g_base_yaw[LEG_LEFT_REAR] = YAW_LEFT + QANGLE;
-
-    g_base_x[LEG_RIGHT_FRONT] = X_OFF_FRONT;
-    g_base_y[LEG_RIGHT_FRONT] = Y_OFF_RIGHT;
-    g_base_z[LEG_RIGHT_FRONT] = Z_OFF;
-    g_base_yaw[LEG_RIGHT_FRONT] = YAW_RIGHT + QANGLE;
-
-    g_base_x[LEG_RIGHT_MIDDLE] = 0.0f;     
-    g_base_y[LEG_RIGHT_MIDDLE] = Y_OFF_RIGHT; 
-    g_base_z[LEG_RIGHT_MIDDLE] = Z_OFF; 
-    g_base_yaw[LEG_RIGHT_MIDDLE] = YAW_RIGHT;
-
-    g_base_x[LEG_RIGHT_REAR] = X_OFF_REAR;  
-    g_base_y[LEG_RIGHT_REAR] = Y_OFF_RIGHT;  
-    g_base_z[LEG_RIGHT_REAR] = Z_OFF;   
-    g_base_yaw[LEG_RIGHT_REAR] = YAW_RIGHT - QANGLE;
-
-    // If leg geometry namespace is loaded, override mount and stance defaults.
-    if (use_stored_geom) {
-        for (int i = 0; i < NUM_LEGS; ++i) {
-            g_base_x[i] = stored_geom->mount_x[i];
-            g_base_y[i] = stored_geom->mount_y[i];
-            g_base_z[i] = stored_geom->mount_z[i];
-            g_base_yaw[i] = stored_geom->mount_yaw[i];
-            g_stance_out[i] = stored_geom->stance_out[i];
-            g_stance_fwd[i] = stored_geom->stance_fwd[i];
-        }
+        g_base_x[i] = stored_geom->mount_x[i];
+        g_base_y[i] = stored_geom->mount_y[i];
+        g_base_z[i] = stored_geom->mount_z[i];
+        g_base_yaw[i] = stored_geom->mount_yaw[i];
+        g_stance_out[i] = stored_geom->stance_out[i];
+        g_stance_fwd[i] = stored_geom->stance_fwd[i];
     }
 
     // --- Future hardware settings (not applied here; live in robot_control) ---
@@ -184,6 +117,8 @@ void robot_config_init_default(void) {
     g_cfg.debug_leg_index = 0;          // monitor leg 0 by default
     g_cfg.debug_leg_delta_thresh = 0.0174533f; // ~1 degree
     g_cfg.debug_leg_min_interval_ms = 100;     // 100 ms between logs min
+
+    return ESP_OK;
 }
 
 leg_handle_t robot_config_get_leg(int leg_index) {
@@ -207,20 +142,11 @@ const joint_calib_t* robot_config_get_joint_calib(int leg_index, leg_servo_t joi
     static joint_calib_t temp_calib;
     
     // Get data directly from configuration manager
-    if (config_get_joint_calib_data(leg_index, j, &temp_calib) == ESP_OK) {
-        // No conversion needed - structures are now identical
-        return &temp_calib;
+    if (config_get_joint_calib_data(leg_index, j, &temp_calib) != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to read joint calibration for leg %d joint %d", leg_index, j);
+        return NULL;
     }
-    ESP_LOGW("robot_config", "robot_config_get_joint_calib: Using fallback defaults for leg %d joint %d", leg_index, j);
-    
-    // Fallback to default values if config manager is not available
-    temp_calib.zero_offset_rad = 0.0f;
-    temp_calib.invert_sign = (j == LEG_SERVO_COXA || j == LEG_SERVO_TIBIA) ? -1 : 1;
-    temp_calib.min_rad = (float)-M_PI * 0.5f;
-    temp_calib.max_rad = (float) M_PI * 0.5f;
-    temp_calib.pwm_min_us = 500;
-    temp_calib.pwm_max_us = 2500;
-    temp_calib.neutral_us = 1500;
+
     return &temp_calib;
 }
 

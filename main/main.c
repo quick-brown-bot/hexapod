@@ -141,8 +141,12 @@ void app_main(void)
     // can connect even if later initialization stalls.
     wifi_ap_init_with_options(&ap_opts);
     
-    // Initialize robot configuration
-    robot_config_init_default();
+    // Initialize robot configuration (namespace-backed; fail fast on invalid state)
+    err = robot_config_init_default();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize robot configuration: %s", esp_err_to_name(err));
+        return;
+    }
     
     // Initialize the primary controller from configuration namespaces.
     const controller_config_namespace_t* controller_cfg = config_get_controller();
