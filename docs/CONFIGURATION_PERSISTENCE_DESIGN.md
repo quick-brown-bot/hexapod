@@ -365,20 +365,18 @@ Following Betaflight's Parameter Group (PG) concept, organized by logical functi
 ```
 
 ### 8. debug - Development and Diagnostic Settings
-**Derived from:** `robot_config_t` debug settings and `kpp_config.h` logging
+**Derived from:** `kpp_config.h` compile-time logging toggles
 
 **Debug and logging configuration:**
 ```c
-// Debug control (~8 parameters)
-"debug_leg_enable"          // robot_config_t.debug_leg_enable
-"debug_leg_index"           // robot_config_t.debug_leg_index  
-"debug_leg_delta_thresh"    // robot_config_t.debug_leg_delta_thresh
-"debug_leg_min_interval_ms" // robot_config_t.debug_leg_min_interval_ms
-
-// Logging settings (~10 parameters)
+// Logging settings
 "enable_state_logging"      // KPP_ENABLE_STATE_LOGGING
 "log_interval"              // KPP_LOG_INTERVAL (control cycles)
 "enable_limit_logging"      // KPP_ENABLE_LIMIT_LOGGING
+```
+
+```c
+// Future runtime logging namespace candidates
 "log_level"                 // ESP log level (ERROR/WARN/INFO/DEBUG)
 "telemetry_rate"            // Telemetry broadcast rate (Hz)
 "enable_performance_stats"  // Performance monitoring enable
