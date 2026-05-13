@@ -100,7 +100,7 @@ When creating a new namespace in `hex_config_manager`, follow this checklist in 
 
 ## 10) Documentation Sync
 
-- Start from `docs/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md` when adding a namespace to keep file shape and touch points consistent.
+- Start from `docs/configuration/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md` when adding a namespace to keep file shape and touch points consistent.
 - Update design docs and examples to the short namespace string name.
 - Keep RPC examples aligned with real namespace strings and parameter names.
 - Keep folder-path examples aligned with `namespaces/<namespace>/` structure.

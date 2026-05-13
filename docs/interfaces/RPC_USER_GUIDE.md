@@ -9,7 +9,7 @@ This guide is operational-only:
 - how to send commands safely
 - practical workflows for tuning and persistence
 
-For authoritative protocol behavior (supported commands, framing, and semantics), see `docs/RPC_SYSTEM_DESIGN.md`.
+For authoritative protocol behavior (supported commands, framing, and semantics), see [RPC_SYSTEM_DESIGN.md](RPC_SYSTEM_DESIGN.md).
 
 ## Transport Setup
 
@@ -175,5 +175,5 @@ This erases robot configuration namespaces and reloads defaults. Use with care.
 
 ## Related Documentation
 
-- See `docs/RPC_SYSTEM_DESIGN.md` for the canonical RPC command contract.
-- See `docs/WIFI_TCP_PROTOCOL.md` and `docs/BLUETOOTH_CLASSIC_PROTOCOL.md` for protocol deprecation context.
+- See [RPC_SYSTEM_DESIGN.md](RPC_SYSTEM_DESIGN.md) for the canonical RPC command contract.
+- See [WIFI_TCP_PROTOCOL.md](WIFI_TCP_PROTOCOL.md) and [BLUETOOTH_CLASSIC_PROTOCOL.md](BLUETOOTH_CLASSIC_PROTOCOL.md) for transport-specific context.

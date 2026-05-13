@@ -1,21 +1,54 @@
-# Documentation Index
+# Hexapod Documentation
 
-This folder contains project technical documentation consolidated from the repository root.
+This directory is organized by intent so that stable reference material stays separate from plans and historical refactor notes.
 
-## Architecture and Design
-- [COMPONENT_ARCHITECTURE_BASELINE.md](COMPONENT_ARCHITECTURE_BASELINE.md)
-- [CONFIG_MANAGER_ARCHITECTURE_REVIEW.md](CONFIG_MANAGER_ARCHITECTURE_REVIEW.md)
-- [CONFIG_MANAGER_NAMESPACE_TEMPLATE.md](CONFIG_MANAGER_NAMESPACE_TEMPLATE.md)
-- [CONFIGURATION_PERSISTENCE_DESIGN.md](CONFIGURATION_PERSISTENCE_DESIGN.md)
-- [KPP_IMPLEMENTATION_PLAN.md](KPP_IMPLEMENTATION_PLAN.md)
-- [RPC_SYSTEM_DESIGN.md](RPC_SYSTEM_DESIGN.md)
+## Structure
 
-## Protocols and Drivers
-- [CONTROLLER_DRIVERS.md](CONTROLLER_DRIVERS.md)
-- [WIFI_TCP_PROTOCOL.md](WIFI_TCP_PROTOCOL.md)
-- [WIFI_NETWORK_MODES.md](WIFI_NETWORK_MODES.md)
-- [BLUETOOTH_CLASSIC_PROTOCOL.md](BLUETOOTH_CLASSIC_PROTOCOL.md)
-- [RPC_USER_GUIDE.md](RPC_USER_GUIDE.md)
+- [architecture/](architecture)
+  - Current system-level architecture and runtime interaction references.
+- [development/](development)
+  - Software setup, editor workflow, build steps, and test guidance for contributors.
+- [configuration/](configuration)
+  - Configuration platform design, persistence model, and namespace authoring guidance.
+- [interfaces/](interfaces)
+  - RPC, transport, controller, and protocol-facing documentation.
+- [plans/](plans)
+  - Forward-looking implementation plans and project TODO material.
 
-## Planning
-- [TODO.md](TODO.md)
+## Recommended Reading Order
+
+1. [architecture/SYSTEM_ARCHITECTURE.md](architecture/SYSTEM_ARCHITECTURE.md)
+2. [development/README.md](development/README.md)
+3. [configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
+4. [interfaces/RPC_USER_GUIDE.md](interfaces/RPC_USER_GUIDE.md)
+5. [interfaces/RPC_SYSTEM_DESIGN.md](interfaces/RPC_SYSTEM_DESIGN.md)
+
+## Current Reference Docs
+
+### Architecture
+
+- [architecture/SYSTEM_ARCHITECTURE.md](architecture/SYSTEM_ARCHITECTURE.md)
+- [architecture/HARDWARE_AND_MECHANICS.md](architecture/HARDWARE_AND_MECHANICS.md)
+
+### Development
+
+- [development/README.md](development/README.md)
+
+### Configuration
+
+- [configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
+- [configuration/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md](configuration/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md)
+
+### Interfaces
+
+- [interfaces/RPC_USER_GUIDE.md](interfaces/RPC_USER_GUIDE.md)
+- [interfaces/RPC_SYSTEM_DESIGN.md](interfaces/RPC_SYSTEM_DESIGN.md)
+- [interfaces/CONTROLLER_DRIVERS.md](interfaces/CONTROLLER_DRIVERS.md)
+- [interfaces/WIFI_TCP_PROTOCOL.md](interfaces/WIFI_TCP_PROTOCOL.md)
+- [interfaces/WIFI_NETWORK_MODES.md](interfaces/WIFI_NETWORK_MODES.md)
+- [interfaces/BLUETOOTH_CLASSIC_PROTOCOL.md](interfaces/BLUETOOTH_CLASSIC_PROTOCOL.md)
+
+### Plans
+
+- [plans/KPP_IMPLEMENTATION_PLAN.md](plans/KPP_IMPLEMENTATION_PLAN.md)
+- [plans/TODO.md](plans/TODO.md)

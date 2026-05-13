@@ -60,14 +60,14 @@
   - Implemented boot-time load/default/migration pipeline in config manager
   - Implemented KPP runtime consumption of `motion_lim` during `kpp_init` with fail-fast behavior
 
-- [ ] **NVS Scope Expansion**
-  - Extend persisted namespaces to `servo_map`, `controller`, `gait`, `debug`, and `wifi` as needed
+- [x] **NVS Scope Expansion**
+  - Extend persisted namespaces to `servo_map`, `controller`, `gait` and `wifi` as needed
   - Add explicit coverage tracking for remaining parameter schemas
 
-- [ ] **Per-leg Configuration** (`robot_config.c`)
-  - [x] Replace geometry/mount/stance hardcoded defaults with storage-loaded values when `leg_geom` is loaded
+- [x] **Per-leg Configuration** (`robot_config.c`)
+  - Replace geometry/mount/stance hardcoded defaults with storage-loaded values when `leg_geom` is loaded
   - Consider per-leg geometry differences (mirrors, tolerances)
-  - [ ] Remove remaining fallback paths once strict source-of-truth policy is finalized (`joint_cal` still has fallback defaults)
+  - Remove remaining fallback paths once strict source-of-truth policy is finalized (`joint_cal` still has fallback defaults)
 
 ### Motion Control System
 - [ ] **Advanced Motion Modes** (`kpp_system.h`)
@@ -102,7 +102,7 @@
   - Add arming checks (controller link valid, config loaded, telemetry channel healthy, basic power checks)
   - Add parameter-change safe-apply flow with timeout revert for risky live tuning updates
 
-- [ ] **Controller Configuration** (`controller.c`)
+- [x] **Controller Configuration** (`controller.c`)
   - Make DEAD_BAND configurable via Kconfig or runtime configuration
   - Add controller parameter tuning interfaces
 
