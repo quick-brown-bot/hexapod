@@ -186,8 +186,8 @@ esp_err_t robot_set_joint_angle_rad(int leg_index, leg_servo_t joint, float radi
         return ESP_ERR_INVALID_STATE;
     }
     if (cal->pwm_max_us <= cal->pwm_min_us) {
-        ESP_LOGE(TAG_RC, "Invalid PWM range for leg %d joint %d: min=%d max=%d",
-                 leg_index, (int)joint, cal->pwm_min_us, cal->pwm_max_us);
+        ESP_LOGE(TAG_RC, "Invalid PWM range for leg %d joint %d: min=%ld max=%ld",
+                 leg_index, (int)joint, (long)cal->pwm_min_us, (long)cal->pwm_max_us);
         return ESP_ERR_INVALID_STATE;
     }
 

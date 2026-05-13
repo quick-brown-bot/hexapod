@@ -308,7 +308,19 @@ static void rpc_execute_line(char *line) {
 	if (argc == 0) return;
 
     if (strcmp(argv[0], "set") == 0 && argc > 1 && strcmp(argv[1], "controller") == 0) {
-        cmd_set_controller(argc, argv);
+		// Disambiguate between:
+		// 1) config set: set controller <param> <value>
+		// 2) channel stream: set controller <ch0> ... <ch31>
+		// Route to config set when token[2] is a known controller namespace parameter.
+		if (argc >= 4) {
+			config_param_info_t info;
+			if (config_get_parameter_info("controller", argv[2], &info) == ESP_OK) {
+				cmd_set(argc, argv, false);
+				return;
+			}
+		}
+		cmd_set_controller(argc, argv);
+		return;
     }
 	else if (strcmp(argv[0], "help")==0) { cmd_help(); }
 	else if (strcmp(argv[0], "version")==0) { cmd_version(); }
