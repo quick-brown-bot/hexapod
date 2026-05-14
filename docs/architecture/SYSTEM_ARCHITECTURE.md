@@ -10,8 +10,6 @@ It describes:
 - where configuration and transport boundaries live,
 - which architectural rules are expected to remain stable.
 
-Historical refactor plans and architecture reviews are intentionally kept out of this document. Those now live under [../archive](../archive).
-
 ## 1. System At A Glance
 
 The firmware is split into explicit ESP-IDF components under `components/`, with `main/` responsible for top-level boot ordering and task orchestration.
@@ -141,7 +139,7 @@ Boot sequence at a high level:
 
 The important architectural point is ordering: configuration and communication services come up before consumers that depend on namespace-backed runtime values.
 
-### 3.2 10 ms Locomotion Loop
+### 3.2 10 ms Locomotion Loop Execution Flow
 
 The main control loop runs at 100 Hz and follows a single dominant pipeline:
 
@@ -168,7 +166,67 @@ Per-stage role:
 6. `robot_execute` maps commands to servo outputs.
 7. `kpp_update_state` updates estimated motion state from the command stream.
 
-### 3.3 RPC And Config Flow
+### 3.3 10 ms Locomotion Loop Information Flow
+
+The same control loop can also be viewed as a data-transformation pipeline. In this view, the important question is not only what runs next, but which runtime state each stage consumes and which outputs it produces.
+
+```mermaid
+flowchart LR
+    ControllerState[Normalized controller state]
+    UserCmd[user_command_t]
+    SchedState[Scheduler state\nphase + support/swing]
+    FootTargets[Body-frame foot targets]
+    JointDesired[Desired joint command set]
+    JointLimited[Limited joint command set]
+    PwmOut[Servo PWM outputs]
+    EstState[Estimated motion state]
+
+    Core[hex_controller_core]
+    Loc[hex_locomotion]
+    Lim[hex_motion_limits]
+    Act[hex_actuation]
+    Kin[hex_kinematics]
+    RobotCfg[hex_robot_config]
+    CfgMgr[hex_config_manager]
+
+    Core --> ControllerState
+    ControllerState --> Loc
+    Loc --> UserCmd
+    UserCmd --> Loc
+    Loc --> SchedState
+    SchedState --> Loc
+    UserCmd --> FootTargets
+    Loc --> FootTargets
+
+    FootTargets --> Loc
+    RobotCfg --> Loc
+    Kin --> Loc
+    CfgMgr --> RobotCfg
+    Loc --> JointDesired
+
+    JointDesired --> Lim
+    CfgMgr --> Lim
+    RobotCfg --> Lim
+    Lim --> JointLimited
+    JointDesired --> EstState
+    Lim --> EstState
+
+    JointLimited --> Act
+    RobotCfg --> Act
+    Act --> PwmOut
+```
+
+Data-flow interpretation:
+
+1. `hex_controller_core` exposes normalized controller state, which `user_command_poll` converts into `user_command_t`.
+2. `gait_scheduler_update` consumes the user command and produces scheduler phase plus support/swing state.
+3. `swing_trajectory_generate` consumes the user command and scheduler state to produce body-frame foot targets.
+4. `whole_body_control_compute` consumes foot targets together with robot geometry and mount data from `hex_robot_config`, and kinematic solving support from `hex_kinematics`, to produce the desired joint command set.
+5. `kpp_apply_limits` consumes desired joint commands together with runtime limit configuration to produce the limited joint command set.
+6. `robot_execute` consumes the limited joint command set together with projected robot configuration to produce the actual PWM outputs.
+7. `kpp_update_state` derives estimated motion state from the command stream after the loop update.
+
+### 3.4 RPC And Config Flow
 
 RPC and persistence are queue-oriented and transport-neutral.
 
