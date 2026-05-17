@@ -140,3 +140,61 @@ def test_system_setpersist_persists_and_can_be_restored(send_rpc):
         restore_cmd = f"setpersist system {param_name} {original_value}"
         restore_response = send_rpc(restore_cmd)
         _assert_rpc_success(restore_response, restore_cmd)
+
+
+def test_system_factory_reset_restores_factory_defaults_after_save(send_rpc):
+    param_name = "auto_disarm_timeout"
+    get_cmd = f"get system {param_name}"
+    reset_cmd = "factory-reset"
+
+    baseline_reset_response = send_rpc(reset_cmd)
+    _assert_rpc_success(baseline_reset_response, reset_cmd)
+    assert "factory-reset: OK" in baseline_reset_response, (
+        f"Expected factory reset success response, got: {baseline_reset_response!r}"
+    )
+
+    baseline_response = send_rpc(get_cmd)
+    _assert_rpc_success(baseline_response, get_cmd)
+    baseline_value = int(_parse_kv(baseline_response, param_name))
+
+    candidate_values = [31, 32, 60]
+    new_value = next((value for value in candidate_values if value != baseline_value), None)
+    assert new_value is not None, "Failed to find alternate auto_disarm_timeout test value"
+
+    set_cmd = f"set system {param_name} {new_value}"
+    save_cmd = "save system"
+
+    try:
+        set_response = send_rpc(set_cmd)
+        _assert_rpc_success(set_response, set_cmd)
+        assert f"{param_name}={new_value}" in set_response, (
+            f"Expected set echo in response, got: {set_response!r}"
+        )
+        assert "(mem)" in set_response, f"Expected mem set marker, got: {set_response!r}"
+
+        save_response = send_rpc(save_cmd)
+        _assert_rpc_success(save_response, save_cmd)
+        assert "save system: OK" in save_response, (
+            f"Expected save success response, got: {save_response!r}"
+        )
+
+        updated_response = send_rpc(get_cmd)
+        _assert_rpc_success(updated_response, get_cmd)
+        assert int(_parse_kv(updated_response, param_name)) == new_value, (
+            f"Expected {param_name} to read back {new_value}, got: {updated_response!r}"
+        )
+
+        reset_response = send_rpc(reset_cmd)
+        _assert_rpc_success(reset_response, reset_cmd)
+        assert "factory-reset: OK" in reset_response, (
+            f"Expected factory reset success response, got: {reset_response!r}"
+        )
+
+        restored_response = send_rpc(get_cmd)
+        _assert_rpc_success(restored_response, get_cmd)
+        assert int(_parse_kv(restored_response, param_name)) == baseline_value, (
+            f"Expected {param_name} to return to factory value {baseline_value}, got: {restored_response!r}"
+        )
+    finally:
+        final_reset_response = send_rpc(reset_cmd)
+        _assert_rpc_success(final_reset_response, reset_cmd)
