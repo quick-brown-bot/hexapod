@@ -86,13 +86,13 @@ Why `-p no:embedded` is used here:
 
 - The current host-side tests are intended for a Windows development machine.
 - Tests expect access to a reachable robot endpoint over Wi-Fi.
-- Some flows reuse the current `HEXABOT_*` or `HEXAPOD_*` network, depending on the test utility behavior in the environment.
+- Some flows reuse the current `HEXAPOT_*` or `HEXAPOD_*` network, depending on the test utility behavior in the environment.
 
 If needed, override the target endpoint with environment variables before running tests:
 
 ```bash
-set HEXABOT_IP=<robot_ip>
-set HEXABOT_PORT=<robot_port>
+set HEXAPOD_IP=<robot_ip>
+set HEXAPOD_PORT=<robot_port>
 ```
 
 ## Practical First Steps

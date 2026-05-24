@@ -25,7 +25,7 @@ def _get_current_ssid() -> Optional[str]:
     return None
 
 
-def _find_first_hexabot_ssid() -> Optional[str]:
+def _find_first_hexapod_ssid() -> Optional[str]:
     available_aps = WinWiFi.scan()
 
     for ap in available_aps:
@@ -35,12 +35,12 @@ def _find_first_hexabot_ssid() -> Optional[str]:
     return None
 
 
-def _ensure_hexabot_wifi() -> str:
+def _ensure_hexapod_wifi() -> str:
     current_ssid = _get_current_ssid()
     if current_ssid and HEXAPOD_SSID_PATTERN.match(current_ssid):
         return current_ssid
 
-    discovered_ssid = _find_first_hexabot_ssid()
+    discovered_ssid = _find_first_hexapod_ssid()
     if not discovered_ssid:
         pytest.skip("No HEXAPOD_xxx Wi-Fi network found during scan")
 
@@ -61,7 +61,7 @@ def robot_network() -> dict:
     if os.name != "nt":
         pytest.skip("These integration tests require Windows Wi-Fi control")
 
-    connected_ssid = _ensure_hexabot_wifi()
+    connected_ssid = _ensure_hexapod_wifi()
     return {
         "ssid": connected_ssid,
         "ip": os.getenv("HEXAPOD_IP", "192.168.4.1"),
