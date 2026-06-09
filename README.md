@@ -2,7 +2,7 @@
 
 An ESP32-powered hexapod robot built as a long-term robotics and embedded systems project.
 
-The goal is not just to make a robot walk, but to build a platform that is easy to experiment with, tune, and extend. Most robot behavior is configurable at runtime, control inputs are transport-independent, and the motion stack is organized into clearly separated components.
+The goal is not just to make a robot walk, but to learn and at the same time build a platform that is easy to experiment with, tune, and extend. Most robot behavior is configurable at runtime, control inputs are transport-independent, and the motion stack is organized into separated components.
 
 The project combines firmware, hardware design, and system documentation in a single repository.
 
@@ -44,6 +44,50 @@ Servo Outputs
 ---
 
 ## Current Technical Highlights
+
+## Effort Summary
+
+| Effort Area | Scope | Current Status | Notes |
+| --- | --- | --- | --- |
+| Locomotion Pipeline | Command mapping, gait scheduler, swing trajectory, whole-body IK | Implemented | Runs in a fixed 100 Hz control loop |
+| KPP Motion Limits | Velocity, acceleration, jerk limiting and state estimation | Implemented | Runtime limits are configuration-backed |
+| Controller Abstraction | Driver-agnostic core plus transport-specific drivers | Implemented | FlySky iBUS, Wi-Fi TCP, and Bluetooth Classic paths are present |
+| RPC System | Queue-based command processing and config control | Implemented | Live inspection and runtime tuning are available |
+| Configuration Platform | Namespace defaults, migration, discovery, persistence | Implemented | Core runtime namespaces are already consumed by modules |
+| Configurator Tooling | External tuning and visualization UX | Planned | Firmware-side groundwork exists; UI work remains |
+
+## Hardware Snapshot
+
+- MCU: ESP32 running FreeRTOS through ESP-IDF.
+- Robot layout: 6 legs, 3 degrees of freedom per leg, 18 hobby servos total.
+- Power architecture: 4S LiPo with separate UBEC paths for locomotion power and logic power isolation.
+- PWM strategy: mixed MCPWM and LEDC usage to reach all 18 outputs on classic ESP32.
+- Mechanical structure: custom 3D-printed chassis, brackets, and leg parts built around standardized servo geometry.
+
+## High-Level Architecture
+
+```mermaid
+flowchart LR
+        Control[Controller stack]
+        Config[RPC and config]
+        App[Application loop]
+        Loc[Locomotion]
+        Limits[Motion limiting]
+        Act[Actuation]
+        Robot[Robot hardware]
+
+        Control --> App
+        Config --> App
+        App --> Loc --> Limits --> Act --> Robot
+        Config --> Control
+```
+
+- Controller stack: receives operator input from supported transports and normalizes it.
+- RPC and config: handles runtime commands, parameter discovery, persistence, and save flows.
+- Application loop: owns boot order and the 100 Hz control cycle.
+- Locomotion: turns operator intent into gait phase, foot targets, and joint-space commands.
+- Motion limiting: constrains commanded motion to configured dynamic envelopes.
+- Actuation: maps joint commands to the PWM outputs that drive the robot.
 
 ### Runtime Configuration
 
