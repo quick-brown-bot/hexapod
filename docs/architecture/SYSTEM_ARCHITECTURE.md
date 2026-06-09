@@ -308,7 +308,6 @@ Use the following docs together with this one:
 - RPC operational guide: [../interfaces/RPC_USER_GUIDE.md](../interfaces/RPC_USER_GUIDE.md)
 - RPC contract and command semantics: [../interfaces/RPC_SYSTEM_DESIGN.md](../interfaces/RPC_SYSTEM_DESIGN.md)
 - Controller and transport details: [../interfaces/CONTROLLER_DRIVERS.md](../interfaces/CONTROLLER_DRIVERS.md)
-- Historical refactor context: [../archive/CONFIG_MANAGER_ARCHITECTURE_REVIEW.md](../archive/CONFIG_MANAGER_ARCHITECTURE_REVIEW.md)
 
 ## 8. What This Document Does Not Cover
 

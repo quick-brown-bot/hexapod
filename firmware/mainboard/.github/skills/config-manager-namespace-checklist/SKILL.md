@@ -103,7 +103,7 @@ Use this skill when creating a new `hex_config_manager` namespace or refactoring
    - Log the effective configuration source at startup and prefer namespace-backed configuration over fallback behavior.
 
 11. Sync documentation.
-   - Start from `docs/configuration/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md` when documenting a namespace.
+   - Start from `../../docs/configuration/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md` when documenting a namespace.
    - Keep design docs, examples, and RPC samples aligned to the real namespace string and parameter names.
    - Keep folder-path examples aligned with `namespaces/<namespace>/`.
 

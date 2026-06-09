@@ -82,17 +82,17 @@ flowchart LR
 
 - `main/`: bootstrapping and top-level task orchestration.
 - `components/`: runtime system split into ESP-IDF components.
-- `docs/`: architecture, configuration, protocol, and planning documentation.
+- `../../docs/`: architecture, configuration, protocol, and planning documentation.
 - `test/`: host-side integration tests for runtime command and config behavior.
 
 ## Start Here
 
-- Documentation hub: [docs/README.md](docs/README.md)
-- System architecture: [docs/architecture/SYSTEM_ARCHITECTURE.md](docs/architecture/SYSTEM_ARCHITECTURE.md)
-- Development setup: [docs/development/README.md](docs/development/README.md)
-- Hardware and mechanics: [docs/architecture/HARDWARE_AND_MECHANICS.md](docs/architecture/HARDWARE_AND_MECHANICS.md)
-- RPC and transport docs: [docs/interfaces/RPC_USER_GUIDE.md](docs/interfaces/RPC_USER_GUIDE.md)
-- Configuration persistence design: [docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
+- Documentation hub: [../../docs/README.md](../../docs/README.md)
+- System architecture: [../../docs/architecture/SYSTEM_ARCHITECTURE.md](../../docs/architecture/SYSTEM_ARCHITECTURE.md)
+- Development setup: [../../docs/development/README.md](../../docs/development/README.md)
+- Hardware and mechanics: [../../docs/architecture/HARDWARE_AND_MECHANICS.md](../../docs/architecture/HARDWARE_AND_MECHANICS.md)
+- RPC and transport docs: [../../docs/interfaces/RPC_USER_GUIDE.md](../../docs/interfaces/RPC_USER_GUIDE.md)
+- Configuration persistence design: [../../docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](../../docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
 
 ## Build And Flash
 
@@ -119,7 +119,7 @@ The tests are written for Windows hosts and connect to a live robot endpoint ove
 
 ## Additional Context
 
-- Technical documentation lives under [docs/README.md](docs/README.md).
+- Technical documentation lives under [../../docs/README.md](../../docs/README.md).
 - A companion gait visualization project exists at <https://github.com/pgrudzien12/hexapod-visualizer>.
 - The work is informed in part by the 2024 paper *Efficient gait generation and evaluation for hexapod robots*.
 

@@ -11,10 +11,10 @@ This file helps coding agents become productive quickly in this repository.
 ## Start here
 
 - Project overview: [README.md](README.md)
-- Docs hub: [docs/README.md](docs/README.md)
-- System architecture: [docs/architecture/SYSTEM_ARCHITECTURE.md](docs/architecture/SYSTEM_ARCHITECTURE.md)
-- Development setup: [docs/development/README.md](docs/development/README.md)
-- Configuration persistence and namespaces: [docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
+- Docs hub: [../../docs/README.md](../../docs/README.md)
+- System architecture: [../../docs/architecture/SYSTEM_ARCHITECTURE.md](../../docs/architecture/SYSTEM_ARCHITECTURE.md)
+- Development setup: [../../docs/development/README.md](../../docs/development/README.md)
+- Configuration persistence and namespaces: [../../docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](../../docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
 
 ## Build, flash, and test
 
