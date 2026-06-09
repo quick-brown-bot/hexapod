@@ -47,15 +47,27 @@ Servo Outputs
 
 ### Runtime Configuration
 
-Configuration is organized into namespaces with:
+Configuration is treated as a first-class subsystem rather than a collection of compile-time constants.
 
-- defaults,
-- validation,
-- persistence,
-- runtime discovery,
-- RPC access.
+Parameters are organized into namespaces. Each namespace owns:
 
-This allows geometry, limits, controller settings, calibration values, and other robot behavior to be adjusted without rebuilding firmware.
+- parameter definitions,
+- default values,
+- validation rules,
+- persistence behavior,
+- migration logic,
+- RPC discovery metadata.
+
+The configuration manager provides:
+
+- runtime parameter inspection,
+- runtime modification,
+- save/load operations,
+- namespace registration,
+- NVS persistence,
+- version-aware migration support.
+
+Robot geometry, calibration data, controller settings, motion limits, and other runtime behavior are loaded through this system rather than being hardcoded throughout the codebase.
 
 ### Motion Pipeline
 
@@ -73,15 +85,17 @@ The motion loop runs at 100 Hz.
 
 ### Controller Abstraction
 
-The locomotion layer does not depend directly on transport-specific controller code.
+Controller transports are separated from locomotion.
 
-Current control paths include:
+Supported ingress paths currently include:
 
 - FlySky iBUS,
 - Wi-Fi TCP,
 - Bluetooth Classic.
 
-All controller sources are normalized into a common command interface before entering the motion system.
+Each transport driver translates incoming data into a normalized controller state consumed by the motion system.
+
+This allows locomotion, gait generation, and motion limiting to remain independent of transport-specific protocols.
 
 ### Hardware-Aware Design
 
@@ -111,6 +125,38 @@ Current focus areas include:
 - transport-independent control interfaces,
 - robotics software maintainability,
 - practical servo-driven locomotion.
+
+---
+
+## Future Hardware Revisions
+
+Several areas are currently being explored for a future hardware revision.
+
+### Mechanical
+
+- Larger body volume for easier electronics integration.
+- Improved cable routing.
+- Increased structural stiffness in the legs.
+- Better serviceability and assembly.
+
+### Electronics
+
+- Separation of control and power-distribution responsibilities.
+- Dedicated power board for servo power routing.
+- Simplified mainboard focused on control and communication.
+
+### Distributed Leg Control
+
+One architecture under investigation places a microcontroller in each leg.
+
+The current concept is:
+
+- Main controller performs locomotion and planning.
+- Leg controllers generate local PWM signals.
+- Communication occurs over a shared bus.
+- Current sensing and additional sensors can be integrated at the leg level.
+
+The architecture is intended to reduce wiring complexity and make future sensor integration easier.
 
 ---
 
