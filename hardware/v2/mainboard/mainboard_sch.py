@@ -10,7 +10,8 @@ Contents:
 * J_REG  3.3V regulator module header (5V in -> 3.3V out) — local logic rail.
 * J_SBEC logic-power input from the MainPowerBoard SBEC (+5V).
 * J_IMU  IMU breakout header (I2C + INT) — module abstraction, processed centrally.
-* J1..J6 RJ11 (RJ25 6P) leg interfaces: GND / +5V logic / RS485 A / RS485 B.
+* J1..J6 RJ11 (RJ25 6P used as 4-wire) leg interfaces: NC / GND / RS485 A /
+    RS485 B / +5V logic / NC.
 
 Power model: SBEC +5V comes in, is distributed unchanged to the legs over RJ11
 (logic power), and feeds a local 3V3 regulator module that powers the ESP32,
@@ -124,14 +125,14 @@ def build() -> Schematic:
     sch.net("LED_PWR", [r_led.pin("2"), d_led.pin("2")])  # anode of LED_Small = pin 2
     sch.net("GND", [d_led.pin("1")])
 
-    # --- RJ11 leg interfaces (x6) ---------------------------------------- #
+    # --- RJ11 leg interfaces (x6): pins 1 and 6 intentionally unused ----- #
     for i in range(1, 7):
         j = sch.place("Hexapod_V2:RJ25", f"J{i}", at=(40 + (i - 1) * 35, 175),
                       value=f"LEG{i}_RJ11")
-        sch.net("GND", [j.pin("1")])
-        sch.net("+5V", [j.pin("2")])
+        sch.net("GND", [j.pin("2")])
         sch.net("RS485_A", [j.pin("3")])
         sch.net("RS485_B", [j.pin("4")])
+        sch.net("+5V", [j.pin("5")])
 
     # --- ERC power flags -------------------------------------------------- #
     power_flag(sch, "#FLG1", (40, 145), "+5V")

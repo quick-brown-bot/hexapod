@@ -7,7 +7,8 @@ signals, and reports telemetry. No IK / no body awareness here.
 Contents:
 * U1  XIAO RP2040 — local control loop (500-1000 Hz), PWM, watchdog, telemetry.
 * U2  SP3485CN RS485 transceiver — bus slave node.
-* J1  RJ11 (RJ25 6P) uplink to MainBoard: GND / +5V logic / RS485 A / RS485 B.
+* J1  RJ11 (RJ25 6P used as 4-wire) uplink to MainBoard: NC / GND / RS485 A /
+    RS485 B / +5V logic / NC.
 * J2/J3/J4 servo connectors (coxa / femur / tibia): signal / +6V / GND.
 * J5  servo-power input from the MainPowerBoard (+6V rail for this leg pair).
 * J6  current/voltage sense module header (analog out -> RP2040 ADC).
@@ -79,12 +80,12 @@ def build() -> Schematic:
     sch.net("RS485_A", [rt.pin("1")])
     sch.net("RS485_B", [rt.pin("2")])
 
-    # --- RJ11 uplink ------------------------------------------------------ #
+    # --- RJ11 uplink: pins 1 and 6 intentionally unused ------------------ #
     j1 = sch.place("Hexapod_V2:RJ25", "J1", at=(50, 90), value="UPLINK_RJ11")
-    sch.net("GND", [j1.pin("1")])
-    sch.net("+5V", [j1.pin("2")])
+    sch.net("GND", [j1.pin("2")])
     sch.net("RS485_A", [j1.pin("3")])
     sch.net("RS485_B", [j1.pin("4")])
+    sch.net("+5V", [j1.pin("5")])
 
     # --- servo power input ------------------------------------------------ #
     j5 = sch.place("Connector:Conn_01x02_Pin", "J5", at=(50, 140),

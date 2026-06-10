@@ -50,19 +50,23 @@ MainPowerBoard.J1..J6 (+6V)  ──► LegBoard.J5 (SERVO_PWR_IN)       ×6
 
 ### RJ11 / RJ25 leg link (MainBoard ↔ LegBoard)
 
+The physical cable is populated as a 4-wire link inside a 6P6C/RJ25 shell, so
+pins 1 and 6 are intentionally left unconnected.
+
 | Pin | Net | Function |
 |-----|-----|----------|
-| 1 | GND | Ground |
-| 2 | +5V | Logic power |
+| 1 | — | unused |
+| 2 | GND | Ground |
 | 3 | RS485_A | RS485 A |
 | 4 | RS485_B | RS485 B |
-| 5,6 | — | unused |
+| 5 | +5V | Logic power |
+| 6 | — | unused |
 
 ## MainBoard nets
 
 | Net | Connects |
 |-----|----------|
-| `+5V` | SBEC input (J7), 3V3-reg VIN (J8), all six RJ11 pin 2 |
+| `+5V` | SBEC input (J7), 3V3-reg VIN (J8), all six RJ11 pin 5 |
 | `+3.3V` | 3V3-reg out (J8), ESP32 V3.3, SP3485 VCC, IMU, decoupling, EN pull-up |
 | `GND` | global ground |
 | `ESP_TXD` / `ESP_RXD` | ESP32 IO17/IO16 (UART2) ↔ SP3485 DI/RO |
@@ -77,7 +81,7 @@ IMU header J9 (`Conn_01x05`): 1 = +3.3V, 2 = GND, 3 = SDA, 4 = SCL, 5 = INT.
 
 | Net | Connects |
 |-----|----------|
-| `+5V` | RJ11 logic power → XIAO VBUS (U1.14) |
+| `+5V` | RJ11 pin 5 logic power → XIAO VBUS (U1.14) |
 | `+3.3V` | XIAO 3V3 out (U1.12) → SP3485 VCC, sense header |
 | `+6V` | servo-power in (J5) → 3 servo connectors, bulk cap C2 |
 | `GND` | global ground |

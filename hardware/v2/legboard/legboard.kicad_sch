@@ -2636,18 +2636,6 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 60.16 95.08 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "fb9afb7c-784b-497e-a5dd-6edf9b6b1154")
-	)
-	(global_label "+5V"
-		(shape passive)
 		(at 60.16 92.54 0)
 		(fields_autoplaced yes)
 		(effects
@@ -2656,7 +2644,7 @@
 			)
 			(justify left)
 		)
-		(uuid "50a49bd0-0703-49ce-bdd0-d64b817c006a")
+		(uuid "fb9afb7c-784b-497e-a5dd-6edf9b6b1154")
 	)
 	(global_label "RS485_A"
 		(shape passive)
@@ -2681,6 +2669,18 @@
 			(justify left)
 		)
 		(uuid "62cf8510-bd39-49da-abf0-220c5c15244a")
+	)
+	(global_label "+5V"
+		(shape passive)
+		(at 60.16 84.92 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "50a49bd0-0703-49ce-bdd0-d64b817c006a")
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x02_Pin")

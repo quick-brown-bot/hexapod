@@ -56,6 +56,7 @@
 *.kicad_prl
 *.kicad_pro-bak
 *.kicad_sch-bak
+*.lck
 
 # Plot / fabrication folders
 gerbers/
