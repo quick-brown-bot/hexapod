@@ -88,6 +88,9 @@ Shared generator/DSL code lives once at `hardware/schematic/` (the
    (`sch.place("lib_id", "ref", at=(x, y), value=...)`, `sch.net(name, [pins])`,
    `sch.wire(a, b)`, `sch.set_value("R3", "1k")`). Import a new part's symbol with
    `sch.import_lib_symbol(...)` before placing it.
+  Set `footprint=` in the Python source for any part whose PCB package matters;
+  do not rely on KiCad session state or on a symbol library's default footprint
+  surviving regeneration.
 2. Prefer **net labels** over explicit wires where possible — connecting by net
    name avoids hand-computing wire endpoints and is how KiCad nets work anyway.
 3. Run the script to regenerate the `.kicad_sch`. Confirm `uuids.json` only
@@ -136,10 +139,12 @@ sch = Schematic.new("<board>", reg, paper="A4")   # root uuid comes from registr
 # unlike a migrated board, a new sheet starts with an empty lib_symbols cache.
 sch.import_lib_symbol("hardware/symbols/Seeed_Studio_XIAO_Series.kicad_sym",
                       "Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP")
-u1 = sch.place("Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP", "U1", at=(100, 100))
+u1 = sch.place("Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP", "U1", at=(100, 100),
+               footprint="Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP")
 
 sch.import_lib_symbol(R_SMALL_LIB, "Device:R_Small")
-r1 = sch.place("Device:R_Small", "R1", at=(80, 90), value="470", rotation=90)
+r1 = sch.place("Device:R_Small", "R1", at=(80, 90), value="470", rotation=90,
+               footprint="Resistor_SMD:R_0805_2012Metric")
 
 sch.net("LED_OUT", [u1.pin("IO2"), r1.pin("1")])   # connect by net label
 
@@ -156,6 +161,13 @@ Key differences from a migrated board:
   (`Device:*`, `power:*`) come from the KiCad install's libraries.
 - **UUID stability still applies** the moment you first lay out the PCB: from then
   on, `uuids.json` is what protects the layout, exactly as for a migrated board.
+
+For this repo's current V2 boards, the working default is: ordinary resistors,
+small capacitors, indicator LEDs, and other small-signal diodes should use 0805
+footprints unless the part's electrical or thermal requirements say otherwise.
+Power-path parts are explicit exceptions — e.g. bulk polarized capacitors,
+reverse-polarity diodes, and current shunts should get a package chosen from the
+actual datasheet, not a blind 0805 default.
 
 You also need a matching `<board>.kicad_pro` for KiCad to open the project — copy
 one from an existing board and update the name.
@@ -219,6 +231,15 @@ round-trip check on all three boards before trusting it.
   reports pads 1/2 swapped relative to the `pin("1")`/`pin("2")` you labelled.
   Harmless for symmetric R/C, but **verify polarity-sensitive parts (diodes,
   polarized caps) in the netlist** rather than trusting the pin number.
+- **`place()` writes the placed symbol's `Footprint` property exactly as you pass
+  it.** If you omit `footprint=`, the generated sheet gets an empty placed-symbol
+  footprint even when the library symbol carries a default package. For boards
+  that already have PCB layout work behind them, always put the intended package
+  in the Python source of truth.
+- **Current-shunt footprints need a datasheet check, not a guess.** For the
+  planned CMK-R010-class ~3.5 mm current shunt, a stock KiCad candidate exists
+  (`Resistor_SMD:R_Shunt_Ohmite_LVK12`), but treat that as a starting point only
+  and verify pad geometry against the exact part before committing it.
 - **Place on the 1.27 mm grid** to avoid `endpoint_off_grid` ERC warnings. They
   don't break connectivity (labels still attach at the exact pin coordinate), so
   they're cosmetic — but a clean ERC is worth the grid-aligned `at=` coordinates.

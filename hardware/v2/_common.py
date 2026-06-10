@@ -38,6 +38,32 @@ sys.path.insert(0, str(repo_root()))
 V2_DIR = Path(__file__).resolve().parent
 REPO_SYMBOLS = V2_DIR / "symbols"
 SYMBOLSLIB = V2_DIR / "symbols" / "SymbolsLib.kicad_sym"
+INA4181A3IPWR_SYM = V2_DIR / "symbols" / "INA4181A3IPWR.kicad_sym"
+
+# Common footprint defaults used by the V2 schematic generators.
+RJ25_FOOTPRINT = "Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal"
+ESP32_DEV_BOARD_FOOTPRINT = "Custom:ESP32_Dev_Board"
+XIAO_RP2040_DIP_FOOTPRINT = "Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP"
+SP3485_SOIC8_FOOTPRINT = "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
+INA4181_TSSOP20_FOOTPRINT = "Custom:PW20_TEX"
+HEADER_1X05_THT_FOOTPRINT = (
+    "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical"
+)
+HEADER_1X03_THT_FOOTPRINT = (
+    "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
+)
+SCREW_TERMINAL_2P_FOOTPRINT = (
+    "TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm"
+)
+SHUNT_R010_FOOTPRINT = "Resistor_SMD:R_Shunt_Ohmite_LVK12"
+RES_0805_FOOTPRINT = "Resistor_SMD:R_0805_2012Metric"
+CAP_0805_FOOTPRINT = "Capacitor_SMD:C_0805_2012Metric"
+BULK_CAP_470UF_FOOTPRINT = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"
+LED_0805_FOOTPRINT = "LED_SMD:LED_0805_2012Metric"
+DIODE_0805_FOOTPRINT = "Diode_SMD:D_0805_2012Metric"
+# Candidate only for the planned CMK-R010-class current shunt; verify against the
+# exact datasheet before use on a board.
+CMK_R010_SHUNT_CANDIDATE_FOOTPRINT = "Resistor_SMD:R_Shunt_Ohmite_LVK12"
 
 
 def _kicad_symbol_dir() -> Path:
@@ -82,6 +108,8 @@ def _lib_file(lib_id: str) -> Path:
         # these as derived `(extends ...)` symbols, which the DSL importer can't
         # follow, so we keep self-contained standalone copies harvested from V1.
         return REPO_SYMBOLS / "Hexapod_V2.kicad_sym"
+    if lib == "INA4181A3IPWR":
+        return INA4181A3IPWR_SYM
     if lib == "SymbolsLib":
         return SYMBOLSLIB
     return KICAD_SYMS / f"{lib}.kicad_sym"

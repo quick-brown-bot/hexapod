@@ -77,22 +77,48 @@ pins 1 and 6 are intentionally left unconnected.
 IMU header J9 (`Conn_01x05`): 1 = +3.3V, 2 = GND, 3 = SDA, 4 = SCL, 5 = INT.
 3V3-reg module J8 (`Conn_01x03`): 1 = +5V in, 2 = GND, 3 = +3.3V out.
 
+Footprints currently driven from the generator: `U1` uses
+`Custom:ESP32_Dev_Board`, `J1..J6` use
+`Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal`, `J9` uses
+`Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical`, `U2` uses the
+SOIC-8 SP3485 footprint, and the ordinary small R/C/LED parts default to 0805.
+
 ## LegBoard nets
 
 | Net | Connects |
 |-----|----------|
 | `+5V` | RJ11 pin 5 logic power → XIAO VBUS (U1.14) |
-| `+3.3V` | XIAO 3V3 out (U1.12) → SP3485 VCC, sense header |
-| `+6V` | servo-power in (J5) → 3 servo connectors, bulk cap C2 |
+| `+3.3V` | XIAO 3V3 out (U1.12) → SP3485 VCC, INA4181 VCC, decoupling |
+| `+6V` | post-total-shunt servo bus feeding the three per-servo branch shunts and bulk cap C2 |
+| `+6V_IN` | raw servo-power input (J5) ahead of the shunt |
+| `+6V_COXA` / `+6V_FEMUR` / `+6V_TIBIA` | post-branch-shunt servo supply rails for J2 / J3 / J4 |
 | `GND` | global ground |
 | `RP_TXD` / `RP_RXD` | XIAO P0/P1 (UART) ↔ SP3485 DI/RO |
-| `RS485_DE` | XIAO P28 → SP3485 DE + ~RE |
+| `RS485_DE` | XIAO P6/D4 → SP3485 DE + ~RE |
 | `RS485_A` / `RS485_B` | SP3485 ↔ RJ11, 120 Ω term R1 (DNP except bus ends) |
 | `COXA_PWM` / `FEMUR_PWM` / `TIBIA_PWM` | XIAO P3/P4/P2 → servo connectors J2/J3/J4 |
-| `I_SENSE` / `V_SENSE` | sense header (J6) → XIAO A0/A1 |
+| `I_TOTAL_SENSE` | INA4181 channel 1 output → XIAO A0 |
+| `I_COXA_SENSE` | INA4181 channel 2 output → XIAO A1 |
+| `I_FEMUR_SENSE` | INA4181 channel 3 output → XIAO A2 |
+| `I_TIBIA_SENSE` | INA4181 channel 4 output → XIAO A3 |
 
-Servo connectors J2/J3/J4 (`Conn_01x03`): 1 = signal, 2 = +6V, 3 = GND.
-Sense header J6 (`Conn_01x04`): 1 = +3.3V, 2 = GND, 3 = I_SENSE, 4 = V_SENSE.
+Servo connectors J2/J3/J4 (`Conn_01x03`): 1 = signal, 2 = branch +6V, 3 = GND.
+J5 is now a 2-pin screw terminal for servo power input. U3 (`INA4181A3IPWR`) uses
+channel 1 across the total-leg 10 mOhm shunt `R2` (`+6V_IN` to `+6V`), channel 2
+across the coxa shunt `R3`, channel 3 across the femur shunt `R4`, and channel 4
+across the tibia shunt `R5`.
+
+Footprints currently driven from the generator: `U1` uses
+`Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP`, `J1` uses
+`Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal`, `U2` uses the SOIC-8
+SP3485 footprint, `U3` uses `Custom:PW20_TEX`, `J2`/`J3`/`J4` use
+`Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical`, `J5` uses
+`TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm`, the INA shunts
+currently use the candidate `Resistor_SMD:R_Shunt_Ohmite_LVK12`, `C2` uses the
+through-hole radial candidate `Capacitor_THT:CP_Radial_D8.0mm_P3.50mm` for an
+8 mm diameter bulk capacitor, and the ordinary small R/C parts default to 0805.
+Verify the shunt geometry and the capacitor lead pitch / body height against the
+exact parts before freezing the PCB.
 
 ## MainPowerBoard nets
 
@@ -110,6 +136,11 @@ UBEC/SBEC module headers (`Conn_01x04`): 1 = +VMAIN in, 2 = GND, 3 = regulated
 out, 4 = GND. Monitor header J13 (`Conn_01x05`): +VMAIN, VSERVO1, VSERVO2,
 VSERVO3, GND.
 
+Footprints currently driven from the generator: the status resistor / LED parts
+default to 0805. The bulk capacitors and the high-current reverse-polarity
+Schottky are still explicit footprint-selection tasks rather than forced 0805
+placeholders.
+
 ## Status / known limitations (first pass)
 
 These are deliberate module-abstraction simplifications to refine in Eeschema
@@ -124,4 +155,6 @@ before fabrication:
   and the ESP32 `VIN`/`SENSOR_*` pins are left open (add no-connect flags), and
   off-grid endpoints (the loose auto-layout is meant to be re-placed in
   Eeschema). Net-label connectivity is verified correct via exported netlist.
-* **Footprints** are not yet assigned for the discrete passives/connectors.
+* **Remaining footprint work** is limited to the high-current / bulk power-path
+  parts and the placeholder module headers; the ordinary V2 passives, ESP32,
+  XIAO RP2040, RJ25 connectors, and the IMU header are now assigned in code.

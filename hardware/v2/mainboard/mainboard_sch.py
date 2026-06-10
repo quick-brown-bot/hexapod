@@ -31,7 +31,17 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # hardware/v2
-from _common import imp, power_flag  # noqa: E402
+from _common import (  # noqa: E402
+    CAP_0805_FOOTPRINT,
+    ESP32_DEV_BOARD_FOOTPRINT,
+    HEADER_1X05_THT_FOOTPRINT,
+    LED_0805_FOOTPRINT,
+    RES_0805_FOOTPRINT,
+    RJ25_FOOTPRINT,
+    SP3485_SOIC8_FOOTPRINT,
+    imp,
+    power_flag,
+)
 
 from hardware.schematic import Schematic, UuidRegistry  # noqa: E402
 
@@ -56,7 +66,8 @@ def build() -> Schematic:
 
     # --- main controller -------------------------------------------------- #
     u1 = sch.place("SymbolsLib:ESP32-WROOM-32D", "U1", at=(130, 95),
-                   value="ESP32-WROOM-32D")
+                   value="ESP32-WROOM-32D",
+                   footprint=ESP32_DEV_BOARD_FOOTPRINT)
     sch.net("+3.3V", [u1.pin("V3.3")])
     sch.net("GND", [u1.pin("1")])
     sch.net("ESP_TXD", [u1.pin("IO17")])      # UART2 TX -> RS485 DI
@@ -67,12 +78,14 @@ def build() -> Schematic:
     sch.net("IMU_INT", [u1.pin("IO34")])
 
     # EN pull-up (boot).
-    r_en = sch.place("Device:R_Small", "R2", at=(105, 80), value="10k", rotation=90)
+    r_en = sch.place("Device:R_Small", "R2", at=(105, 80), value="10k",
+                     rotation=90, footprint=RES_0805_FOOTPRINT)
     sch.net("+3.3V", [r_en.pin("1")])
     sch.net("ESP_EN", [r_en.pin("2"), u1.pin("EN")])
 
     # --- RS485 master ----------------------------------------------------- #
-    u2 = sch.place("Hexapod_V2:SP3485CN", "U2", at=(195, 95), value="SP3485CN")
+    u2 = sch.place("Hexapod_V2:SP3485CN", "U2", at=(195, 95), value="SP3485CN",
+                   footprint=SP3485_SOIC8_FOOTPRINT)
     sch.net("+3.3V", [u2.pin("8")])     # VCC
     sch.net("GND", [u2.pin("5")])       # GND
     sch.net("ESP_RXD", [u2.pin("1")])                  # RO
@@ -82,7 +95,8 @@ def build() -> Schematic:
     sch.net("RS485_B", [u2.pin("7")])
 
     # Bus termination 120R across A/B (fit on the master end of the bus).
-    rt = sch.place("Device:R_Small", "R1", at=(220, 95), value="120", rotation=90)
+    rt = sch.place("Device:R_Small", "R1", at=(220, 95), value="120",
+                   rotation=90, footprint=RES_0805_FOOTPRINT)
     sch.net("RS485_A", [rt.pin("1")])
     sch.net("RS485_B", [rt.pin("2")])
 
@@ -100,7 +114,7 @@ def build() -> Schematic:
 
     # --- IMU breakout (I2C) ---------------------------------------------- #
     j_imu = sch.place("Connector:Conn_01x05_Pin", "J9", at=(70, 120),
-                      value="IMU_I2C")
+                      value="IMU_I2C", footprint=HEADER_1X05_THT_FOOTPRINT)
     sch.net("+3.3V", [j_imu.pin("1")])
     sch.net("GND", [j_imu.pin("2")])
     sch.net("IMU_SDA", [j_imu.pin("3")])
@@ -108,19 +122,22 @@ def build() -> Schematic:
     sch.net("IMU_INT", [j_imu.pin("5")])
 
     # --- decoupling ------------------------------------------------------- #
-    c1 = sch.place("Device:C_Polarized", "C1", at=(50, 110), value="10uF")
+    c1 = sch.place("Device:C_Polarized", "C1", at=(50, 110), value="10uF",
+                   footprint=CAP_0805_FOOTPRINT)
     sch.net("+5V", [c1.pin("1")])
     sch.net("GND", [c1.pin("2")])
     for ref, x, rail in (("C2", 150, "+3.3V"), ("C3", 175, "+3.3V"),
                          ("C4", 90, "+3.3V")):
-        c = sch.place("Device:C_Small", ref, at=(x, 125), value="100nF")
+        c = sch.place("Device:C_Small", ref, at=(x, 125), value="100nF",
+                  footprint=CAP_0805_FOOTPRINT)
         sch.net(rail, [c.pin("1")])
         sch.net("GND", [c.pin("2")])
 
     # --- power status LED ------------------------------------------------- #
-    r_led = sch.place("Device:R_Small", "R3", at=(245, 55), value="1k", rotation=90)
+    r_led = sch.place("Device:R_Small", "R3", at=(245, 55), value="1k",
+                      rotation=90, footprint=RES_0805_FOOTPRINT)
     d_led = sch.place("Device:LED_Small", "D1", at=(245, 70), value="PWR",
-                      rotation=90)
+                      rotation=90, footprint=LED_0805_FOOTPRINT)
     sch.net("+3.3V", [r_led.pin("1")])
     sch.net("LED_PWR", [r_led.pin("2"), d_led.pin("2")])  # anode of LED_Small = pin 2
     sch.net("GND", [d_led.pin("1")])
@@ -128,7 +145,7 @@ def build() -> Schematic:
     # --- RJ11 leg interfaces (x6): pins 1 and 6 intentionally unused ----- #
     for i in range(1, 7):
         j = sch.place("Hexapod_V2:RJ25", f"J{i}", at=(40 + (i - 1) * 35, 175),
-                      value=f"LEG{i}_RJ11")
+                      value=f"LEG{i}_RJ11", footprint=RJ25_FOOTPRINT)
         sch.net("GND", [j.pin("2")])
         sch.net("RS485_A", [j.pin("3")])
         sch.net("RS485_B", [j.pin("4")])

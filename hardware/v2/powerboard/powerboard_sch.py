@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # hardware/v2
-from _common import imp, power_flag  # noqa: E402
+from _common import LED_0805_FOOTPRINT, RES_0805_FOOTPRINT, imp, power_flag  # noqa: E402
 
 from hardware.schematic import Schematic, UuidRegistry  # noqa: E402
 
@@ -97,9 +97,10 @@ def build() -> Schematic:
         sch.net("GND", [c.pin("2")])
         # power-present status LED
         rl = sch.place("Device:R_Small", f"R{n}", at=(x + 10, 75), value="1k",
-                       rotation=90)
+                       rotation=90, footprint=RES_0805_FOOTPRINT)
         dl = sch.place("Device:LED_Small", f"D{1 + n}", at=(x + 10, 88),
-                       value=f"UBEC{n}", rotation=90)
+                       value=f"UBEC{n}", rotation=90,
+                       footprint=LED_0805_FOOTPRINT)
         sch.net(rail, [rl.pin("1")])
         sch.net(f"LED_U{n}", [rl.pin("2"), dl.pin("2")])
         sch.net("GND", [dl.pin("1")])
@@ -111,9 +112,10 @@ def build() -> Schematic:
     sch.net("GND", [j_sbec.pin("2")])
     sch.net("+5V", [j_sbec.pin("3")])
     sch.net("GND", [j_sbec.pin("4")])
-    r4 = sch.place("Device:R_Small", "R4", at=(180, 75), value="1k", rotation=90)
+    r4 = sch.place("Device:R_Small", "R4", at=(180, 75), value="1k",
+                   rotation=90, footprint=RES_0805_FOOTPRINT)
     d5 = sch.place("Device:LED_Small", "D5", at=(180, 88), value="SBEC",
-                   rotation=90)
+                   rotation=90, footprint=LED_0805_FOOTPRINT)
     sch.net("+5V", [r4.pin("1")])
     sch.net("LED_SBEC", [r4.pin("2"), d5.pin("2")])
     sch.net("GND", [d5.pin("1")])
