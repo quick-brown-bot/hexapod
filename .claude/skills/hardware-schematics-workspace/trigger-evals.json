@@ -1,0 +1,23 @@
+[
+  {"query": "can you add a 470 ohm resistor and a status LED on IO2 of the esp32 on the servo_mainboard? do it through the python schematic generator, not by hand in kicad", "should_trigger": true},
+  {"query": "I want to migrate hardware/leg/leg_v2.kicad_sch into code so I stop editing the .kicad_sch directly in eeschema", "should_trigger": true},
+  {"query": "set up a DSL so I can define the hexapod mainboard schematic as a python script that spits out the kicad_sch file", "should_trigger": true},
+  {"query": "how do we keep the kicad uuids stable so regenerating the schematic doesn't blow away the pcb layout I already routed?", "should_trigger": true},
+  {"query": "regenerate hardware/leg/leg_v2.kicad_sch from its python source and check the uuids didn't churn", "should_trigger": true},
+  {"query": "add a new RJ25 connector and wire its pins to the coxa net on the leg board, keep the source of truth in the .py file", "should_trigger": true},
+  {"query": "the esp32_connector board needs a GND and a +3V3 rail added — change the schematic generator script not the file itself", "should_trigger": true},
+  {"query": "convert all three boards under hardware/ over to the python-generated schematic approach", "should_trigger": true},
+  {"query": "I bumped R3 to 1k in the schematic code, regenerate and confirm uuids.json only gained keys and didn't rewrite anything", "should_trigger": true},
+  {"query": "define the servo mainboard netlist as code instead of clicking wires in kicad", "should_trigger": true},
+
+  {"query": "route the remaining traces on hexapod.kicad_pcb and pour a ground plane on the bottom layer", "should_trigger": false},
+  {"query": "update the 3D STEP model for the leg bracket in hardware/models so it matches the new mount", "should_trigger": false},
+  {"query": "the esp32 firmware isn't toggling IO2, can you debug the gpio init in firmware/", "should_trigger": false},
+  {"query": "export a BOM csv from the hexapod kicad project for ordering parts from lcsc", "should_trigger": false},
+  {"query": "design a new footprint for the XIAO esp32-c3 in the Seeed .pretty library", "should_trigger": false},
+  {"query": "write a python script to parse the servo telemetry coming over the serial port and plot it", "should_trigger": false},
+  {"query": "open the leg schematic in kicad and run ERC, tell me what errors come up", "should_trigger": false},
+  {"query": "make a clean wiring diagram image for the docs showing how the six legs connect to the mainboard", "should_trigger": false},
+  {"query": "increase the trace width for the 6V power net in the pcb editor to handle the servo current", "should_trigger": false},
+  {"query": "set up platformio CI to build the firmware on every push", "should_trigger": false}
+]
