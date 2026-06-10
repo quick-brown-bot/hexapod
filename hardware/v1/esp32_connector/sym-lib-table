@@ -2,7 +2,7 @@
   (version 7)
   (lib (name "SymbolsLib")
        (type "KiCad")
-       (uri "${KIPRJMOD}/../SymbolsLib.kicad_sym")
+       (uri "${KIPRJMOD}/../symbols/SymbolsLib.kicad_sym")
        (options "")
        (descr ""))
 )
