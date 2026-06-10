@@ -114,11 +114,11 @@ Footprints currently driven from the generator: `U1` uses
 SP3485 footprint, `U3` uses `Custom:PW20_TEX`, `J2`/`J3`/`J4` use
 `Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical`, `J5` uses
 `TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm`, the INA shunts
-currently use the candidate `Resistor_SMD:R_Shunt_Ohmite_LVK12`, `C2` uses the
-through-hole radial candidate `Capacitor_THT:CP_Radial_D8.0mm_P3.50mm` for an
-8 mm diameter bulk capacitor, and the ordinary small R/C parts default to 0805.
-Verify the shunt geometry and the capacitor lead pitch / body height against the
-exact parts before freezing the PCB.
+now use `Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder`, `C2` uses
+the through-hole radial candidate `Capacitor_THT:CP_Radial_D8.0mm_P3.50mm` for
+an 8 mm diameter bulk capacitor, and the ordinary small R/C parts default to
+0805. Verify the 1210 shunt power rating and the capacitor lead pitch / body
+height against the exact parts before freezing the PCB.
 
 ## MainPowerBoard nets
 
