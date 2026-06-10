@@ -29,6 +29,7 @@ This directory is organized by intent so that stable reference material stays se
 
 - [architecture/SYSTEM_ARCHITECTURE.md](architecture/SYSTEM_ARCHITECTURE.md)
 - [architecture/HARDWARE_AND_MECHANICS.md](architecture/HARDWARE_AND_MECHANICS.md)
+- [architecture/HEXAPOD_V2_SYSTEM_ARCHITECTURE.md](architecture/HEXAPOD_V2_SYSTEM_ARCHITECTURE.md) — V2 distributed-controller hardware ([boards](../hardware/v2/README.md))
 
 ### Development
 
