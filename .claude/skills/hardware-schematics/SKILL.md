@@ -93,10 +93,32 @@ Shared generator/DSL code lives once at `hardware/schematic/` (the
 3. Run the script to regenerate the `.kicad_sch`. Confirm `uuids.json` only
    *grew* (new keys) and did not rewrite existing UUIDs — `git diff uuids.json`
    should show additions, not modifications, for unchanged parts.
-4. Open in KiCad, run ERC, update the PCB from schematic. Existing placements
+4. **Verify with `kicad-cli`** (see below) — the file loads, and the netlist
+   connects what you intended.
+5. Open in KiCad, run ERC, update the PCB from schematic. Existing placements
    must be preserved; only genuinely new parts appear unplaced.
-5. **Update the docs** (see the rule above). Then commit `*_sch.py`,
+6. **Update the docs** (see the rule above). Then commit `*_sch.py`,
    `uuids.json`, the `.kicad_sch`, and the doc changes together.
+
+### Verifying with `kicad-cli`
+
+The Python parser will happily write a file KiCad then rejects, and net-label
+connectivity is invisible in a diff (it's by matching label *name*, nothing
+positional). So check both, headless, with the installed `kicad-cli`:
+
+```bash
+# 1. Does it even load? Catches structurally-invalid output (see Gotchas).
+kicad-cli sch erc <board>.kicad_sch -o erc.txt
+
+# 2. Did net()/wire() actually connect the pins? This is the real correctness gate.
+kicad-cli sch export netlist --format kicadsexpr -o net.net <board>.kicad_sch
+```
+
+Inspect the netlist's `(net (name …) (node (ref …)(pin …)) …)` entries to confirm
+each rail/bus/signal lists exactly the pins you expect. ERC *warnings*
+(`endpoint_off_grid`, unused-pin) do not imply broken nets — connectivity is
+position-independent — so the netlist export, not the ERC count, is what tells
+you the board is wired correctly.
 
 ### Creating a new board from scratch
 
@@ -174,12 +196,51 @@ library, the per-symbol `instances` block, and the trailing `sheet_instances` /
 `embedded_fonts` entries. After any change to `sexpr.py`, re-run the byte-exact
 round-trip check on all three boards before trusting it.
 
+## Gotchas (hard-won)
+
+- **`net(..., shape=…)` / `label(..., shape=…)` only accept a valid KiCad
+  `global_label` shape: `input | output | bidirectional | tri_state | passive`.**
+  Anything else (e.g. `shape="power"`) is written without complaint — the Python
+  parser accepts it, `.write()` succeeds, `uuids.json` looks fine — and then
+  KiCad fails the *entire* schematic to load with a generic "Cannot load
+  schematic file" (no line number). For power rails use a real `power:*` symbol
+  or just the default `passive`. `kicad-cli sch erc` is how you catch this fast.
+- **Derived `(extends …)` stock symbols have no pins** — `import_lib_symbol`
+  won't flatten them. Harvest a standalone copy instead: load the source (a
+  `.kicad_sym`, or an existing board's `lib_symbols`), re-key the symbol to a
+  bare name, wrap the symbol nodes in a `node("kicad_symbol_lib", …)`, write it
+  to an in-repo `.kicad_sym`, then `import_lib_symbol` from that. (Done this way
+  for `RJ25` + `SP3485CN` → `hardware/.../symbols/Hexapod_V2.kicad_sym`.)
+- **Stacked module pins share coordinates.** Big modules (ESP32-WROOM) draw
+  several same-net pins (e.g. all GND) at one location, and `_lib_pin` keys by
+  both pin number and name (number: last wins; name: first wins). Connect by a
+  *unique* pin name where you can, and confirm the merge in the exported netlist.
+- **Rotation flips pad order for two-pin passives.** A rotation-90 `R`/`C`
+  reports pads 1/2 swapped relative to the `pin("1")`/`pin("2")` you labelled.
+  Harmless for symmetric R/C, but **verify polarity-sensitive parts (diodes,
+  polarized caps) in the netlist** rather than trusting the pin number.
+- **Place on the 1.27 mm grid** to avoid `endpoint_off_grid` ERC warnings. They
+  don't break connectivity (labels still attach at the exact pin coordinate), so
+  they're cosmetic — but a clean ERC is worth the grid-aligned `at=` coordinates.
+
 ## What this toolchain does NOT do
 
 - **Auto-routing / auto-placement of wires** — you specify wire paths, or (better)
   connect by net label and skip wires entirely.
 - **Inventing pin positions for unknown symbols** — a new symbol needs its pin
   data supplied or pulled from a `.kicad_sym` library.
+- **Resolving `(extends …)` derived symbols.** `import_lib_symbol` copies the
+  named symbol verbatim; it does not flatten an inherited base. Many stock KiCad
+  parts are derived and carry *zero* pins of their own — e.g. `Connector:RJ25`
+  extends `6P6C`, `Interface_UART:SP3485CN` extends `LTC2850xS8`. Import one and
+  `pin()` raises `KeyError` (or the part places with no connectivity). Fix:
+  harvest a flattened standalone copy into an in-repo `.kicad_sym` (see Gotchas).
+- **Importing a symbol straight out of a `.kicad_sch`.** `import_lib_symbol`
+  scans `find_all("symbol")`, which is *non-recursive*. A `.kicad_sym` has
+  `(symbol …)` at the root (works); a `.kicad_sch` nests them inside
+  `lib_symbols`, so the scan silently finds nothing. To reuse a board's symbol,
+  wrap its `lib_symbols` children in a `kicad_symbol_lib` node and write that out
+  first.
 - **Hierarchical sheets** — single-sheet only for now; add later if needed.
 
 When you hit one of these, say so plainly rather than guessing.
