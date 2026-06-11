@@ -14,9 +14,10 @@ Contents:
     this leg pair).
 * U3  INA4181A3IPWR quad current-sense amplifier; channel 1 monitors total leg
     current, channels 2-4 monitor coxa / femur / tibia branch currents.
-* R2/R3/R4/R5  10 mOhm shunts for total leg current and each servo branch.
-* NT1..NT5  net ties that split the heavy-current +6V rails from thin INA sense
-    routes.
+* R2/R3/R4/R5  10 mOhm 4-terminal (Kelvin) shunts for total leg current and each
+    servo branch. The two sense pads give every INA input its own unique 2-node
+    net, so the router keeps the sense taps off the fat current rail and never
+    bridges the three high-side taps together.
 
 Power model: +5V logic arrives over RJ11 and feeds the XIAO via VBUS; the XIAO's
 on-board regulator provides +3.3V (its 3V3 pin) for the RS485 transceiver and
@@ -38,11 +39,10 @@ from _common import (  # noqa: E402
     CAP_0805_FOOTPRINT,
     HEADER_1X03_THT_FOOTPRINT,
     INA4181_TSSOP20_FOOTPRINT,
-    NET_TIE_2_FOOTPRINT,
     RES_0805_FOOTPRINT,
     RJ25_FOOTPRINT,
     SCREW_TERMINAL_2P_FOOTPRINT,
-    SHUNT_R010_FOOTPRINT,
+    SHUNT_R010_KELVIN_FOOTPRINT,
     SP3485_SOIC8_FOOTPRINT,
     XIAO_RP2040_DIP_FOOTPRINT,
     imp,
@@ -71,8 +71,8 @@ def build() -> Schematic:
         "INA4181A3IPWR:INA4181A3IPWR",
         "Connector:Screw_Terminal_01x02",
         "Connector:Conn_01x03_Pin",
-        "Device:NetTie_2",
         "Device:R_Small",
+        "Device:R_Shunt",
         "Device:C_Small",
         "Device:C_Polarized")
 
@@ -136,59 +136,57 @@ def build() -> Schematic:
         sch.net("GND", [j.pin("3")])
 
     # --- current sensing -------------------------------------------------- #
-    r_total = sch.place("Device:R_Small", "R2", at=(70, 140), value="0.01",
-                        rotation=90, footprint=SHUNT_R010_FOOTPRINT)
-    sch.net("+6V_IN", [r_total.pin("1")])
-    sch.net("+6V", [r_total.pin("2")])
+    # 4-terminal Kelvin shunts: pins 1/4 carry current (the fat +6V rails),
+    # pins 2/3 are sense taps (pin 2 senses terminal 1, pin 3 senses terminal 4).
+    # Each INA input reaches the shunt over its OWN unique 2-node sense net, so
+    # the router never bridges the three high-side taps (U3 pins 6/15/17) through
+    # the shared +6V copper or assigns them current-rail trace widths.
+    #
+    # Total shunt R2: current +6V_IN (term 1) -> +6V (term 4).
+    # NB: rotation MUST stay 0. The DSL's off-axis pin transform mismatches KiCad
+    # at 90/270 (sense pads land off-pin, force pads swap) — verified by netlist.
+    r_total = sch.place("Device:R_Shunt", "R2", at=(70, 140), value="0.01",
+                        footprint=SHUNT_R010_KELVIN_FOOTPRINT)
+    sch.net("+6V_IN", [r_total.pin("1")])    # force, high side
+    sch.net("+6V", [r_total.pin("4")])       # force, low side
+    sch.net("ITOT_SP", [r_total.pin("2")])   # sense, high side -> IN+1
+    sch.net("ITOT_SN", [r_total.pin("3")])   # sense, low side  -> IN-1
 
-    for ref, x, branch in (("R3", 120, "+6V_COXA"),
-                           ("R4", 155, "+6V_FEMUR"),
-                           ("R5", 190, "+6V_TIBIA")):
-        shunt = sch.place("Device:R_Small", ref, at=(x, 130), value="0.01",
-                          rotation=90, footprint=SHUNT_R010_FOOTPRINT)
-        sch.net("+6V", [shunt.pin("1")])
-        sch.net(branch, [shunt.pin("2")])
-
-    # Use dedicated thin sense nets between the shunts and INA inputs so PCB
-    # routing rules can keep these traces narrow without changing the power-rail
-    # width rules.
-    nt1 = sch.place("Device:NetTie_2", "NT1", at=(82, 122),
-                    footprint=NET_TIE_2_FOOTPRINT)
-    sch.net("+6V_IN", [nt1.pin("1")])
-    sch.net("+6V_IN_SNS", [nt1.pin("2")])
-
-    nt2 = sch.place("Device:NetTie_2", "NT2", at=(92, 122),
-                    footprint=NET_TIE_2_FOOTPRINT)
-    sch.net("+6V", [nt2.pin("1")])
-    sch.net("+6V_SNS", [nt2.pin("2")])
-
-    for ref, x, rail, sense in (("NT3", 120, "+6V_COXA", "+6V_COXA_SNS"),
-                                ("NT4", 155, "+6V_FEMUR", "+6V_FEMUR_SNS"),
-                                ("NT5", 190, "+6V_TIBIA", "+6V_TIBIA_SNS")):
-        nt = sch.place("Device:NetTie_2", ref, at=(x, 122),
-                       footprint=NET_TIE_2_FOOTPRINT)
-        sch.net(rail, [nt.pin("1")])
-        sch.net(sense, [nt.pin("2")])
+    # Branch shunts: current +6V (term 1) -> branch rail (term 4). The high-side
+    # force pad stays on the shared +6V bulk; only the sense pads are per-branch.
+    for ref, x, branch, sp, sn in (
+            ("R3", 120, "+6V_COXA", "COXA_SP", "COXA_SN"),
+            ("R4", 155, "+6V_FEMUR", "FEMUR_SP", "FEMUR_SN"),
+            ("R5", 190, "+6V_TIBIA", "TIBIA_SP", "TIBIA_SN")):
+        shunt = sch.place("Device:R_Shunt", ref, at=(x, 128), value="0.01",
+                          footprint=SHUNT_R010_KELVIN_FOOTPRINT)  # rotation 0 — see R2
+        sch.net("+6V", [shunt.pin("1")])     # force, high side (shared bulk)
+        sch.net(branch, [shunt.pin("4")])    # force, low side (to servo conn)
+        sch.net(sp, [shunt.pin("2")])        # sense, high side -> IN+
+        sch.net(sn, [shunt.pin("3")])        # sense, low side  -> IN-
 
     u3 = sch.place("INA4181A3IPWR:INA4181A3IPWR", "U3", at=(225, 40),
                    value="INA4181A3IPWR", footprint=INA4181_TSSOP20_FOOTPRINT)
-    stub_label("GND", u3.pin("1"), -15)
-    stub_label("I_TOTAL_SENSE", u3.pin("2"), -15)
-    stub_label("+6V_SNS", u3.pin("3"), -15)
-    stub_label("+6V_IN_SNS", u3.pin("4"), -15)
-    stub_label("+3.3V", u3.pin("5"), -15)
-    stub_label("+6V_SNS", u3.pin("6"), -15)
-    stub_label("+6V_COXA_SNS", u3.pin("7"), -15)
-    stub_label("I_COXA_SENSE", u3.pin("8"), -15)
-    stub_label("GND", u3.pin("9"), -15)
-    stub_label("+6V_FEMUR_SNS", u3.pin("14"), 8)
-    stub_label("+6V_SNS", u3.pin("15"), 8)
-    stub_label("GND", u3.pin("16"), 8)
-    stub_label("+6V_SNS", u3.pin("17"), 8)
-    stub_label("+6V_TIBIA_SNS", u3.pin("18"), 8)
-    stub_label("I_TIBIA_SENSE", u3.pin("19"), 8)
-    stub_label("GND", u3.pin("20"), 8)
-    stub_label("I_FEMUR_SENSE", u3.pin("13"), 8)
+    # All four REF pins to GND (unidirectional, zero referenced to GND). Each IN+
+    # is on the higher-potential (source) side of its shunt.
+    stub_label("GND", u3.pin("1"), -15)            # REF1
+    stub_label("I_TOTAL_SENSE", u3.pin("2"), -15)  # OUT1
+    stub_label("ITOT_SN", u3.pin("3"), -15)        # IN-1
+    stub_label("ITOT_SP", u3.pin("4"), -15)        # IN+1
+    stub_label("+3.3V", u3.pin("5"), -15)          # VS
+    stub_label("COXA_SP", u3.pin("6"), -15)        # IN+2
+    stub_label("COXA_SN", u3.pin("7"), -15)        # IN-2
+    stub_label("I_COXA_SENSE", u3.pin("8"), -15)   # OUT2
+    stub_label("GND", u3.pin("9"), -15)            # REF2
+    stub_label("GND", u3.pin("12"), 8)             # REF3
+    stub_label("I_FEMUR_SENSE", u3.pin("13"), 8)   # OUT3
+    stub_label("FEMUR_SN", u3.pin("14"), 8)        # IN-3
+    stub_label("FEMUR_SP", u3.pin("15"), 8)        # IN+3
+    stub_label("GND", u3.pin("16"), 8)             # GND
+    stub_label("TIBIA_SP", u3.pin("17"), 8)        # IN+4
+    stub_label("TIBIA_SN", u3.pin("18"), 8)        # IN-4
+    stub_label("I_TIBIA_SENSE", u3.pin("19"), 8)   # OUT4
+    stub_label("GND", u3.pin("20"), 8)             # REF4
 
     # --- decoupling / bulk ------------------------------------------------ #
     c1 = sch.place("Device:C_Small", "C1", at=(145, 108), value="100nF",

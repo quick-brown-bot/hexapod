@@ -55,8 +55,11 @@ HEADER_1X03_THT_FOOTPRINT = (
 SCREW_TERMINAL_2P_FOOTPRINT = (
     "TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm"
 )
-NET_TIE_2_FOOTPRINT = "NetTie:NetTie-2_SMD_Pad0.5mm"
-SHUNT_R010_FOOTPRINT = "Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder"
+# 4-terminal (Kelvin) current shunt. The two sense pads let each INA input tap a
+# unique thin net right at the shunt element, so the router never merges the
+# sense lines with — or onto each other through — the fat current-carrying rail.
+# Verify the LVK12 power rating against the exact part before freezing.
+SHUNT_R010_KELVIN_FOOTPRINT = "Resistor_SMD:R_Shunt_Ohmite_LVK12"
 RES_0805_FOOTPRINT = "Resistor_SMD:R_0805_2012Metric"
 CAP_0805_FOOTPRINT = "Capacitor_SMD:C_0805_2012Metric"
 BULK_CAP_470UF_FOOTPRINT = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"
