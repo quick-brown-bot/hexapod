@@ -2040,6 +2040,188 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Device:R_Shunt"
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at -2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R_Shunt"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Shunt resistor with Kelvin connections"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res shunt resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*Shunt*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_Shunt_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 -2.54) (xy 1.27 -2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 2.54) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_Shunt_1_1"
+				(pin passive line
+					(at 0 5.08 270)
+					(length 2.54)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 90)
+					(length 2.54)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 2.54 180)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 -2.54 180)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Device:C_Small"
 			(pin_numbers
 				(hide yes)
@@ -3324,8 +3506,8 @@
 		(uuid "fb9afb7c-784b-497e-a5dd-6edf9b6b1154")
 	)
 	(symbol
-		(lib_id "Device:R_Small")
-		(at 85 140 90)
+		(lib_id "Device:R_Shunt")
+		(at 85 140 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3349,7 +3531,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_Shunt_Ohmite_LVK12"
 			(at 85 140 0)
 			(effects
 				(font
@@ -3378,7 +3560,7 @@
 	)
 	(global_label "+6V_IN"
 		(shape passive)
-		(at 87.54 140 0)
+		(at 85 134.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3390,7 +3572,7 @@
 	)
 	(global_label "+6V"
 		(shape passive)
-		(at 82.46 140 0)
+		(at 85 145.08 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3400,9 +3582,33 @@
 		)
 		(uuid "a5e17515-073b-4a61-9513-da57baa9009f")
 	)
+	(global_label "ITOT_SP"
+		(shape passive)
+		(at 87.54 137.46 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "a8144789-02d9-4c11-8bf8-eafd3119f4b4")
+	)
+	(global_label "ITOT_SN"
+		(shape passive)
+		(at 87.54 142.54 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "b3f42506-dd4d-4142-85d4-b86be1f6378b")
+	)
 	(symbol
-		(lib_id "Device:R_Small")
-		(at 140 125 90)
+		(lib_id "Device:R_Shunt")
+		(at 140 125 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3426,7 +3632,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_Shunt_Ohmite_LVK12"
 			(at 140 125 0)
 			(effects
 				(font
@@ -3455,7 +3661,7 @@
 	)
 	(global_label "+6V"
 		(shape passive)
-		(at 142.54 125 0)
+		(at 140 119.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3467,7 +3673,7 @@
 	)
 	(global_label "+6V_COXA"
 		(shape passive)
-		(at 137.46 125 0)
+		(at 140 130.08 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3477,9 +3683,33 @@
 		)
 		(uuid "aa8bb274-a3a6-4f03-a418-e000f032c45f")
 	)
+	(global_label "COXA_SP"
+		(shape passive)
+		(at 142.54 122.46 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "b4709507-ede3-4663-9e23-2b2d7ca2e68d")
+	)
+	(global_label "COXA_SN"
+		(shape passive)
+		(at 142.54 127.54 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d6744418-7533-45ba-8642-372cefe30370")
+	)
 	(symbol
-		(lib_id "Device:R_Small")
-		(at 165 125 90)
+		(lib_id "Device:R_Shunt")
+		(at 165 125 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3503,7 +3733,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_Shunt_Ohmite_LVK12"
 			(at 165 125 0)
 			(effects
 				(font
@@ -3532,7 +3762,7 @@
 	)
 	(global_label "+6V"
 		(shape passive)
-		(at 167.54 125 0)
+		(at 165 119.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3544,7 +3774,7 @@
 	)
 	(global_label "+6V_FEMUR"
 		(shape passive)
-		(at 162.46 125 0)
+		(at 165 130.08 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3554,9 +3784,33 @@
 		)
 		(uuid "5c7718c9-7c01-4b25-999e-3ef1473ce0f9")
 	)
+	(global_label "FEMUR_SP"
+		(shape passive)
+		(at 167.54 122.46 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "7d38e958-f94f-4240-8e08-b6ff0ece9348")
+	)
+	(global_label "FEMUR_SN"
+		(shape passive)
+		(at 167.54 127.54 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "be859cf1-7cd3-43e0-8244-be3eb2b0247a")
+	)
 	(symbol
-		(lib_id "Device:R_Small")
-		(at 190 125 90)
+		(lib_id "Device:R_Shunt")
+		(at 190 125 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3580,7 +3834,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_Shunt_Ohmite_LVK12"
 			(at 190 125 0)
 			(effects
 				(font
@@ -3609,7 +3863,7 @@
 	)
 	(global_label "+6V"
 		(shape passive)
-		(at 192.54 125 0)
+		(at 190 119.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3621,7 +3875,7 @@
 	)
 	(global_label "+6V_TIBIA"
 		(shape passive)
-		(at 187.46 125 0)
+		(at 190 130.08 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3630,6 +3884,30 @@
 			(justify left)
 		)
 		(uuid "48162b93-20bd-44ec-914e-d0ae936bbb5f")
+	)
+	(global_label "TIBIA_SP"
+		(shape passive)
+		(at 192.54 122.46 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "7ab43a7c-739a-4361-b233-9afc5d1f40a0")
+	)
+	(global_label "TIBIA_SN"
+		(shape passive)
+		(at 192.54 127.54 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "21dc381c-0a34-4bc6-ab02-33944e1b8ed6")
 	)
 	(symbol
 		(lib_id "INA4181A3IPWR:INA4181A3IPWR")
@@ -3756,7 +4034,7 @@
 		)
 		(uuid "6064ba7a-0d98-4803-9f50-ba6e503ece19")
 	)
-	(global_label "+6V_IN"
+	(global_label "ITOT_SP"
 		(shape passive)
 		(at 105 167.62 0)
 		(fields_autoplaced yes)
@@ -3766,9 +4044,9 @@
 			)
 			(justify left)
 		)
-		(uuid "9644c77e-6726-4727-80c7-2fb9d5a8012c")
+		(uuid "a8144789-02d9-4c11-8bf8-eafd3119f4b4")
 	)
-	(global_label "+6V"
+	(global_label "ITOT_SN"
 		(shape passive)
 		(at 105 165.08 0)
 		(fields_autoplaced yes)
@@ -3778,7 +4056,7 @@
 			)
 			(justify left)
 		)
-		(uuid "a5e17515-073b-4a61-9513-da57baa9009f")
+		(uuid "b3f42506-dd4d-4142-85d4-b86be1f6378b")
 	)
 	(global_label "I_TOTAL_SENSE"
 		(shape passive)
@@ -3792,7 +4070,7 @@
 		)
 		(uuid "7265a3eb-e918-405d-8866-bb6b1d642581")
 	)
-	(global_label "+6V"
+	(global_label "COXA_SP"
 		(shape passive)
 		(at 105 172.7 0)
 		(fields_autoplaced yes)
@@ -3802,9 +4080,9 @@
 			)
 			(justify left)
 		)
-		(uuid "a5e17515-073b-4a61-9513-da57baa9009f")
+		(uuid "b4709507-ede3-4663-9e23-2b2d7ca2e68d")
 	)
-	(global_label "+6V_COXA"
+	(global_label "COXA_SN"
 		(shape passive)
 		(at 105 175.24 0)
 		(fields_autoplaced yes)
@@ -3814,7 +4092,7 @@
 			)
 			(justify left)
 		)
-		(uuid "aa8bb274-a3a6-4f03-a418-e000f032c45f")
+		(uuid "d6744418-7533-45ba-8642-372cefe30370")
 	)
 	(global_label "I_COXA_SENSE"
 		(shape passive)
@@ -3828,7 +4106,7 @@
 		)
 		(uuid "17a94e3b-be32-4328-b524-8b56d8ad52c7")
 	)
-	(global_label "+6V"
+	(global_label "FEMUR_SP"
 		(shape passive)
 		(at 145.64 172.7 0)
 		(fields_autoplaced yes)
@@ -3838,9 +4116,9 @@
 			)
 			(justify left)
 		)
-		(uuid "a5e17515-073b-4a61-9513-da57baa9009f")
+		(uuid "7d38e958-f94f-4240-8e08-b6ff0ece9348")
 	)
-	(global_label "+6V_FEMUR"
+	(global_label "FEMUR_SN"
 		(shape passive)
 		(at 145.64 175.24 0)
 		(fields_autoplaced yes)
@@ -3850,7 +4128,7 @@
 			)
 			(justify left)
 		)
-		(uuid "5c7718c9-7c01-4b25-999e-3ef1473ce0f9")
+		(uuid "be859cf1-7cd3-43e0-8244-be3eb2b0247a")
 	)
 	(global_label "I_FEMUR_SENSE"
 		(shape passive)
@@ -3864,7 +4142,7 @@
 		)
 		(uuid "06b9dcb1-c078-4807-83b5-1b8e1e6ef6cf")
 	)
-	(global_label "+6V"
+	(global_label "TIBIA_SP"
 		(shape passive)
 		(at 145.64 167.62 0)
 		(fields_autoplaced yes)
@@ -3874,9 +4152,9 @@
 			)
 			(justify left)
 		)
-		(uuid "a5e17515-073b-4a61-9513-da57baa9009f")
+		(uuid "7ab43a7c-739a-4361-b233-9afc5d1f40a0")
 	)
-	(global_label "+6V_TIBIA"
+	(global_label "TIBIA_SN"
 		(shape passive)
 		(at 145.64 165.08 0)
 		(fields_autoplaced yes)
@@ -3886,7 +4164,7 @@
 			)
 			(justify left)
 		)
-		(uuid "48162b93-20bd-44ec-914e-d0ae936bbb5f")
+		(uuid "21dc381c-0a34-4bc6-ab02-33944e1b8ed6")
 	)
 	(global_label "I_TIBIA_SENSE"
 		(shape passive)

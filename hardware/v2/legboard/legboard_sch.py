@@ -14,7 +14,10 @@ Contents:
     this leg pair).
 * U3  INA4181A3IPWR quad current-sense amplifier; channel 1 monitors total leg
     current, channels 2-4 monitor coxa / femur / tibia branch currents.
-* R2/R3/R4/R5  10 mOhm shunts for total leg current and each servo branch.
+* R2/R3/R4/R5  10 mOhm 4-terminal (Kelvin) shunts for total leg current and each
+    servo branch. The two sense pads give every INA input its own unique 2-node
+    net, so the router keeps the sense taps off the fat current rail and never
+    bridges the three high-side taps together.
 
 Power model: +5V logic arrives over RJ11 and feeds the XIAO via VBUS; the XIAO's
 on-board regulator provides +3.3V (its 3V3 pin) for the RS485 transceiver and
@@ -39,7 +42,7 @@ from _common import (  # noqa: E402
     RES_0805_FOOTPRINT,
     RJ25_FOOTPRINT,
     SCREW_TERMINAL_2P_FOOTPRINT,
-    SHUNT_R010_FOOTPRINT,
+    SHUNT_R010_KELVIN_FOOTPRINT,
     SP3485_SOIC8_FOOTPRINT,
     XIAO_RP2040_DIP_FOOTPRINT,
     imp,
@@ -63,6 +66,7 @@ def build() -> Schematic:
         "Connector:Screw_Terminal_01x02",
         "Connector:Conn_01x03_Pin",
         "Device:R_Small",
+        "Device:R_Shunt",
         "Device:C_Small",
         "Device:C_Polarized")
 
@@ -126,35 +130,51 @@ def build() -> Schematic:
         sch.net("GND", [j.pin("3")])
 
     # --- current sensing -------------------------------------------------- #
-    r_total = sch.place("Device:R_Small", "R2", at=(85, 140), value="0.01",
-                        rotation=90, footprint=SHUNT_R010_FOOTPRINT)
-    sch.net("+6V_IN", [r_total.pin("1")])
-    sch.net("+6V", [r_total.pin("2")])
+    # 4-terminal Kelvin shunts: pins 1/4 carry current (the fat +6V rails),
+    # pins 2/3 are sense taps (pin 2 senses terminal 1, pin 3 senses terminal 4).
+    # Each INA input reaches the shunt over its OWN unique 2-node sense net, so
+    # the router never bridges the three high-side taps (U3 pins 6/15/17) through
+    # the shared +6V copper or assigns them current-rail trace widths.
+    #
+    # Total shunt R2: current +6V_IN (term 1) -> +6V (term 4).
+    # NB: rotation MUST stay 0. The DSL's off-axis pin transform mismatches KiCad
+    # at 90/270 (sense pads land off-pin, force pads swap) — verified by netlist.
+    r_total = sch.place("Device:R_Shunt", "R2", at=(85, 140), value="0.01",
+                        footprint=SHUNT_R010_KELVIN_FOOTPRINT)
+    sch.net("+6V_IN", [r_total.pin("1")])    # force, high side
+    sch.net("+6V", [r_total.pin("4")])       # force, low side
+    sch.net("ITOT_SP", [r_total.pin("2")])   # sense, high side -> IN+1
+    sch.net("ITOT_SN", [r_total.pin("3")])   # sense, low side  -> IN-1
 
-    for ref, x, branch in (("R3", 140, "+6V_COXA"),
-                           ("R4", 165, "+6V_FEMUR"),
-                           ("R5", 190, "+6V_TIBIA")):
-        shunt = sch.place("Device:R_Small", ref, at=(x, 125), value="0.01",
-                          rotation=90, footprint=SHUNT_R010_FOOTPRINT)
-        sch.net("+6V", [shunt.pin("1")])
-        sch.net(branch, [shunt.pin("2")])
+    # Branch shunts: current +6V (term 1) -> branch rail (term 4). The high-side
+    # force pad stays on the shared +6V bulk; only the sense pads are per-branch.
+    for ref, x, branch, sp, sn in (
+            ("R3", 140, "+6V_COXA", "COXA_SP", "COXA_SN"),
+            ("R4", 165, "+6V_FEMUR", "FEMUR_SP", "FEMUR_SN"),
+            ("R5", 190, "+6V_TIBIA", "TIBIA_SP", "TIBIA_SN")):
+        shunt = sch.place("Device:R_Shunt", ref, at=(x, 125), value="0.01",
+                          footprint=SHUNT_R010_KELVIN_FOOTPRINT)  # rotation 0 — see R2
+        sch.net("+6V", [shunt.pin("1")])     # force, high side (shared bulk)
+        sch.net(branch, [shunt.pin("4")])    # force, low side (to servo conn)
+        sch.net(sp, [shunt.pin("2")])        # sense, high side -> IN+
+        sch.net(sn, [shunt.pin("3")])        # sense, low side  -> IN-
 
     u3 = sch.place("INA4181A3IPWR:INA4181A3IPWR", "U3", at=(105, 160),
                    value="INA4181A3IPWR", footprint=INA4181_TSSOP20_FOOTPRINT)
     sch.net("GND", [u3.pin("16"), u3.pin("1"), u3.pin("9"), u3.pin("12"), u3.pin("20")])
     sch.net("+3.3V", [u3.pin("5")])
-    sch.net("+6V_IN", [u3.pin("4")])
-    sch.net("+6V", [u3.pin("3")])
-    sch.net("I_TOTAL_SENSE", [u3.pin("2")])
-    sch.net("+6V", [u3.pin("6")])
-    sch.net("+6V_COXA", [u3.pin("7")])
-    sch.net("I_COXA_SENSE", [u3.pin("8")])
-    sch.net("+6V", [u3.pin("15")])
-    sch.net("+6V_FEMUR", [u3.pin("14")])
-    sch.net("I_FEMUR_SENSE", [u3.pin("13")])
-    sch.net("+6V", [u3.pin("17")])
-    sch.net("+6V_TIBIA", [u3.pin("18")])
-    sch.net("I_TIBIA_SENSE", [u3.pin("19")])
+    sch.net("ITOT_SP", [u3.pin("4")])        # IN+1
+    sch.net("ITOT_SN", [u3.pin("3")])        # IN-1
+    sch.net("I_TOTAL_SENSE", [u3.pin("2")])  # OUT1
+    sch.net("COXA_SP", [u3.pin("6")])        # IN+2
+    sch.net("COXA_SN", [u3.pin("7")])        # IN-2
+    sch.net("I_COXA_SENSE", [u3.pin("8")])   # OUT2
+    sch.net("FEMUR_SP", [u3.pin("15")])      # IN+3
+    sch.net("FEMUR_SN", [u3.pin("14")])      # IN-3
+    sch.net("I_FEMUR_SENSE", [u3.pin("13")])  # OUT3
+    sch.net("TIBIA_SP", [u3.pin("17")])      # IN+4
+    sch.net("TIBIA_SN", [u3.pin("18")])      # IN-4
+    sch.net("I_TIBIA_SENSE", [u3.pin("19")])  # OUT4
 
     # --- decoupling / bulk ------------------------------------------------ #
     c1 = sch.place("Device:C_Small", "C1", at=(160, 70), value="100nF",

@@ -89,9 +89,13 @@ SOIC-8 SP3485 footprint, and the ordinary small R/C/LED parts default to 0805.
 |-----|----------|
 | `+5V` | RJ11 pin 5 logic power → XIAO VBUS (U1.14) |
 | `+3.3V` | XIAO 3V3 out (U1.12) → SP3485 VCC, INA4181 VCC, decoupling |
-| `+6V` | post-total-shunt servo bus feeding the three per-servo branch shunts and bulk cap C2 |
-| `+6V_IN` | raw servo-power input (J5) ahead of the shunt |
-| `+6V_COXA` / `+6V_FEMUR` / `+6V_TIBIA` | post-branch-shunt servo supply rails for J2 / J3 / J4 |
+| `+6V` | post-total-shunt servo bus; high-side **force** node feeding the three per-servo branch shunts and bulk cap C2 |
+| `+6V_IN` | raw servo-power input (J5) ahead of the total shunt |
+| `+6V_COXA` / `+6V_FEMUR` / `+6V_TIBIA` | post-branch-shunt servo supply rails (force) for J2 / J3 / J4 |
+| `ITOT_SP` / `ITOT_SN` | Kelvin **sense** taps of total shunt R2 → INA IN+1 / IN-1 |
+| `COXA_SP` / `COXA_SN` | Kelvin sense taps of coxa shunt R3 → INA IN+2 / IN-2 |
+| `FEMUR_SP` / `FEMUR_SN` | Kelvin sense taps of femur shunt R4 → INA IN+3 / IN-3 |
+| `TIBIA_SP` / `TIBIA_SN` | Kelvin sense taps of tibia shunt R5 → INA IN+4 / IN-4 |
 | `GND` | global ground |
 | `RP_TXD` / `RP_RXD` | XIAO P0/P1 (UART) ↔ SP3485 DI/RO |
 | `RS485_DE` | XIAO P6/D4 → SP3485 DE + ~RE |
@@ -103,22 +107,33 @@ SOIC-8 SP3485 footprint, and the ordinary small R/C/LED parts default to 0805.
 | `I_TIBIA_SENSE` | INA4181 channel 4 output → XIAO A3 |
 
 Servo connectors J2/J3/J4 (`Conn_01x03`): 1 = signal, 2 = branch +6V, 3 = GND.
-J5 is now a 2-pin screw terminal for servo power input. U3 (`INA4181A3IPWR`) uses
-channel 1 across the total-leg 10 mOhm shunt `R2` (`+6V_IN` to `+6V`), channel 2
-across the coxa shunt `R3`, channel 3 across the femur shunt `R4`, and channel 4
-across the tibia shunt `R5`.
+J5 is a 2-pin screw terminal for servo power input. The four current shunts
+`R2`/`R3`/`R4`/`R5` are **4-terminal (Kelvin) shunts** (`Device:R_Shunt`): pins
+1/4 carry current, pins 2/3 are the sense taps. Each INA input reaches the shunt
+over its own unique two-node `*_SP`/`*_SN` net, so the autorouter cannot merge
+the three high-side taps (INA pins 6/15/17) through the shared `+6V` copper or
+assign them current-rail trace widths. U3 (`INA4181A3IPWR`) measures channel 1
+across the total-leg shunt `R2` (`+6V_IN`→`+6V`), channel 2 across coxa `R3`,
+channel 3 across femur `R4`, channel 4 across tibia `R5`; IN+ is always on the
+higher-potential (source) side.
+
+> **Shunt placement must stay at rotation 0.** The schematic-as-code pin
+> transform mismatches KiCad for off-axis pins at rotation 90/270 — the Kelvin
+> sense pads land off the pin and the force pads swap. Verified via netlist
+> export; keep the `Device:R_Shunt` placements un-rotated.
 
 Footprints currently driven from the generator: `U1` uses
 `Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP`, `J1` uses
 `Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal`, `U2` uses the SOIC-8
 SP3485 footprint, `U3` uses `Custom:PW20_TEX`, `J2`/`J3`/`J4` use
 `Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical`, `J5` uses
-`TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm`, the INA shunts
-now use `Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder`, `C2` uses
-the through-hole radial candidate `Capacitor_THT:CP_Radial_D8.0mm_P3.50mm` for
-an 8 mm diameter bulk capacitor, and the ordinary small R/C parts default to
-0805. Verify the 1210 shunt power rating and the capacitor lead pitch / body
-height against the exact parts before freezing the PCB.
+`TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm`, the four INA
+shunts now use the 4-contact Kelvin footprint
+`Resistor_SMD:R_Shunt_Ohmite_LVK12`, `C2` uses the through-hole radial candidate
+`Capacitor_THT:CP_Radial_D8.0mm_P3.50mm` for an 8 mm diameter bulk capacitor, and
+the ordinary small R/C parts default to 0805. Verify the LVK12 shunt power rating
+and the capacitor lead pitch / body height against the exact parts before
+freezing the PCB.
 
 ## MainPowerBoard nets
 
