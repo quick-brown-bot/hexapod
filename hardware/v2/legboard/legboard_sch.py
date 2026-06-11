@@ -58,6 +58,12 @@ def build() -> Schematic:
     reg = UuidRegistry(HERE / "uuids.json")
     sch = Schematic.new("legboard", reg, paper="A4")
 
+    def stub_label(name: str, pin_xy: tuple[float, float], dx: float, dy: float = 0,
+                   shape: str = "passive") -> None:
+        end = (pin_xy[0] + dx, pin_xy[1] + dy)
+        sch.wire(pin_xy, end)
+        sch.label(name, end, shape=shape)
+
     imp(sch,
         "Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP",
         "Hexapod_V2:SP3485CN",
@@ -71,42 +77,42 @@ def build() -> Schematic:
         "Device:C_Polarized")
 
     # --- local controller ------------------------------------------------- #
-    u1 = sch.place("Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP", "U1", at=(120, 90),
+    u1 = sch.place("Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP", "U1", at=(70, 40),
                    value="XIAO-RP2040",
                    footprint=XIAO_RP2040_DIP_FOOTPRINT)
     sch.net("+5V", [u1.pin("14")])       # VBUS <- RJ11 logic power
     sch.net("+3.3V", [u1.pin("12")])     # 3V3 OUT (on-board regulator)
     sch.net("GND", [u1.pin("13")])
-    sch.net("RP_TXD", [u1.pin("7")])     # P0/D6/TX -> RS485 DI
+    sch.net("RP_TXD", [u1.pin("7")], rotation=180)     # P0/D6/TX -> RS485 DI
     sch.net("RP_RXD", [u1.pin("8")])     # P1/D7/RX <- RS485 RO
-    sch.net("RS485_DE", [u1.pin("5")])   # P6/D4 -> driver enable
+    sch.net("RS485_DE", [u1.pin("5")], rotation=180)   # P6/D4 -> driver enable
     sch.net("COXA_PWM", [u1.pin("11")])  # P3/D10
     sch.net("FEMUR_PWM", [u1.pin("10")])  # P4/D9
     sch.net("TIBIA_PWM", [u1.pin("9")])  # P2/D8
-    sch.net("I_TOTAL_SENSE", [u1.pin("1")])    # P26/A0 (ADC)
-    sch.net("I_COXA_SENSE", [u1.pin("2")])     # P27/A1 (ADC)
-    sch.net("I_FEMUR_SENSE", [u1.pin("3")])    # P28/A2 (ADC)
-    sch.net("I_TIBIA_SENSE", [u1.pin("4")])    # P29/A3 (ADC)
+    sch.net("I_TOTAL_SENSE", [u1.pin("1")], rotation=180)    # P26/A0 (ADC)
+    sch.net("I_COXA_SENSE", [u1.pin("2")], rotation=180)     # P27/A1 (ADC)
+    sch.net("I_FEMUR_SENSE", [u1.pin("3")], rotation=180)    # P28/A2 (ADC)
+    sch.net("I_TIBIA_SENSE", [u1.pin("4")], rotation=180)    # P29/A3 (ADC)
 
     # --- RS485 slave ------------------------------------------------------ #
-    u2 = sch.place("Hexapod_V2:SP3485CN", "U2", at=(185, 90), value="SP3485CN",
+    u2 = sch.place("Hexapod_V2:SP3485CN", "U2", at=(145, 72), value="SP3485CN",
                    footprint=SP3485_SOIC8_FOOTPRINT)
     sch.net("+3.3V", [u2.pin("8")])      # VCC
     sch.net("GND", [u2.pin("5")])
-    sch.net("RP_RXD", [u2.pin("1")])     # RO
-    sch.net("RP_TXD", [u2.pin("4")])     # DI
-    sch.net("RS485_DE", [u2.pin("2"), u2.pin("3")])  # ~RE + DE tied
+    sch.net("RP_RXD", [u2.pin("1")], rotation=180)     # RO
+    sch.net("RP_TXD", [u2.pin("4")], rotation=180)     # DI
+    sch.net("RS485_DE", [u2.pin("2"), u2.pin("3")], rotation=180)  # ~RE + DE tied
     sch.net("RS485_A", [u2.pin("6")])
     sch.net("RS485_B", [u2.pin("7")])
 
     # Bus termination 120R — DNP except on the two electrical ends of the bus.
-    rt = sch.place("Device:R_Small", "R1", at=(210, 90), value="120 (DNP)",
+    rt = sch.place("Device:R_Small", "R1", at=(170, 72), value="120 (DNP)",
                    rotation=90, footprint=RES_0805_FOOTPRINT)
     sch.net("RS485_A", [rt.pin("1")])
     sch.net("RS485_B", [rt.pin("2")])
 
     # --- RJ11 uplink: pins 1 and 6 intentionally unused ------------------ #
-    j1 = sch.place("Hexapod_V2:RJ25", "J1", at=(50, 90), value="UPLINK_RJ11",
+    j1 = sch.place("Hexapod_V2:RJ25", "J1", at=(25, 90), value="UPLINK_RJ11",
                    footprint=RJ25_FOOTPRINT)
     sch.net("GND", [j1.pin("2")])
     sch.net("RS485_A", [j1.pin("3")])
@@ -114,16 +120,16 @@ def build() -> Schematic:
     sch.net("+5V", [j1.pin("5")])
 
     # --- servo power input ------------------------------------------------ #
-    j5 = sch.place("Connector:Screw_Terminal_01x02", "J5", at=(50, 140),
+    j5 = sch.place("Connector:Screw_Terminal_01x02", "J5", at=(35, 140),
                    value="SERVO_PWR_IN", footprint=SCREW_TERMINAL_2P_FOOTPRINT)
     sch.net("+6V_IN", [j5.pin("1")])
     sch.net("GND", [j5.pin("2")])
 
     # --- servo connectors (signal / +6V / GND) --------------------------- #
-    for ref, x, pwm, rail in (("J2", 150, "COXA_PWM", "+6V_COXA"),
-                              ("J3", 175, "FEMUR_PWM", "+6V_FEMUR"),
-                              ("J4", 200, "TIBIA_PWM", "+6V_TIBIA")):
-        j = sch.place("Connector:Conn_01x03_Pin", ref, at=(x, 140), value=pwm[:-4],
+    for ref, x, pwm, rail in (("J2", 120, "COXA_PWM", "+6V_COXA"),
+                              ("J3", 155, "FEMUR_PWM", "+6V_FEMUR"),
+                              ("J4", 190, "TIBIA_PWM", "+6V_TIBIA")):
+        j = sch.place("Connector:Conn_01x03_Pin", ref, at=(x, 145), value=pwm[:-4],
                       footprint=HEADER_1X03_THT_FOOTPRINT)
         sch.net(pwm, [j.pin("1")])
         sch.net(rail, [j.pin("2")])
@@ -139,7 +145,7 @@ def build() -> Schematic:
     # Total shunt R2: current +6V_IN (term 1) -> +6V (term 4).
     # NB: rotation MUST stay 0. The DSL's off-axis pin transform mismatches KiCad
     # at 90/270 (sense pads land off-pin, force pads swap) — verified by netlist.
-    r_total = sch.place("Device:R_Shunt", "R2", at=(85, 140), value="0.01",
+    r_total = sch.place("Device:R_Shunt", "R2", at=(70, 140), value="0.01",
                         footprint=SHUNT_R010_KELVIN_FOOTPRINT)
     sch.net("+6V_IN", [r_total.pin("1")])    # force, high side
     sch.net("+6V", [r_total.pin("4")])       # force, low side
@@ -149,57 +155,63 @@ def build() -> Schematic:
     # Branch shunts: current +6V (term 1) -> branch rail (term 4). The high-side
     # force pad stays on the shared +6V bulk; only the sense pads are per-branch.
     for ref, x, branch, sp, sn in (
-            ("R3", 140, "+6V_COXA", "COXA_SP", "COXA_SN"),
-            ("R4", 165, "+6V_FEMUR", "FEMUR_SP", "FEMUR_SN"),
+            ("R3", 120, "+6V_COXA", "COXA_SP", "COXA_SN"),
+            ("R4", 155, "+6V_FEMUR", "FEMUR_SP", "FEMUR_SN"),
             ("R5", 190, "+6V_TIBIA", "TIBIA_SP", "TIBIA_SN")):
-        shunt = sch.place("Device:R_Shunt", ref, at=(x, 125), value="0.01",
+        shunt = sch.place("Device:R_Shunt", ref, at=(x, 128), value="0.01",
                           footprint=SHUNT_R010_KELVIN_FOOTPRINT)  # rotation 0 — see R2
         sch.net("+6V", [shunt.pin("1")])     # force, high side (shared bulk)
         sch.net(branch, [shunt.pin("4")])    # force, low side (to servo conn)
         sch.net(sp, [shunt.pin("2")])        # sense, high side -> IN+
         sch.net(sn, [shunt.pin("3")])        # sense, low side  -> IN-
 
-    u3 = sch.place("INA4181A3IPWR:INA4181A3IPWR", "U3", at=(105, 160),
+    u3 = sch.place("INA4181A3IPWR:INA4181A3IPWR", "U3", at=(225, 40),
                    value="INA4181A3IPWR", footprint=INA4181_TSSOP20_FOOTPRINT)
-    sch.net("GND", [u3.pin("16"), u3.pin("1"), u3.pin("9"), u3.pin("12"), u3.pin("20")])
-    sch.net("+3.3V", [u3.pin("5")])
-    sch.net("ITOT_SP", [u3.pin("4")])        # IN+1
-    sch.net("ITOT_SN", [u3.pin("3")])        # IN-1
-    sch.net("I_TOTAL_SENSE", [u3.pin("2")])  # OUT1
-    sch.net("COXA_SP", [u3.pin("6")])        # IN+2
-    sch.net("COXA_SN", [u3.pin("7")])        # IN-2
-    sch.net("I_COXA_SENSE", [u3.pin("8")])   # OUT2
-    sch.net("FEMUR_SP", [u3.pin("15")])      # IN+3
-    sch.net("FEMUR_SN", [u3.pin("14")])      # IN-3
-    sch.net("I_FEMUR_SENSE", [u3.pin("13")])  # OUT3
-    sch.net("TIBIA_SP", [u3.pin("17")])      # IN+4
-    sch.net("TIBIA_SN", [u3.pin("18")])      # IN-4
-    sch.net("I_TIBIA_SENSE", [u3.pin("19")])  # OUT4
+    # All four REF pins to GND (unidirectional, zero referenced to GND). Each IN+
+    # is on the higher-potential (source) side of its shunt.
+    stub_label("GND", u3.pin("1"), -15)            # REF1
+    stub_label("I_TOTAL_SENSE", u3.pin("2"), -15)  # OUT1
+    stub_label("ITOT_SN", u3.pin("3"), -15)        # IN-1
+    stub_label("ITOT_SP", u3.pin("4"), -15)        # IN+1
+    stub_label("+3.3V", u3.pin("5"), -15)          # VS
+    stub_label("COXA_SP", u3.pin("6"), -15)        # IN+2
+    stub_label("COXA_SN", u3.pin("7"), -15)        # IN-2
+    stub_label("I_COXA_SENSE", u3.pin("8"), -15)   # OUT2
+    stub_label("GND", u3.pin("9"), -15)            # REF2
+    stub_label("GND", u3.pin("12"), 8)             # REF3
+    stub_label("I_FEMUR_SENSE", u3.pin("13"), 8)   # OUT3
+    stub_label("FEMUR_SN", u3.pin("14"), 8)        # IN-3
+    stub_label("FEMUR_SP", u3.pin("15"), 8)        # IN+3
+    stub_label("GND", u3.pin("16"), 8)             # GND
+    stub_label("TIBIA_SP", u3.pin("17"), 8)        # IN+4
+    stub_label("TIBIA_SN", u3.pin("18"), 8)        # IN-4
+    stub_label("I_TIBIA_SENSE", u3.pin("19"), 8)   # OUT4
+    stub_label("GND", u3.pin("20"), 8)             # REF4
 
     # --- decoupling / bulk ------------------------------------------------ #
-    c1 = sch.place("Device:C_Small", "C1", at=(160, 70), value="100nF",
+    c1 = sch.place("Device:C_Small", "C1", at=(145, 108), value="100nF",
                    footprint=CAP_0805_FOOTPRINT)
     sch.net("+3.3V", [c1.pin("1")])
     sch.net("GND", [c1.pin("2")])
-    c2 = sch.place("Device:C_Polarized", "C2", at=(70, 140), value="470uF",
+    c2 = sch.place("Device:C_Polarized", "C2", at=(52, 140), value="470uF",
                    footprint=BULK_CAP_470UF_FOOTPRINT)
     sch.net("+6V", [c2.pin("1")])
     sch.net("GND", [c2.pin("2")])
-    c3 = sch.place("Device:C_Small", "C3", at=(100, 70), value="100nF",
+    c3 = sch.place("Device:C_Small", "C3", at=(40, 40), value="100nF",
                    footprint=CAP_0805_FOOTPRINT)
     sch.net("+5V", [c3.pin("1")])
     sch.net("GND", [c3.pin("2")])
-    c4 = sch.place("Device:C_Small", "C4", at=(125, 160), value="100nF",
+    c4 = sch.place("Device:C_Small", "C4", at=(248, 40), value="100nF",
                    footprint=CAP_0805_FOOTPRINT)
     sch.net("+3.3V", [c4.pin("1")])
     sch.net("GND", [c4.pin("2")])
 
     # --- ERC power flags -------------------------------------------------- #
-    power_flag(sch, "#FLG1", (40, 160), "+5V")
-    power_flag(sch, "#FLG2", (60, 160), "+3.3V")
-    power_flag(sch, "#FLG3", (80, 160), "+6V")
-    power_flag(sch, "#FLG4", (100, 160), "GND")
-    power_flag(sch, "#FLG5", (120, 160), "+6V_IN")
+    power_flag(sch, "#FLG1", (35, 175), "+5V")
+    power_flag(sch, "#FLG2", (55, 175), "+3.3V")
+    power_flag(sch, "#FLG3", (75, 175), "+6V")
+    power_flag(sch, "#FLG4", (95, 175), "GND")
+    power_flag(sch, "#FLG5", (115, 175), "+6V_IN")
 
     return sch
 

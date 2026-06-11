@@ -65,11 +65,6 @@ CAP_0805_FOOTPRINT = "Capacitor_SMD:C_0805_2012Metric"
 BULK_CAP_470UF_FOOTPRINT = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"
 LED_0805_FOOTPRINT = "LED_SMD:LED_0805_2012Metric"
 DIODE_0805_FOOTPRINT = "Diode_SMD:D_0805_2012Metric"
-# Candidate only for the planned CMK-R010-class current shunt; verify against the
-# exact datasheet before use on a board.
-CMK_R010_SHUNT_CANDIDATE_FOOTPRINT = (
-    "Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder"
-)
 
 
 def _kicad_symbol_dir() -> Path:

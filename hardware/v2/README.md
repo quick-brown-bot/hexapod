@@ -115,7 +115,9 @@ the three high-side taps (INA pins 6/15/17) through the shared `+6V` copper or
 assign them current-rail trace widths. U3 (`INA4181A3IPWR`) measures channel 1
 across the total-leg shunt `R2` (`+6V_IN`→`+6V`), channel 2 across coxa `R3`,
 channel 3 across femur `R4`, channel 4 across tibia `R5`; IN+ is always on the
-higher-potential (source) side.
+higher-potential (source) side. The generated sheet layout keeps the XIAO and INA
+blocks as top-level anchors with the connector and power groups below for
+readability.
 
 > **Shunt placement must stay at rotation 0.** The schematic-as-code pin
 > transform mismatches KiCad for off-axis pins at rotation 90/270 — the Kelvin
