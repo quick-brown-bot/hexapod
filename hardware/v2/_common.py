@@ -55,17 +55,13 @@ HEADER_1X03_THT_FOOTPRINT = (
 SCREW_TERMINAL_2P_FOOTPRINT = (
     "TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm"
 )
+NET_TIE_2_FOOTPRINT = "NetTie:NetTie-2_SMD_Pad0.5mm"
 SHUNT_R010_FOOTPRINT = "Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder"
 RES_0805_FOOTPRINT = "Resistor_SMD:R_0805_2012Metric"
 CAP_0805_FOOTPRINT = "Capacitor_SMD:C_0805_2012Metric"
 BULK_CAP_470UF_FOOTPRINT = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"
 LED_0805_FOOTPRINT = "LED_SMD:LED_0805_2012Metric"
 DIODE_0805_FOOTPRINT = "Diode_SMD:D_0805_2012Metric"
-# Candidate only for the planned CMK-R010-class current shunt; verify against the
-# exact datasheet before use on a board.
-CMK_R010_SHUNT_CANDIDATE_FOOTPRINT = (
-    "Resistor_SMD:R_1210_3225Metric_Pad1.30x2.65mm_HandSolder"
-)
 
 
 def _kicad_symbol_dir() -> Path:

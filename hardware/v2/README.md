@@ -92,6 +92,7 @@ SOIC-8 SP3485 footprint, and the ordinary small R/C/LED parts default to 0805.
 | `+6V` | post-total-shunt servo bus feeding the three per-servo branch shunts and bulk cap C2 |
 | `+6V_IN` | raw servo-power input (J5) ahead of the shunt |
 | `+6V_COXA` / `+6V_FEMUR` / `+6V_TIBIA` | post-branch-shunt servo supply rails for J2 / J3 / J4 |
+| `+6V_IN_SNS` / `+6V_SNS` / `+6V_COXA_SNS` / `+6V_FEMUR_SNS` / `+6V_TIBIA_SNS` | low-current INA sense nets, joined to the matching power rails through net ties |
 | `GND` | global ground |
 | `RP_TXD` / `RP_RXD` | XIAO P0/P1 (UART) ↔ SP3485 DI/RO |
 | `RS485_DE` | XIAO P6/D4 → SP3485 DE + ~RE |
@@ -106,7 +107,10 @@ Servo connectors J2/J3/J4 (`Conn_01x03`): 1 = signal, 2 = branch +6V, 3 = GND.
 J5 is now a 2-pin screw terminal for servo power input. U3 (`INA4181A3IPWR`) uses
 channel 1 across the total-leg 10 mOhm shunt `R2` (`+6V_IN` to `+6V`), channel 2
 across the coxa shunt `R3`, channel 3 across the femur shunt `R4`, and channel 4
-across the tibia shunt `R5`.
+across the tibia shunt `R5`. Net ties `NT1..NT5` separate the heavy-current rail
+nets from the INA measurement nets so the PCB can route those sense traces with
+signal-width rules. The generated sheet layout keeps the XIAO and INA blocks as
+top-level anchors with the connector and power groups below for readability.
 
 Footprints currently driven from the generator: `U1` uses
 `Seeed_Studio_XIAO_Series:XIAO-RP2040-DIP`, `J1` uses

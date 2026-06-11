@@ -232,27 +232,44 @@ class Schematic:
     def label(self, name: str, at, shape: str = "input", rotation: int = 0,
               key: str | None = None) -> Node:
         """Add a global net label at a coordinate. Matching label text = one net,
-        which is the cleanest way to connect pins without drawing wires."""
+        which is the cleanest way to connect pins without drawing wires.
+
+        KiCad also cares about text justification when labels are rotated. For the
+        common 180-degree case used by left-facing labels, emit `justify right`
+        so the rendered anchor behaves as expected.
+        """
         x, y = float(at[0]), float(at[1])
         luid = self.reg.get(key or f"glabel:{name}@{x},{y}")
+        justify = "right" if rotation % 360 == 180 else "left"
         lnode = node(
             "global_label", qstr(name),
             node("shape", sym(shape)),
             node("at", num(x), num(y), num(rotation)),
             node("fields_autoplaced", sym("yes")),
             node("effects", node("font", node("size", num(1.27), num(1.27))),
-                 node("justify", sym("left"))),
+                 node("justify", sym(justify))),
             node("uuid", qstr(luid)),
         )
         self._insert_before_tail(lnode)
         return lnode
 
-    def net(self, name: str, pins, shape: str = "passive") -> None:
+    def net(self, name: str, pins, shape: str = "passive",
+            offset: tuple[float, float] = (0, 0), rotation: int = 0) -> None:
         """Connect a set of pins by dropping an identically-named global label at
-        each pin coordinate. KiCad merges same-named labels into one net."""
+        each pin coordinate.
+
+        `offset` moves the placed label away from the pin; when non-zero, a wire
+        stub is drawn from the pin to the offset label point so readability can be
+        improved without changing the electrical net. `rotation` is the KiCad
+        label rotation in degrees.
+        """
         for i, p in enumerate(pins):
             xy = p.pin_xy if hasattr(p, "pin_xy") else p
-            self.label(name, xy, shape=shape, key=f"glabel:{name}#{i}")
+            label_xy = (_round(xy[0] + offset[0]), _round(xy[1] + offset[1]))
+            if offset != (0, 0):
+                self.wire(xy, label_xy, key=f"wire:glabel:{name}#{i}")
+            self.label(name, label_xy, shape=shape, rotation=rotation,
+                       key=f"glabel:{name}#{i}")
 
     # ------------------------------------------------------------------ #
     # Mutation of existing instances

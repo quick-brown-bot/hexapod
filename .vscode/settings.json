@@ -3,6 +3,7 @@
         "/^python hardware/v2/legboard/legboard_sch\\.py$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "kicad-cli": true
     }
 }
