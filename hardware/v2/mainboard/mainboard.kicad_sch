@@ -2872,7 +2872,7 @@
 	)
 	(symbol
 		(lib_id "SymbolsLib:ESP32-WROOM-32D")
-		(at 130 95 0)
+		(at 130 55 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2881,7 +2881,7 @@
 		(fields_autoplaced yes)
 		(uuid "f73926e5-995e-4789-afe8-609263842101")
 		(property "Reference" "U1"
-			(at 130 91.19 0)
+			(at 130 51.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2889,7 +2889,7 @@
 			)
 		)
 		(property "Value" "ESP32-WROOM-32D"
-			(at 130 98.81 0)
+			(at 130 58.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2897,7 +2897,7 @@
 			)
 		)
 		(property "Footprint" "Custom:ESP32_Dev_Board"
-			(at 130 95 0)
+			(at 130 55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2906,7 +2906,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 130 95 0)
+			(at 130 55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2923,9 +2923,21 @@
 			)
 		)
 	)
+	(global_label "+5V"
+		(shape passive)
+		(at 130 19.44 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "78dc3014-0eb0-4fa5-90ef-c1781f8e3cfd")
+	)
 	(global_label "+3.3V"
 		(shape passive)
-		(at 124.92 59.44 0)
+		(at 124.92 19.44 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -2937,7 +2949,7 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 130 130.56 0)
+		(at 130 90.56 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -2949,7 +2961,7 @@
 	)
 	(global_label "ESP_TXD"
 		(shape passive)
-		(at 145.24 87.38 0)
+		(at 145.24 47.38 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -2961,7 +2973,7 @@
 	)
 	(global_label "ESP_RXD"
 		(shape passive)
-		(at 145.24 89.92 0)
+		(at 145.24 49.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -2973,7 +2985,7 @@
 	)
 	(global_label "RS485_DE"
 		(shape passive)
-		(at 145.24 92.46 0)
+		(at 145.24 52.46 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -2985,7 +2997,7 @@
 	)
 	(global_label "IMU_SDA"
 		(shape passive)
-		(at 145.24 77.22 0)
+		(at 145.24 37.22 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -2997,7 +3009,7 @@
 	)
 	(global_label "IMU_SCL"
 		(shape passive)
-		(at 145.24 69.6 0)
+		(at 145.24 29.6 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3009,7 +3021,7 @@
 	)
 	(global_label "IMU_INT"
 		(shape passive)
-		(at 145.24 120.4 0)
+		(at 145.24 80.4 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3086,7 +3098,7 @@
 	)
 	(global_label "ESP_EN"
 		(shape passive)
-		(at 102.46 80 0)
+		(at 114.76 24.52 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3098,19 +3110,19 @@
 	)
 	(global_label "ESP_EN"
 		(shape passive)
-		(at 114.76 64.52 0)
+		(at 102.46 80 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
-		(uuid "8cb2c3f7-cd6c-4350-9672-2a8614b78140")
+		(uuid "ef521ac3-039d-463a-a4c8-1a4c317c4f2c")
 	)
 	(symbol
 		(lib_id "Hexapod_V2:SP3485CN")
-		(at 195 95 0)
+		(at 195 55 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3119,7 +3131,7 @@
 		(fields_autoplaced yes)
 		(uuid "81cccd4d-3eed-43f1-8f16-cc3ed2bc14d5")
 		(property "Reference" "U2"
-			(at 195 91.19 0)
+			(at 195 51.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3127,7 +3139,7 @@
 			)
 		)
 		(property "Value" "SP3485CN"
-			(at 195 98.81 0)
+			(at 195 58.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3135,7 +3147,7 @@
 			)
 		)
 		(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
-			(at 195 95 0)
+			(at 195 55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3144,7 +3156,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 195 95 0)
+			(at 195 55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3163,7 +3175,7 @@
 	)
 	(global_label "+3.3V"
 		(shape passive)
-		(at 195 79.76 0)
+		(at 195 39.76 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3175,7 +3187,7 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 195 110.24 0)
+		(at 195 70.24 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3187,55 +3199,55 @@
 	)
 	(global_label "ESP_RXD"
 		(shape passive)
-		(at 184.84 89.92 0)
+		(at 184.84 49.92 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "c1ca9c53-6e82-45ad-b05f-1fefbd243924")
 	)
 	(global_label "ESP_TXD"
 		(shape passive)
-		(at 184.84 100.08 0)
+		(at 184.84 60.08 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "c023a9cd-5023-4320-a2ec-4b5212998b40")
 	)
 	(global_label "RS485_DE"
 		(shape passive)
-		(at 184.84 92.46 0)
+		(at 184.84 52.46 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "033062f9-69b5-41c0-b1f2-04adf2337eb5")
 	)
 	(global_label "RS485_DE"
 		(shape passive)
-		(at 184.84 95 0)
+		(at 184.84 55 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "5d0e86a7-ead4-465f-ab34-c886c2d2ee00")
 	)
 	(global_label "RS485_A"
 		(shape passive)
-		(at 205.16 87.38 0)
+		(at 205.16 47.38 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3247,7 +3259,7 @@
 	)
 	(global_label "RS485_B"
 		(shape passive)
-		(at 205.16 92.46 0)
+		(at 205.16 52.46 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3324,13 +3336,13 @@
 	)
 	(global_label "RS485_B"
 		(shape passive)
-		(at 217.46 95 0)
+		(at 217.46 95 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "f2049325-9a16-457a-9a31-8c2709d6a5a3")
 	)
@@ -3360,7 +3372,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm"
 			(at 40 90 0)
 			(effects
 				(font
@@ -3639,7 +3651,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_THT:CP_Radial_D4.0mm_P2.00mm"
 			(at 50 110 0)
 			(effects
 				(font
@@ -4041,25 +4053,25 @@
 	)
 	(global_label "LED_PWR"
 		(shape passive)
-		(at 242.46 55 0)
+		(at 242.46 55 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "2abe0388-f966-4645-899c-298cf137c179")
 	)
 	(global_label "LED_PWR"
 		(shape passive)
-		(at 245 72.54 0)
+		(at 245 72.54 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "32545bfc-39b0-43ad-9ea8-9a7098273038")
 	)
@@ -4077,7 +4089,7 @@
 	)
 	(symbol
 		(lib_id "Hexapod_V2:RJ25")
-		(at 40 175 0)
+		(at 40 155 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4086,7 +4098,7 @@
 		(fields_autoplaced yes)
 		(uuid "68f89fe3-b021-4e82-9075-3a0cb582bfa7")
 		(property "Reference" "J1"
-			(at 40 171.19 0)
+			(at 40 151.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4094,7 +4106,7 @@
 			)
 		)
 		(property "Value" "LEG1_RJ11"
-			(at 40 178.81 0)
+			(at 40 158.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4102,7 +4114,7 @@
 			)
 		)
 		(property "Footprint" "Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal"
-			(at 40 175 0)
+			(at 40 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4111,7 +4123,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 40 175 0)
+			(at 40 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4130,7 +4142,7 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 50.16 177.54 0)
+		(at 50.16 157.54 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4142,7 +4154,7 @@
 	)
 	(global_label "RS485_A"
 		(shape passive)
-		(at 50.16 175 0)
+		(at 50.16 155 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4154,7 +4166,7 @@
 	)
 	(global_label "RS485_B"
 		(shape passive)
-		(at 50.16 172.46 0)
+		(at 50.16 152.46 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4166,7 +4178,7 @@
 	)
 	(global_label "+5V"
 		(shape passive)
-		(at 50.16 169.92 0)
+		(at 50.16 149.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4178,7 +4190,7 @@
 	)
 	(symbol
 		(lib_id "Hexapod_V2:RJ25")
-		(at 75 175 0)
+		(at 75 155 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4187,7 +4199,7 @@
 		(fields_autoplaced yes)
 		(uuid "0fd93d19-3fc6-483a-a0ff-bcdeee4334e2")
 		(property "Reference" "J2"
-			(at 75 171.19 0)
+			(at 75 151.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4195,7 +4207,7 @@
 			)
 		)
 		(property "Value" "LEG2_RJ11"
-			(at 75 178.81 0)
+			(at 75 158.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4203,7 +4215,7 @@
 			)
 		)
 		(property "Footprint" "Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal"
-			(at 75 175 0)
+			(at 75 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4212,7 +4224,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 75 175 0)
+			(at 75 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4231,7 +4243,7 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 85.16 177.54 0)
+		(at 85.16 157.54 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4243,7 +4255,7 @@
 	)
 	(global_label "RS485_A"
 		(shape passive)
-		(at 85.16 175 0)
+		(at 85.16 155 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4255,7 +4267,7 @@
 	)
 	(global_label "RS485_B"
 		(shape passive)
-		(at 85.16 172.46 0)
+		(at 85.16 152.46 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4267,7 +4279,7 @@
 	)
 	(global_label "+5V"
 		(shape passive)
-		(at 85.16 169.92 0)
+		(at 85.16 149.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4279,7 +4291,7 @@
 	)
 	(symbol
 		(lib_id "Hexapod_V2:RJ25")
-		(at 110 175 0)
+		(at 110 155 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4288,7 +4300,7 @@
 		(fields_autoplaced yes)
 		(uuid "cde750b5-cd7c-42c9-ad9c-5d433993638b")
 		(property "Reference" "J3"
-			(at 110 171.19 0)
+			(at 110 151.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4296,7 +4308,7 @@
 			)
 		)
 		(property "Value" "LEG3_RJ11"
-			(at 110 178.81 0)
+			(at 110 158.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4304,7 +4316,7 @@
 			)
 		)
 		(property "Footprint" "Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal"
-			(at 110 175 0)
+			(at 110 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4313,7 +4325,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 110 175 0)
+			(at 110 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4332,7 +4344,7 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 120.16 177.54 0)
+		(at 120.16 157.54 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4344,7 +4356,7 @@
 	)
 	(global_label "RS485_A"
 		(shape passive)
-		(at 120.16 175 0)
+		(at 120.16 155 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4356,7 +4368,7 @@
 	)
 	(global_label "RS485_B"
 		(shape passive)
-		(at 120.16 172.46 0)
+		(at 120.16 152.46 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4368,7 +4380,7 @@
 	)
 	(global_label "+5V"
 		(shape passive)
-		(at 120.16 169.92 0)
+		(at 120.16 149.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4380,7 +4392,7 @@
 	)
 	(symbol
 		(lib_id "Hexapod_V2:RJ25")
-		(at 145 175 0)
+		(at 145 155 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4389,7 +4401,7 @@
 		(fields_autoplaced yes)
 		(uuid "3f7cf2a4-54f4-465b-af30-44e4d9802287")
 		(property "Reference" "J4"
-			(at 145 171.19 0)
+			(at 145 151.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4397,7 +4409,7 @@
 			)
 		)
 		(property "Value" "LEG4_RJ11"
-			(at 145 178.81 0)
+			(at 145 158.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4405,7 +4417,7 @@
 			)
 		)
 		(property "Footprint" "Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal"
-			(at 145 175 0)
+			(at 145 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4414,7 +4426,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 145 175 0)
+			(at 145 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4433,7 +4445,7 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 155.16 177.54 0)
+		(at 155.16 157.54 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4445,7 +4457,7 @@
 	)
 	(global_label "RS485_A"
 		(shape passive)
-		(at 155.16 175 0)
+		(at 155.16 155 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4457,7 +4469,7 @@
 	)
 	(global_label "RS485_B"
 		(shape passive)
-		(at 155.16 172.46 0)
+		(at 155.16 152.46 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4469,7 +4481,7 @@
 	)
 	(global_label "+5V"
 		(shape passive)
-		(at 155.16 169.92 0)
+		(at 155.16 149.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4481,7 +4493,7 @@
 	)
 	(symbol
 		(lib_id "Hexapod_V2:RJ25")
-		(at 180 175 0)
+		(at 180 155 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4490,7 +4502,7 @@
 		(fields_autoplaced yes)
 		(uuid "cd506638-dabd-4f21-ba1f-37f4a5f1c79b")
 		(property "Reference" "J5"
-			(at 180 171.19 0)
+			(at 180 151.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4498,7 +4510,7 @@
 			)
 		)
 		(property "Value" "LEG5_RJ11"
-			(at 180 178.81 0)
+			(at 180 158.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4506,7 +4518,7 @@
 			)
 		)
 		(property "Footprint" "Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal"
-			(at 180 175 0)
+			(at 180 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4515,7 +4527,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 180 175 0)
+			(at 180 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4534,7 +4546,7 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 190.16 177.54 0)
+		(at 190.16 157.54 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4546,7 +4558,7 @@
 	)
 	(global_label "RS485_A"
 		(shape passive)
-		(at 190.16 175 0)
+		(at 190.16 155 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4558,7 +4570,7 @@
 	)
 	(global_label "RS485_B"
 		(shape passive)
-		(at 190.16 172.46 0)
+		(at 190.16 152.46 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4570,7 +4582,7 @@
 	)
 	(global_label "+5V"
 		(shape passive)
-		(at 190.16 169.92 0)
+		(at 190.16 149.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4582,7 +4594,7 @@
 	)
 	(symbol
 		(lib_id "Hexapod_V2:RJ25")
-		(at 215 175 0)
+		(at 215 155 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4591,7 +4603,7 @@
 		(fields_autoplaced yes)
 		(uuid "b6f3020d-26f0-4808-aa8c-d997c2010ce4")
 		(property "Reference" "J6"
-			(at 215 171.19 0)
+			(at 215 151.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4599,7 +4611,7 @@
 			)
 		)
 		(property "Value" "LEG6_RJ11"
-			(at 215 178.81 0)
+			(at 215 158.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4607,7 +4619,7 @@
 			)
 		)
 		(property "Footprint" "Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal"
-			(at 215 175 0)
+			(at 215 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4616,7 +4628,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 215 175 0)
+			(at 215 155 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4635,7 +4647,7 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 225.16 177.54 0)
+		(at 225.16 157.54 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4647,7 +4659,7 @@
 	)
 	(global_label "RS485_A"
 		(shape passive)
-		(at 225.16 175 0)
+		(at 225.16 155 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4659,7 +4671,7 @@
 	)
 	(global_label "RS485_B"
 		(shape passive)
-		(at 225.16 172.46 0)
+		(at 225.16 152.46 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4671,7 +4683,7 @@
 	)
 	(global_label "+5V"
 		(shape passive)
-		(at 225.16 169.92 0)
+		(at 225.16 149.92 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4683,7 +4695,7 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 40 145 0)
+		(at 40 135 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4692,7 +4704,7 @@
 		(fields_autoplaced yes)
 		(uuid "edc88255-a1a1-463c-b289-30b928f2632f")
 		(property "Reference" "#FLG1"
-			(at 40 141.19 0)
+			(at 40 131.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4700,7 +4712,7 @@
 			)
 		)
 		(property "Value" "PWR_FLAG"
-			(at 40 148.81 0)
+			(at 40 138.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4708,7 +4720,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 40 145 0)
+			(at 40 135 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4717,7 +4729,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 40 145 0)
+			(at 40 135 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4736,7 +4748,7 @@
 	)
 	(global_label "+5V"
 		(shape passive)
-		(at 40 145 0)
+		(at 40 135 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4748,7 +4760,7 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 60 145 0)
+		(at 60 135 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4757,7 +4769,7 @@
 		(fields_autoplaced yes)
 		(uuid "0f48c470-065c-4292-8749-c673ec9bc37d")
 		(property "Reference" "#FLG2"
-			(at 60 141.19 0)
+			(at 60 131.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4765,7 +4777,7 @@
 			)
 		)
 		(property "Value" "PWR_FLAG"
-			(at 60 148.81 0)
+			(at 60 138.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4773,7 +4785,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 60 145 0)
+			(at 60 135 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4782,7 +4794,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 60 145 0)
+			(at 60 135 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4801,7 +4813,7 @@
 	)
 	(global_label "+3.3V"
 		(shape passive)
-		(at 60 145 0)
+		(at 60 135 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4813,7 +4825,7 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 80 145 0)
+		(at 80 135 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4822,7 +4834,7 @@
 		(fields_autoplaced yes)
 		(uuid "037fc1b8-db61-4903-a606-6fd780445294")
 		(property "Reference" "#FLG3"
-			(at 80 141.19 0)
+			(at 80 131.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4830,7 +4842,7 @@
 			)
 		)
 		(property "Value" "PWR_FLAG"
-			(at 80 148.81 0)
+			(at 80 138.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4838,7 +4850,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 80 145 0)
+			(at 80 135 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4847,7 +4859,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 80 145 0)
+			(at 80 135 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4866,7 +4878,7 @@
 	)
 	(global_label "GND"
 		(shape passive)
-		(at 80 145 0)
+		(at 80 135 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
