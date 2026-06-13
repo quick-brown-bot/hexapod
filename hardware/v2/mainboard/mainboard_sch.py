@@ -7,16 +7,20 @@ current.
 Contents:
 * U1  ESP32-WROOM-32D — gait/IK/stabilisation/comms (the "intelligence").
 * U2  SP3485CN RS485 transceiver — bus master to the six leg controllers.
-* J_REG  3.3V regulator module header (5V in -> 3.3V out) — local logic rail.
 * J7  SBEC logic-power input screw terminal from the MainPowerBoard (+5V).
 * J_IMU  IMU breakout header (I2C + INT) — module abstraction, processed centrally.
 * J1..J6 RJ11 (RJ25 6P used as 4-wire) leg interfaces: NC / GND / RS485 A /
     RS485 B / +5V logic / NC.
-* C1  10µF THT bulk decoupling capacitor on +5V rail.
+* C1  10uF THT bulk capacitor on +5V entry.
+* C2  100nF local decoupling for ESP32 3V3.
+* C3  100nF local decoupling for RS485 transceiver 3V3.
+* C4  100nF local decoupling for IMU header 3V3.
+* C5  10uF local bulk decoupling on +3.3V rail.
 
 Power model: SBEC +5V comes in via screw terminal J7, is distributed unchanged
-to the legs over RJ11 (logic power), and feeds a local 3V3 regulator module that
-powers the ESP32, IMU and RS485 transceiver. C1 provides local bulk decoupling.
+to the legs over RJ11 (logic power), and feeds the ESP32 dev board VIN. The
+dev board's onboard regulator generates +3.3V, and that +3.3V pin powers the
+IMU, RS485 transceiver and local decoupling network.
 
 Run `python hardware/v2/mainboard/mainboard_sch.py` to (re)generate
 `mainboard.kicad_sch`. Connectivity is by net label; placement is a loose grid
@@ -37,7 +41,6 @@ from _common import (  # noqa: E402
     CAP_0805_FOOTPRINT,
     ESP32_DEV_BOARD_FOOTPRINT,
     HEADER_1X05_THT_FOOTPRINT,
-    LED_0805_FOOTPRINT,
     RES_0805_FOOTPRINT,
     RJ25_FOOTPRINT,
     SCREW_TERMINAL_2P_FOOTPRINT,
@@ -60,12 +63,10 @@ def build() -> Schematic:
         "Hexapod_V2:SP3485CN",
         "Hexapod_V2:RJ25",
         "Connector:Conn_01x02_Pin",
-        "Connector:Conn_01x03_Pin",
         "Connector:Conn_01x05_Pin",
         "Device:R_Small",
         "Device:C_Small",
-        "Device:C_Polarized",
-        "Device:LED_Small")
+        "Device:C_Polarized")
 
     # --- main controller -------------------------------------------------- #
     u1 = sch.place("SymbolsLib:ESP32-WROOM-32D", "U1", at=(130, 55),
@@ -106,17 +107,11 @@ def build() -> Schematic:
     sch.net("RS485_A", [rt.pin("1")])
     sch.net("RS485_B", [rt.pin("2")], rotation=180)
 
-    # --- power input & local 3V3 ----------------------------------------- #
+    # --- power input ----------------------------------------------------- #
     j_sbec = sch.place("Connector:Conn_01x02_Pin", "J7", at=(40, 90),
                        value="SBEC_5V_IN", footprint=SCREW_TERMINAL_2P_FOOTPRINT)
     sch.net("+5V", [j_sbec.pin("1")])
     sch.net("GND", [j_sbec.pin("2")])
-
-    j_reg = sch.place("Connector:Conn_01x03_Pin", "J8", at=(70, 60),
-                      value="3V3_REG_MODULE")
-    sch.net("+5V", [j_reg.pin("1")])    # VIN
-    sch.net("GND", [j_reg.pin("2")])
-    sch.net("+3.3V", [j_reg.pin("3")])  # 3V3 OUT
 
     # --- IMU breakout (I2C) ---------------------------------------------- #
     j_imu = sch.place("Connector:Conn_01x05_Pin", "J9", at=(70, 120),
@@ -128,25 +123,35 @@ def build() -> Schematic:
     sch.net("IMU_INT", [j_imu.pin("5")])
 
     # --- decoupling ------------------------------------------------------- #
+    # C1: place at the +5V entry cluster, physically close to J7 and U1 VIN.
     c1 = sch.place("Device:C_Polarized", "C1", at=(50, 110), value="10uF",
                    footprint=BULK_CAP_10UF_FOOTPRINT)
     sch.net("+5V", [c1.pin("1")])
     sch.net("GND", [c1.pin("2")])
-    for ref, x, rail in (("C2", 150, "+3.3V"), ("C3", 175, "+3.3V"),
-                         ("C4", 90, "+3.3V")):
-        c = sch.place("Device:C_Small", ref, at=(x, 125), value="100nF",
-                  footprint=CAP_0805_FOOTPRINT)
-        sch.net(rail, [c.pin("1")])
-        sch.net("GND", [c.pin("2")])
 
-    # --- power status LED ------------------------------------------------- #
-    r_led = sch.place("Device:R_Small", "R3", at=(245, 55), value="1k",
-                      rotation=90, footprint=RES_0805_FOOTPRINT)
-    d_led = sch.place("Device:LED_Small", "D1", at=(245, 70), value="PWR",
-                      rotation=90, footprint=LED_0805_FOOTPRINT)
-    sch.net("+3.3V", [r_led.pin("1")])
-    sch.net("LED_PWR", [r_led.pin("2"), d_led.pin("2")], rotation=180)  # anode of LED_Small = pin 2
-    sch.net("GND", [d_led.pin("1")])
+    # C2: place immediately next to U1 3V3/GND pins (short return loop).
+    c2 = sch.place("Device:C_Small", "C2", at=(150, 125), value="100nF",
+                   footprint=CAP_0805_FOOTPRINT)
+    sch.net("+3.3V", [c2.pin("1")])
+    sch.net("GND", [c2.pin("2")])
+
+    # C3: place immediately next to U2 VCC/GND pins.
+    c3 = sch.place("Device:C_Small", "C3", at=(175, 125), value="100nF",
+                   footprint=CAP_0805_FOOTPRINT)
+    sch.net("+3.3V", [c3.pin("1")])
+    sch.net("GND", [c3.pin("2")])
+
+    # C4: place at the IMU header power pins (J9 pin 1/2).
+    c4 = sch.place("Device:C_Small", "C4", at=(90, 125), value="100nF",
+                   footprint=CAP_0805_FOOTPRINT)
+    sch.net("+3.3V", [c4.pin("1")])
+    sch.net("GND", [c4.pin("2")])
+
+    # C5: place near the 3V3 source/load hub (between U1 3V3 and U2/IMU loads).
+    c5 = sch.place("Device:C_Polarized", "C5", at=(115, 125), value="10uF",
+                   footprint=BULK_CAP_10UF_FOOTPRINT)
+    sch.net("+3.3V", [c5.pin("1")])
+    sch.net("GND", [c5.pin("2")])
 
     # --- RJ11 leg interfaces (x6): pins 1 and 6 intentionally unused ----- #
     for i in range(1, 7):
@@ -159,7 +164,6 @@ def build() -> Schematic:
 
     # --- ERC power flags -------------------------------------------------- #
     power_flag(sch, "#FLG1", (40, 135), "+5V")
-    power_flag(sch, "#FLG2", (60, 135), "+3.3V")
     power_flag(sch, "#FLG3", (80, 135), "GND")
 
     return sch

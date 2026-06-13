@@ -66,22 +66,26 @@ pins 1 and 6 are intentionally left unconnected.
 
 | Net | Connects |
 |-----|----------|
-| `+5V` | SBEC input (J7), 3V3-reg VIN (J8), all six RJ11 pin 5 |
-| `+3.3V` | 3V3-reg out (J8), ESP32 V3.3, SP3485 VCC, IMU, decoupling, EN pull-up |
+| `+5V` | SBEC input (J7), ESP32 dev-board VIN, all six RJ11 pin 5 |
+| `+3.3V` | ESP32 dev-board 3V3 output, SP3485 VCC, IMU, decoupling, EN pull-up |
 | `GND` | global ground |
 | `ESP_TXD` / `ESP_RXD` | ESP32 IO17/IO16 (UART2) ↔ SP3485 DI/RO |
 | `RS485_DE` | ESP32 IO4 → SP3485 DE + ~RE (direction) |
 | `RS485_A` / `RS485_B` | SP3485 A/B ↔ all six RJ11, 120 Ω term (R1) |
 | `IMU_SDA` / `IMU_SCL` / `IMU_INT` | ESP32 IO21/IO22/IO34 ↔ IMU header (J9) |
 
+MainBoard decoupling intent (implemented in schematic code): `C1` 10 uF on +5V at
+power entry (close to J7/U1 VIN), `C2` 100 nF at ESP32 3V3 pins, `C3` 100 nF at
+SP3485 VCC, `C4` 100 nF at IMU header power pins, and `C5` 10 uF bulk on +3.3V
+near the ESP32 3V3-source/load hub.
+
 IMU header J9 (`Conn_01x05`): 1 = +3.3V, 2 = GND, 3 = SDA, 4 = SCL, 5 = INT.
-3V3-reg module J8 (`Conn_01x03`): 1 = +5V in, 2 = GND, 3 = +3.3V out.
 
 Footprints currently driven from the generator: `U1` uses
 `Custom:ESP32_Dev_Board`, `J1..J6` use
 `Connector_RJ:RJ25_Wayconn_MJEA-660X1_Horizontal`, `J9` uses
 `Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical`, `U2` uses the
-SOIC-8 SP3485 footprint, and the ordinary small R/C/LED parts default to 0805.
+SOIC-8 SP3485 footprint, and the ordinary small R/C parts default to 0805.
 
 ## LegBoard nets
 
