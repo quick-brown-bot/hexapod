@@ -4,6 +4,14 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "kicad-cli": true
+        "kicad-cli": true,
+        "/^python \\.\\\\hardware\\\\v2\\\\mainboard\\\\mainboard_sch\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python \\.\\\\hardware\\\\v2\\\\mainboard\\\\mainboard_sch\\.py ; git diff hardware/v2/mainboard/$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }
