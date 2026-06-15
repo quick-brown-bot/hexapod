@@ -50,6 +50,67 @@
   - Add live telemetry and monitoring capabilities
   - Implement configuration backup/restore functionality
 
+### Bio-Inspired & Research-Backed Locomotion
+
+These items upgrade the open-loop phase-table gait engine
+(`gait_scheduler.c` → `swing_trajectory.c` → `whole_body_control.c` → `kpp_system.c`)
+toward biologically-grounded, continuously-adaptive locomotion. Each item is
+anchored to published research. Tiers reflect hardware dependency, not priority.
+
+#### Tier 1 — Pure software (no new hardware; works on v1)
+- [ ] **Wilson gait continuum (continuously-variable duty factor)**
+  - Replace the 3 discrete gaits (tripod/ripple/wave) and their hardcoded duty
+    factors (`S` in `swing_trajectory.c:60-65`) with a single continuum where
+    duty factor `β` decreases with commanded speed (slow→wave, fast→tripod)
+  - Derive per-leg phase offsets from one wave parameter in `gait_scheduler.c`
+  - Replaces the "crude frequency scaling" TODO (`gait_scheduler.c:22-26`)
+  - Highest effort/payoff ratio; foundation for the CPG item below
+  - Ref: Wilson, D.M. (1966), "Insect Walking", *Annual Review of Entomology* 11:103-122
+  - Ref: Graham, D. (1985), "Pattern and Control of Walking in Insects", *Advances in Insect Physiology* 18:31-140
+
+- [ ] **CPG gait engine — coupled phase oscillators**
+  - Replace the phase *table* in `gait_scheduler.c` with 6 coupled oscillators
+    (Kuramoto / Hopf) whose phase-locking encodes the gait; preserve the existing
+    `phase` / `leg_states` output contract so downstream stages are unchanged
+  - Enables smooth online gait transitions (no popping at speed thresholds) and
+    automatic re-synchronization after disturbance
+  - Keep phase tables behind a config flag as fallback
+  - Natural injection point for sensory feedback (see Tegotae, Tier 3)
+  - Ref: Ijspeert, A.J. (2008), "Central pattern generators for locomotion control in animals and robots: a review", *Neural Networks* 21(4):642-653
+  - Ref: Righetti & Ijspeert (2008), "Pattern generators with sensory feedback for the control of quadruped locomotion", *IEEE ICRA*
+
+- [ ] **Minimum-impact swing foot trajectory (zero-velocity touchdown)**
+  - Current swing uses a sine vertical arc but a *linear* horizontal sweep
+    (`x_rel = (-0.5+tau)*L`, `swing_trajectory.c:98`), causing instantaneous
+    horizontal velocity reversal at touchdown → foot slip and servo shock
+  - Replace horizontal sweep with a quintic polynomial / Bézier giving zero
+    foot velocity and acceleration at lift-off and touchdown
+  - Overlaps existing "minimum-jerk / quintic foot trajectory" swing TODO
+  - Ref: Raibert, M. (1986), *Legged Robots That Balance*, MIT Press
+  - Ref: Park, Wensing & Kim (2017), "High-speed bounding with the MIT Cheetah 2", *IJRR* 36(2):167-192 (swing-leg trajectory design)
+
+#### Tier 2 — Needs v2 IMU (small code once hardware lands)
+- [ ] **Body-attitude stabilization (auto-leveling on slopes)**
+  - Use IMU roll/pitch to add per-leg z offsets keeping the body level on
+    uneven terrain; injected at the trajectory→WBC stage (the roll/pitch
+    `pose_mode` TODO at `swing_trajectory.c:143`)
+  - Ref: Saranli, Buehler & Koditschek (2001), "RHex: A Simple and Highly Mobile Hexapod Robot", *IJRR* 20(7):616-631
+  - Ref: Pratt et al. (2001), "Virtual Model Control: An Intuitive Approach for Bipedal Locomotion", *IJRR* 20(2):129-143
+
+- [ ] **Inertial stumble / elevator reflex**
+  - On unexpected IMU pitch/roll spike (or a swing leg failing to find ground),
+    trigger an elevator reflex: lift higher and re-place
+  - Ref: Cruse, Kindermann, Schumm, Dean & Schmitz (1998), "Walknet — a biologically inspired network to control six-legged walking", *Neural Networks* 11(7-8):1435-1447
+
+#### Tier 3 — Needs v2 per-leg current sensing (flagship research feature)
+- [ ] **Tegotae — decentralized force-feedback gait emergence**
+  - Each leg modulates its own oscillator phase by the ground reaction force it
+    feels (using per-servo current draw as a GRF proxy); speed-dependent gaits
+    and tripod↔wave transitions emerge with no central gait selection
+  - Plugs the force term directly into the CPG engine (Tier 1)
+  - Ref: Owaki & Ishiguro (2017), "A Minimal Model Describing Hexapedal Interlimb Coordination: The Tegotae-Based Approach", *Frontiers in Neurorobotics* 11:29
+  - Ref: Owaki, Kano, Nagasawa, Tero & Ishiguro (2013), "Simple robot suggests physical interlimb communication is essential for quadruped walking", *J. Royal Society Interface* 10:20120669
+
 ---
 
 ## 🔧 Existing Code TODOs
@@ -268,6 +329,7 @@
 5. Swing trajectory improvements
 6. **Configuration management and calibration wizards**
 7. **Gait transition smoothing + phase/frequency slew limiting**
+8. **Bio-inspired locomotion Tier 1** (Wilson continuum → CPG oscillators → min-impact swing) — pure software, no new hardware
 
 ### Phase 3: Advanced Features (Lower Priority)
 1. **Advanced configurator features** (telemetry, diagnostics, live tuning)
@@ -277,6 +339,7 @@
 5. Computer vision capabilities
 6. Advanced sensor fusion
 7. **Blackbox-style event logging and offline analysis workflow**
+8. **Bio-inspired locomotion Tier 2/3** (IMU attitude stabilization + reflexes; Tegotae force-feedback gaits once per-leg current sensing exists)
 
 ---
 
@@ -288,4 +351,4 @@
 
 ---
 
-*Last updated: May 12, 2026*
+*Last updated: June 15, 2026*
