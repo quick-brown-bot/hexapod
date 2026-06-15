@@ -227,10 +227,20 @@ round-trip check on all three boards before trusting it.
   several same-net pins (e.g. all GND) at one location, and `_lib_pin` keys by
   both pin number and name (number: last wins; name: first wins). Connect by a
   *unique* pin name where you can, and confirm the merge in the exported netlist.
-- **Rotation flips pad order for two-pin passives.** A rotation-90 `R`/`C`
-  reports pads 1/2 swapped relative to the `pin("1")`/`pin("2")` you labelled.
-  Harmless for symmetric R/C, but **verify polarity-sensitive parts (diodes,
-  polarized caps) in the netlist** rather than trusting the pin number.
+- **Two-pin net-label rotation rule (`R`, `C`, `D`, `LED`).** Use
+  `rotation=180` on the opposite-side label only for an unrotated (`rotation=0`)
+  two-pin part when that improves readability. If the part itself is already
+  rotated (`90/270`), do not also rotate labels by default. If rotated by 180 - reverse pins where you rotate labels.
+
+  Rotated 90 deg LED example (no extra label rotation needed):
+
+  ```python
+  d5 = sch.place("Device:LED_Small", "D5", at=(180, 88), value="SBEC",
+                 rotation=90, footprint=LED_0805_FOOTPRINT)
+  sch.net("+5V", [r4.pin("1")])
+  sch.net("LED_SBEC", [r4.pin("2"), d5.pin("2")])
+  sch.net("GND", [d5.pin("1")])
+  ```
 - **`place()` writes the placed symbol's `Footprint` property exactly as you pass
   it.** If you omit `footprint=`, the generated sheet gets an empty placed-symbol
   footprint even when the library symbol carries a default package. For boards
