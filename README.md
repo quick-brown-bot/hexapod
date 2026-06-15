@@ -16,14 +16,16 @@ The repository contains software and hardware assets used to develop and validat
 
 ```text
 firmware/
-├── mainboard/     Main robot firmware
-└── leg_v2/        Experimental leg-controller workspace
+├── v1/
+│   └── mainboard/     Main robot firmware (hardware v1)
+└── v2/
+    └── leg/           Experimental leg-controller workspace (hardware v2)
 
 docs/              Architecture and design documentation
 hardware/          Electronics and mechanical design files
 ```
 
-Mainboard firmware overview: [firmware/mainboard/README.md](firmware/mainboard/README.md)
+Mainboard firmware overview: [firmware/v1/mainboard/README.md](firmware/v1/mainboard/README.md)
 
 The main firmware is built around a fixed 100 Hz control loop and a modular motion pipeline:
 
@@ -210,7 +212,7 @@ The repository contains detailed documentation covering implementation details a
 
 Recommended starting points:
 
-- Mainboard firmware documentation: [firmware/mainboard/README.md](firmware/mainboard/README.md)
+- Mainboard firmware documentation: [firmware/v1/mainboard/README.md](firmware/v1/mainboard/README.md)
 - System architecture: [docs/architecture/SYSTEM_ARCHITECTURE.md](docs/architecture/SYSTEM_ARCHITECTURE.md)
 - Configuration system: [docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
 - RPC interface documentation: [docs/interfaces/RPC_USER_GUIDE.md](docs/interfaces/RPC_USER_GUIDE.md)
