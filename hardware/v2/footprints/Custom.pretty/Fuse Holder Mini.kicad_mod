@@ -1,0 +1,113 @@
+(footprint "Fuse Holder Mini"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at -2.4 1.1 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "639a869f-1271-4da8-b9ee-3b60086dfb05")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "Fuse Holder Mini"
+		(at 0.4 2.6 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "c2b3cb2d-0972-49e0-a89c-d942f3572eb6")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "1d04b25c-efc0-46bb-a4a2-c33313aa6d92")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "15e4da6e-f186-4f6a-acef-7541576c9ac2")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_rect
+		(start -2.4 -13.1)
+		(end 2.4 1.6)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "4a958d2c-a147-4a49-b61f-6ea8236677c3")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0.4 4.1 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "f403b6a4-f83d-4f88-88e8-9805e6f63988")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" thru_hole oval
+		(at 0 -11.4 90)
+		(size 2 3.5)
+		(drill oval 1.2 2.2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "61dc1b6f-f1e9-41a5-affc-e6a9518bc9cc")
+	)
+	(pad "2" thru_hole oval
+		(at 0 -7.7 90)
+		(size 2 3.5)
+		(drill oval 1.2 2.2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "81250c3c-16e6-4819-a68f-df108f3eaa44")
+	)
+	(pad "3" thru_hole oval
+		(at 0 -3.7 90)
+		(size 2 3.5)
+		(drill oval 1.2 2.2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "cf8996cb-b173-41d1-9d26-90d1e92fbd97")
+	)
+	(pad "4" thru_hole oval
+		(at 0 0 90)
+		(size 2 3.5)
+		(drill oval 1.2 2.2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "3d347fd2-b55a-4b1e-a54c-554f38c3712d")
+	)
+	(embedded_fonts no)
+)

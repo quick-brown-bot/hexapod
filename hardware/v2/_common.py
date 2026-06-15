@@ -52,8 +52,14 @@ HEADER_1X05_THT_FOOTPRINT = (
 HEADER_1X03_THT_FOOTPRINT = (
     "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
 )
+HEADER_1X02_THT_FOOTPRINT = (
+    "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+)
 SCREW_TERMINAL_2P_FOOTPRINT = (
     "TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm"
+)
+BATTERY_SOLDER_PADS_2P_FOOTPRINT = (
+    "Connector_Wire:SolderWire-1.5sqmm_1x02_P7.8mm_D1.7mm_OD3.9mm"
 )
 # 4-terminal (Kelvin) current shunt. The two sense pads let each INA input tap a
 # unique thin net right at the shunt element, so the router never merges the
@@ -64,8 +70,14 @@ RES_0805_FOOTPRINT = "Resistor_SMD:R_0805_2012Metric"
 CAP_0805_FOOTPRINT = "Capacitor_SMD:C_0805_2012Metric"
 BULK_CAP_10UF_FOOTPRINT = "Capacitor_THT:CP_Radial_D4.0mm_P2.00mm"
 BULK_CAP_470UF_FOOTPRINT = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"
+BULK_CAP_1000UF_FOOTPRINT = "Capacitor_THT:CP_Radial_D8.0mm_P3.80mm"
+BULK_CAP_2200UF_FOOTPRINT = "Capacitor_THT:CP_Radial_D13.0mm_P5.00mm"
+PMOS_TO220_FOOTPRINT = "Package_TO_SOT_THT:TO-220-3_Vertical"
+NPN_SOT23_FOOTPRINT = "Package_TO_SOT_SMD:SOT-23"
 LED_0805_FOOTPRINT = "LED_SMD:LED_0805_2012Metric"
 DIODE_0805_FOOTPRINT = "Diode_SMD:D_0805_2012Metric"
+FUSE_20A_FOOTPRINT = "Custom:Fuse Holder Mini"
+SOLDER_PADS_4P_FOOTPRINT = "Connector_Wire:SolderWire-0.25sqmm_1x04_P4.2mm_D0.65mm_OD1.7mm"
 
 
 def _kicad_symbol_dir() -> Path:

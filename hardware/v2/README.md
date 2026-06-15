@@ -145,7 +145,7 @@ freezing the PCB.
 
 | Net | Connects |
 |-----|----------|
-| `BATT_RAW`→`BATT_FUSED`→`BATT_SW`→`+VMAIN` | battery → F1 fuse → SW1 master switch → D1 reverse-polarity → main rail |
+| `BATT_RAW`→`BATT_FUSED`→`+VMAIN` | battery → F1 fuse → Q1/Q2 parallel PMOS reverse-polarity stage → main rail |
 | `+VMAIN` | feeds the three UBEC modules (J8/J9/J10), the SBEC (J11), monitor (J13), bulk C4 |
 | `VSERVO1` | UBEC1 out → legs 1,2 (J1,J2), bulk C1, LED D2 |
 | `VSERVO2` | UBEC2 out → legs 3,4 (J3,J4), bulk C2, LED D3 |
@@ -157,19 +157,35 @@ UBEC/SBEC module headers (`Conn_01x04`): 1 = +VMAIN in, 2 = GND, 3 = regulated
 out, 4 = GND. Monitor header J13 (`Conn_01x05`): +VMAIN, VSERVO1, VSERVO2,
 VSERVO3, GND.
 
-Footprints currently driven from the generator: the status resistor / LED parts
-default to 0805. The bulk capacitors and the high-current reverse-polarity
-Schottky are still explicit footprint-selection tasks rather than forced 0805
-placeholders.
+Footprints currently driven from the generator: `J7` (battery input) uses
+`Connector_Wire:SolderWire-1.5sqmm_1x02_P7.8mm_D1.7mm_OD3.9mm` solder pads,
+`J1..J6` use
+`TerminalBlock:TerminalBlock_MaiXu_MX126-5.0-02P_1x02_P5.00mm`, and `J13` uses
+`Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical`. Bulk caps use
+`C1..C3`: `Capacitor_THT:CP_Radial_D13.0mm_P5.00mm` (2200 uF class) and `C4`:
+`Capacitor_THT:CP_Radial_D8.0mm_P3.80mm` (1000 uF class). The status resistor /
+LED parts default to 0805. Reverse-polarity protection uses two parallel
+`FQP47P06` PMOS parts in `Package_TO_SOT_THT:TO-220-3_Vertical`.
+
+Power-entry control is now low-current at SW1: the high-current path is
+`BATT_FUSED -> Q1/Q2 -> +VMAIN`, while SW1 only drives the PMOS gates through
+`R7=10k` + `Q3` (NPN pull-down), with `R6=100k` pull-up and `R5=100R` series
+gate resistor for damping.
+
+Pre-prototype hardening now added in-code:
+- `R8=100k` from `NPN_BASE` to `GND` (base pull-down; avoids floating base when SW1 is open).
+- `D6=15V` Zener between `PMOS_GATE` and `BATT_FUSED` (Vgs transient clamp).
+- Optional `C5=100nF` from `PMOS_GATE_DRV` to `GND` (slows turn-on edge to soften inrush into ~7600 uF total bulk capacitance).
 
 ## Status / known limitations (first pass)
 
 These are deliberate module-abstraction simplifications to refine in Eeschema
 before fabrication:
 
-* **Reverse-polarity protection** is a placeholder series Schottky (D1). Replace
-  with an ideal-diode / P-MOSFET circuit — a series diode wastes too much at
-  servo currents.
+* **Reverse-polarity protection** now uses two parallel PMOS parts (`Q1`/`Q2`,
+  `FQP47P06`) to leave thermal headroom for high current, plus a low-current
+  gate-driver stage (`Q3`, `R5`, `R6`, `R7`, `R8`) so SW1 does not switch inrush
+  current directly.
 * **UBEC / SBEC / IMU / current sensor** are represented as module headers, not
   discrete designs.
 * **ERC** loads cleanly but reports expected violations: unused ESP32/XIAO GPIO
