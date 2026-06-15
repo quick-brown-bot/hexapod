@@ -89,6 +89,18 @@ anchored to published research. Tiers reflect hardware dependency, not priority.
   - Ref: Raibert, M. (1986), *Legged Robots That Balance*, MIT Press
   - Ref: Park, Wensing & Kim (2017), "High-speed bounding with the MIT Cheetah 2", *IJRR* 36(2):167-192 (swing-leg trajectory design)
 
+- [ ] **Holonomic (omnidirectional) body velocity — lateral `vy` + crab walk**
+  - `user_command_t` currently carries only `vx` (forward) and `wz` (yaw); the
+    robot cannot strafe. Add a lateral `vy` term and compose the full planar
+    twist (vx, vy, ω) into per-leg stride vectors
+  - Unlocks crab-walking and motion along any heading; hexapods are naturally
+    holonomic so this is low-risk
+  - Localized to `swing_trajectory.c` (stride vector) and one field in
+    `user_command.h`; lowest-effort visible win in this section
+  - Ref: standard omnidirectional legged locomotion; e.g. Gonzalez de Santos,
+    Garcia & Estremera (2006), *Quadrupedal Locomotion: An Introduction to the
+    Control of Four-legged Robots*, Springer (body-velocity → foot-stride mapping)
+
 #### Tier 2 — Needs v2 IMU (small code once hardware lands)
 - [ ] **Body-attitude stabilization (auto-leveling on slopes)**
   - Use IMU roll/pitch to add per-leg z offsets keeping the body level on
@@ -102,6 +114,13 @@ anchored to published research. Tiers reflect hardware dependency, not priority.
     trigger an elevator reflex: lift higher and re-place
   - Ref: Cruse, Kindermann, Schumm, Dean & Schmitz (1998), "Walknet — a biologically inspired network to control six-legged walking", *Neural Networks* 11(7-8):1435-1447
 
+- [ ] **Self-righting / fall recovery (third priority)**
+  - Detect an inverted or fallen state from the IMU, then run a scripted (or
+    optimized) flip-back-over routine to return to a walkable posture
+  - Lower priority than auto-leveling and reflexes; great demo once those land
+  - Ref: Saranli, Buehler & Koditschek (2001), "RHex: A Simple and Highly Mobile Hexapod Robot", *IJRR* 20(7):616-631
+  - Ref: Saranli & Koditschek (2002), "Template-based control of the RHex hexapod", *IEEE ICRA*
+
 #### Tier 3 — Needs v2 per-leg current sensing (flagship research feature)
 - [ ] **Tegotae — decentralized force-feedback gait emergence**
   - Each leg modulates its own oscillator phase by the ground reaction force it
@@ -110,6 +129,45 @@ anchored to published research. Tiers reflect hardware dependency, not priority.
   - Plugs the force term directly into the CPG engine (Tier 1)
   - Ref: Owaki & Ishiguro (2017), "A Minimal Model Describing Hexapedal Interlimb Coordination: The Tegotae-Based Approach", *Frontiers in Neurorobotics* 11:29
   - Ref: Owaki, Kano, Nagasawa, Tero & Ishiguro (2013), "Simple robot suggests physical interlimb communication is essential for quadruped walking", *J. Royal Society Interface* 10:20120669
+
+- [ ] **Walknet — full decentralized coordination rules (lowest priority)**
+  - The complete set of ~6 local leg-to-leg coordination rules from which insect
+    gaits emerge with no central scheduler; kinematic cousin of Tegotae (which is
+    force-based)
+  - **Likely cannot run concurrently with Tegotae** — both are decentralized
+    interlimb-coordination schemes competing for the same role. Treat as an
+    **A/B-toggle alternative** to Tegotae (config-selectable), not an addition
+  - Lowest priority in this section; keep on the list as a research comparison
+  - Ref: Cruse, Kindermann, Schumm, Dean & Schmitz (1998), "Walknet — a biologically inspired network to control six-legged walking", *Neural Networks* 11(7-8):1435-1447
+
+#### Needs Analysis — open questions before scheduling
+These are promising but not yet scoped; each needs analysis of how it fits with
+the items above before it earns a tier/priority.
+- [ ] **Static stability margin + support-polygon-aware foot placement**
+  - Compute the support polygon from stance-leg positions and keep the CoM
+    projection inside it with a margin; bias stance / delay lift-off when the
+    margin shrinks
+  - **Open question:** implications and how it interacts with the CPG, Tegotae,
+    and holonomic motion — is it a safety gate layered on top, or a placement
+    planner that competes with them? Needs analysis before scheduling
+  - Ref: McGhee & Frank (1968), "On the stability properties of quadruped creeping gaits", *Mathematical Biosciences* 3:331-351
+  - Ref: Hirose, Tsukagoshi & Yoneda (1998), "Normalized Energy Stability Margin", *IEEE ICRA*
+
+- [ ] **Manipulability- / singularity-aware posture optimization**
+  - Choose body height and stance width to keep each leg's Jacobian
+    well-conditioned (away from joint limits and singularities)
+  - **Open question:** how it composes with auto-leveling, holonomic motion, and
+    the gait engine (shared posture authority). Needs analysis before scheduling
+  - Ref: Yoshikawa (1985), "Manipulability of Robotic Mechanisms", *IJRR* 4(2):3-9
+
+- [ ] **Phase-resetting sensory entrainment into the CPG**
+  - Feed contact events back to reset oscillator phase so the gait rhythm
+    entrains to the terrain; the proven bridge between feedforward CPG and
+    feedback reflexes
+  - **Open question:** whether/how it fits alongside Tegotae's phase modulation
+    (both inject sensory feedback into the same oscillators). Needs analysis,
+    depends on the CPG engine existing first
+  - Ref: Aoi & Tsuchiya (2005), "Locomotion control of a biped robot using nonlinear oscillators", *Autonomous Robots* 19(3):219-232
 
 ---
 
@@ -329,7 +387,7 @@ anchored to published research. Tiers reflect hardware dependency, not priority.
 5. Swing trajectory improvements
 6. **Configuration management and calibration wizards**
 7. **Gait transition smoothing + phase/frequency slew limiting**
-8. **Bio-inspired locomotion Tier 1** (Wilson continuum → CPG oscillators → min-impact swing) — pure software, no new hardware
+8. **Bio-inspired locomotion Tier 1** (Wilson continuum → CPG oscillators → min-impact swing → holonomic/lateral `vy`) — pure software, no new hardware
 
 ### Phase 3: Advanced Features (Lower Priority)
 1. **Advanced configurator features** (telemetry, diagnostics, live tuning)
@@ -339,7 +397,8 @@ anchored to published research. Tiers reflect hardware dependency, not priority.
 5. Computer vision capabilities
 6. Advanced sensor fusion
 7. **Blackbox-style event logging and offline analysis workflow**
-8. **Bio-inspired locomotion Tier 2/3** (IMU attitude stabilization + reflexes; Tegotae force-feedback gaits once per-leg current sensing exists)
+8. **Bio-inspired locomotion Tier 2/3** (IMU attitude stabilization + reflexes; self-righting/flip recovery; Tegotae force-feedback gaits once per-leg current sensing exists. Walknet is an A/B alternative to Tegotae, lowest priority)
+9. **Locomotion "Needs Analysis" items** (static stability margin, singularity-aware posture, CPG phase-resetting entrainment) — scope and fit before scheduling
 
 ---
 
@@ -351,4 +410,4 @@ anchored to published research. Tiers reflect hardware dependency, not priority.
 
 ---
 
-*Last updated: June 15, 2026*
+*Last updated: June 16, 2026*
