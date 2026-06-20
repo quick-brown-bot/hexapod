@@ -492,14 +492,14 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 1,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.8
+        "track_width": 1.5
       },
       {
         "name": "Power_8A",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 2,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 1.4
+        "track_width": 3.0
       },
       {
         "name": "Power_Light",
@@ -573,7 +573,7 @@
       },
       {
         "netclass": "Power_8A",
-        "pattern": "VMAIN+"
+        "pattern": "+VMAIN"
       }
     ]
   },
@@ -582,10 +582,10 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "output",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "powerboard.step",
       "svg": "",
       "vrml": ""
     },
