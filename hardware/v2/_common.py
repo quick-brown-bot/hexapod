@@ -78,7 +78,7 @@ LED_0805_FOOTPRINT = "LED_SMD:LED_0805_2012Metric"
 DIODE_0805_FOOTPRINT = "Diode_SMD:D_0805_2012Metric"
 FUSE_20A_FOOTPRINT = "Custom:Fuse Holder Mini"
 SOLDER_PADS_4P_FOOTPRINT = "Connector_Wire:SolderWire-0.25sqmm_1x04_P4.2mm_D0.65mm_OD1.7mm"
-
+MASTER_SWITCH_FOOTPRINT = "Custom:SW_Slide_SPDT_Straight"
 
 def _kicad_symbol_dir() -> Path:
     """Locate the installed KiCad stock symbol libraries.

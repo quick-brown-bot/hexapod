@@ -49,6 +49,7 @@ from _common import (  # noqa: E402
     SCREW_TERMINAL_2P_FOOTPRINT,
     FUSE_20A_FOOTPRINT,
     SOLDER_PADS_4P_FOOTPRINT,
+    MASTER_SWITCH_FOOTPRINT,
     imp,
     power_flag,
 )
@@ -69,6 +70,7 @@ def build() -> Schematic:
     imp(sch,
         "Connector:Screw_Terminal_01x02",
         "Connector:Conn_01x02_Pin",
+        "Connector:Conn_01x03_Pin",
         "Connector:Conn_01x04_Pin",
         "Connector:Conn_01x05_Pin",
         "Device:Fuse",
@@ -113,9 +115,10 @@ def build() -> Schematic:
     sch.net("BATT_RAW", [f1.pin("1")])
     sch.net("BATT_FUSED", [f1.pin("2")])
 
-    sw1 = sch.place("Connector:Conn_01x02_Pin", "SW1", at=(x1, y2),
-                    value="MASTER_SW")
+    sw1 = sch.place("Connector:Conn_01x03_Pin", "SW1", at=(x1, y2),
+                    value="MASTER_SW", footprint=MASTER_SWITCH_FOOTPRINT)
     sch.net("BATT_FUSED", [sw1.pin("1")])
+    sch.net("GND", [sw1.pin("3")])
 
     # Parallel PMOS reverse-polarity stage (shared source/drain/gate nets).
     # Gate drive is low-current: SW1 -> R7 -> Q3, plus R6 pull-up and R5 gate resistor.
