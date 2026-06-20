@@ -1295,7 +1295,7 @@
 	(footprint "Capacitor_THT:CP_Radial_D13.0mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "1046109a-6a6a-4054-87bc-82bef2b4f5c7")
-		(at 131.855216 69.85 180)
+		(at 131.8552 69.85 180)
 		(descr "CP, Radial series, Radial, pin pitch=5.00mm, diameter=13mm, height=20mm, Electrolytic Capacitor")
 		(tags "CP Radial series Radial pin pitch 5.00mm diameter 13mm height 20mm Electrolytic Capacitor")
 		(property "Reference" "C3"
@@ -3850,7 +3850,7 @@
 	(footprint "Package_TO_SOT_THT:TO-220-3_Vertical"
 		(layer "F.Cu")
 		(uuid "1070b5c5-8b61-4fef-ae04-01e136e828d5")
-		(at 111.76 99.06 180)
+		(at 113.03 99.06 180)
 		(descr "TO-220-3, Vertical, RM 2.54mm, see https://www.vishay.com/docs/66542/to-220-1.pdf, generated with kicad-footprint-generator TO_SOT_THT_generate.py")
 		(tags "TO-220-3 Vertical RM 2.54mm")
 		(property "Reference" "Q2"
@@ -12475,7 +12475,7 @@
 	(footprint "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "a1250510-21bc-4416-9630-a6fc0ee88d2a")
-		(at 97.79 128.27 90)
+		(at 91.44 100.33 90)
 		(descr "Through hole straight pin header, 1x05, 2.54mm pitch, single row")
 		(tags "Through hole pin header THT 1x05 2.54mm single row")
 		(property "Reference" "J13"
@@ -15015,7 +15015,7 @@
 	(footprint "Package_TO_SOT_THT:TO-220-3_Vertical"
 		(layer "F.Cu")
 		(uuid "d5c76989-f031-4dbf-83a2-0ca537321ee2")
-		(at 87.63 99.06 180)
+		(at 83.82 99.06 180)
 		(descr "TO-220-3, Vertical, RM 2.54mm, see https://www.vishay.com/docs/66542/to-220-1.pdf, generated with kicad-footprint-generator TO_SOT_THT_generate.py")
 		(tags "TO-220-3 Vertical RM 2.54mm")
 		(property "Reference" "Q1"
@@ -15851,7 +15851,7 @@
 	(footprint "Capacitor_THT:CP_Radial_D13.0mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "faa015ba-2198-4ea5-9855-6ad904ca600c")
-		(at 101.375216 69.85 180)
+		(at 101.3752 69.85 180)
 		(descr "CP, Radial series, Radial, pin pitch=5.00mm, diameter=13mm, height=20mm, Electrolytic Capacitor")
 		(tags "CP Radial series Radial pin pitch 5.00mm diameter 13mm height 20mm Electrolytic Capacitor")
 		(property "Reference" "C2"

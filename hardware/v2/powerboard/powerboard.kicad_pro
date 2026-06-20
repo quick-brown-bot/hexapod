@@ -517,23 +517,23 @@
     "netclass_patterns": [
       {
         "netclass": "Power_8A",
-        "pattern": "+6V_IN"
+        "pattern": "BATT_RAW"
       },
       {
         "netclass": "Power_8A",
-        "pattern": "+6V"
+        "pattern": "BATT_FUSED"
       },
       {
         "netclass": "Power_3A",
-        "pattern": "+6V_COXA"
+        "pattern": "VSERVO1"
       },
       {
         "netclass": "Power_3A",
-        "pattern": "+6V_TIBIA"
+        "pattern": "VSERVO2"
       },
       {
         "netclass": "Power_3A",
-        "pattern": "+6V_FEMUR"
+        "pattern": "VSERVO3"
       },
       {
         "netclass": "Default",
@@ -570,6 +570,10 @@
       {
         "netclass": "Default",
         "pattern": "I_COXA_SENSE"
+      },
+      {
+        "netclass": "Power_8A",
+        "pattern": "VMAIN+"
       }
     ]
   },
