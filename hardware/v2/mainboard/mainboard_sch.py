@@ -82,13 +82,6 @@ def build() -> Schematic:
     sch.net("IMU_SCL", [u1.pin("IO22")])
     sch.net("IMU_INT", [u1.pin("IO34")])
 
-    # EN pull-up (boot).
-    r_en = sch.place("Device:R_Small", "R2", at=(105, 80), value="10k",
-                     rotation=90, footprint=RES_0805_FOOTPRINT)
-    sch.net("+3.3V", [r_en.pin("1")])
-    sch.net("ESP_EN", [u1.pin("EN")])
-    sch.net("ESP_EN", [r_en.pin("2")], rotation=180)
-
     # --- RS485 master ----------------------------------------------------- #
     u2 = sch.place("Hexapod_V2:SP3485CN", "U2", at=(195, 55), value="SP3485CN",
                    footprint=SP3485_SOIC8_FOOTPRINT)
