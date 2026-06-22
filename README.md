@@ -226,6 +226,7 @@ Documentation is versioned to match firmware and hardware.
 - [docs/v2/architecture/SYSTEM_ARCHITECTURE.md](docs/v2/architecture/SYSTEM_ARCHITECTURE.md)
 - [docs/v2/architecture/HARDWARE_AND_MECHANICS.md](docs/v2/architecture/HARDWARE_AND_MECHANICS.md)
 - [docs/v2/interfaces/RS485_PROTOCOL.md](docs/v2/interfaces/RS485_PROTOCOL.md)
+- [docs/v2/development/README.md](docs/v2/development/README.md)
 
 **Common (shared across versions):**
 - [docs/common/interfaces/RPC_USER_GUIDE.md](docs/common/interfaces/RPC_USER_GUIDE.md)
