@@ -6,7 +6,8 @@ The goal is not just to make a robot walk, but to learn and at the same time bui
 
 The project combines firmware, hardware design, and system documentation in a single repository.
 
-> Current platform: 6 legs, 18 servos, ESP32, ESP-IDF, FreeRTOS.
+> V1 (operational): 6 legs, 18 servos, ESP32, ESP-IDF, FreeRTOS, direct PWM.
+> V2 (in development): distributed RP2040 leg controllers, RS485 bus, per-servo current sensing.
 
 ---
 
@@ -17,12 +18,20 @@ The repository contains software and hardware assets used to develop and validat
 ```text
 firmware/
 ├── v1/
-│   └── mainboard/     Main robot firmware (hardware v1)
+│   └── mainboard/     Main robot firmware (ESP32, direct PWM)
 └── v2/
-    └── leg/           Experimental leg-controller workspace (hardware v2)
+    ├── mainboard/     V2 ESP32 firmware (in development)
+    └── leg/           RP2040 leg controller firmware (in development)
 
-docs/              Architecture and design documentation
-hardware/          Electronics and mechanical design files
+hardware/
+├── v1/                V1 schematics
+└── v2/                V2 schematics (mainboard, legboard, powerboard)
+
+docs/
+├── common/            Docs shared across versions (RPC, WiFi, config)
+├── v1/                V1-specific architecture and development docs
+├── v2/                V2-specific architecture and development docs
+└── plans/             Project-wide backlog and research items
 ```
 
 Mainboard firmware overview: [firmware/v1/mainboard/README.md](firmware/v1/mainboard/README.md)
@@ -60,11 +69,18 @@ Servo Outputs
 
 ## Hardware Snapshot
 
+**V1 (current robot):**
 - MCU: ESP32 running FreeRTOS through ESP-IDF.
 - Robot layout: 6 legs, 3 degrees of freedom per leg, 18 hobby servos total.
-- Power architecture: 4S LiPo with separate UBEC paths for locomotion power and logic power isolation.
-- PWM strategy: mixed MCPWM and LEDC usage to reach all 18 outputs on classic ESP32.
-- Mechanical structure: custom 3D-printed chassis, brackets, and leg parts built around standardized servo geometry.
+- Power: 4S LiPo, separate UBEC paths for servo and logic power.
+- PWM: mixed MCPWM and LEDC to reach all 18 outputs on the ESP32.
+- Mechanical: custom 3D-printed chassis and leg parts.
+
+**V2 (in development):**
+- MCUs: ESP32 (mainboard) + 6 × XIAO RP2040 (one per leg).
+- Communication: RS485 multi-drop bus connecting mainboard to all six leg controllers.
+- Sensing: INA4181 4-channel current sensing per LegBoard for ground-contact detection.
+- Power: dedicated MainPowerBoard with three UBECs (servo) and one SBEC (logic), fully isolated.
 
 ## High-Level Architecture
 
@@ -174,35 +190,24 @@ Current focus areas include:
 
 ---
 
-## Future Hardware Revisions
+## V2 Hardware (In Development)
 
-Several areas are currently being explored for a future hardware revision.
+V2 introduces distributed leg controllers and full separation of logic and servo
+power. The architecture is defined and schematics are authored; firmware is in
+development.
 
-### Mechanical
+### What Changes in V2
 
-- Larger body volume for easier electronics integration.
-- Improved cable routing.
-- Increased structural stiffness in the legs.
-- Better serviceability and assembly.
+- **Three boards** replace the single V1 board: MainBoard (ESP32 + IMU + RS485
+  master), LegBoard × 6 (XIAO RP2040, servo PWM, per-servo current sensing),
+  MainPowerBoard (battery, fusing, UBEC/SBEC distribution).
+- **ESP32 no longer generates servo PWM.** Joint commands are sent over RS485;
+  each RP2040 generates PWM locally and interpolates between targets.
+- **Per-servo current sensing** on every LegBoard enables ground-contact
+  detection from current spikes without dedicated force sensors.
+- **Servo current is fully isolated from the MainBoard** at the hardware level.
 
-### Electronics
-
-- Separation of control and power-distribution responsibilities.
-- Dedicated power board for servo power routing.
-- Simplified mainboard focused on control and communication.
-
-### Distributed Leg Control
-
-One architecture under investigation places a microcontroller in each leg.
-
-The current concept is:
-
-- Main controller performs locomotion and planning.
-- Leg controllers generate local PWM signals.
-- Communication occurs over a shared bus.
-- Current sensing and additional sensors can be integrated at the leg level.
-
-The architecture is intended to reduce wiring complexity and make future sensor integration easier.
+See [`docs/v2/`](docs/v2/) for the full V2 architecture and interface documentation.
 
 ---
 
@@ -210,15 +215,23 @@ The architecture is intended to reduce wiring complexity and make future sensor 
 
 The repository contains detailed documentation covering implementation details and architecture decisions.
 
-Recommended starting points:
+Documentation is versioned to match firmware and hardware.
 
-- Mainboard firmware documentation: [firmware/v1/mainboard/README.md](firmware/v1/mainboard/README.md)
-- System architecture: [docs/architecture/SYSTEM_ARCHITECTURE.md](docs/architecture/SYSTEM_ARCHITECTURE.md)
-- Configuration system: [docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](docs/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
-- RPC interface documentation: [docs/interfaces/RPC_USER_GUIDE.md](docs/interfaces/RPC_USER_GUIDE.md)
-- Hardware and mechanics overview: [docs/architecture/HARDWARE_AND_MECHANICS.md](docs/architecture/HARDWARE_AND_MECHANICS.md)
+**V1 (operational):**
+- [docs/v1/architecture/SYSTEM_ARCHITECTURE.md](docs/v1/architecture/SYSTEM_ARCHITECTURE.md)
+- [docs/v1/architecture/HARDWARE_AND_MECHANICS.md](docs/v1/architecture/HARDWARE_AND_MECHANICS.md)
+- [firmware/v1/mainboard/README.md](firmware/v1/mainboard/README.md)
 
-Documentation map: [docs/README.md](docs/README.md)
+**V2 (in development):**
+- [docs/v2/architecture/SYSTEM_ARCHITECTURE.md](docs/v2/architecture/SYSTEM_ARCHITECTURE.md)
+- [docs/v2/architecture/HARDWARE_AND_MECHANICS.md](docs/v2/architecture/HARDWARE_AND_MECHANICS.md)
+- [docs/v2/interfaces/RS485_PROTOCOL.md](docs/v2/interfaces/RS485_PROTOCOL.md)
+
+**Common (shared across versions):**
+- [docs/common/interfaces/RPC_USER_GUIDE.md](docs/common/interfaces/RPC_USER_GUIDE.md)
+- [docs/common/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](docs/common/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
+
+Full documentation index: [docs/README.md](docs/README.md)
 
 ---
 

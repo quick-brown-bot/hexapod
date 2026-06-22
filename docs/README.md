@@ -1,55 +1,66 @@
 # Hexapod Documentation
 
-This directory is organized by intent so that stable reference material stays separate from plans and historical refactor notes.
+Documentation is organized by version and shared scope.
 
 ## Structure
 
-- [architecture/](architecture)
-  - Current system-level architecture and runtime interaction references.
-- [development/](development)
-  - Software setup, editor workflow, build steps, and test guidance for contributors.
-- [configuration/](configuration)
-  - Configuration platform design, persistence model, and namespace authoring guidance.
-- [interfaces/](interfaces)
-  - RPC, transport, controller, and protocol-facing documentation.
-- [plans/](plans)
-  - Forward-looking implementation plans and project TODO material.
+```
+docs/
+  common/          — applies to both V1 and V2 (ESP32 input drivers, RPC, WiFi, config platform)
+  v1/              — V1-specific: direct-PWM ESP32-only firmware
+  v2/              — V2-specific: RS485 distributed architecture with RP2040 leg controllers
+  plans/           — project-wide TODO and forward-looking plans
+```
 
-## Recommended Reading Order
+---
 
-1. [architecture/SYSTEM_ARCHITECTURE.md](architecture/SYSTEM_ARCHITECTURE.md)
-2. [development/README.md](development/README.md)
-3. [configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
-4. [interfaces/RPC_USER_GUIDE.md](interfaces/RPC_USER_GUIDE.md)
-5. [interfaces/RPC_SYSTEM_DESIGN.md](interfaces/RPC_SYSTEM_DESIGN.md)
+## Common
 
-## Current Reference Docs
-
-### Architecture
-
-- [architecture/SYSTEM_ARCHITECTURE.md](architecture/SYSTEM_ARCHITECTURE.md)
-- [architecture/HARDWARE_AND_MECHANICS.md](architecture/HARDWARE_AND_MECHANICS.md)
-- [architecture/HEXAPOD_V2_SYSTEM_ARCHITECTURE.md](architecture/HEXAPOD_V2_SYSTEM_ARCHITECTURE.md) — V2 distributed-controller hardware ([boards](../hardware/v2/README.md))
-
-### Development
-
-- [development/README.md](development/README.md)
+These docs describe subsystems that are shared across firmware versions: controller
+input drivers, the RPC system, WiFi and Bluetooth transports, and the configuration
+platform.
 
 ### Configuration
 
-- [configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
-- [configuration/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md](configuration/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md)
+- [common/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md](common/configuration/CONFIGURATION_PERSISTENCE_DESIGN.md)
+- [common/configuration/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md](common/configuration/CONFIG_MANAGER_NAMESPACE_TEMPLATE.md)
 
 ### Interfaces
 
-- [interfaces/RPC_USER_GUIDE.md](interfaces/RPC_USER_GUIDE.md)
-- [interfaces/RPC_SYSTEM_DESIGN.md](interfaces/RPC_SYSTEM_DESIGN.md)
-- [interfaces/CONTROLLER_DRIVERS.md](interfaces/CONTROLLER_DRIVERS.md)
-- [interfaces/WIFI_TCP_PROTOCOL.md](interfaces/WIFI_TCP_PROTOCOL.md)
-- [interfaces/WIFI_NETWORK_MODES.md](interfaces/WIFI_NETWORK_MODES.md)
-- [interfaces/BLUETOOTH_CLASSIC_PROTOCOL.md](interfaces/BLUETOOTH_CLASSIC_PROTOCOL.md)
+- [common/interfaces/RPC_USER_GUIDE.md](common/interfaces/RPC_USER_GUIDE.md)
+- [common/interfaces/RPC_SYSTEM_DESIGN.md](common/interfaces/RPC_SYSTEM_DESIGN.md)
+- [common/interfaces/CONTROLLER_DRIVERS.md](common/interfaces/CONTROLLER_DRIVERS.md)
+- [common/interfaces/WIFI_TCP_PROTOCOL.md](common/interfaces/WIFI_TCP_PROTOCOL.md)
+- [common/interfaces/WIFI_NETWORK_MODES.md](common/interfaces/WIFI_NETWORK_MODES.md)
+- [common/interfaces/BLUETOOTH_CLASSIC_PROTOCOL.md](common/interfaces/BLUETOOTH_CLASSIC_PROTOCOL.md)
 
-### Plans
+---
 
-- [plans/KPP_IMPLEMENTATION_PLAN.md](plans/KPP_IMPLEMENTATION_PLAN.md)
-- [plans/TODO.md](plans/TODO.md)
+## V1
+
+Direct-PWM ESP32-only firmware. Hardware: [`hardware/v1/`](../hardware/v1/README.md).
+Firmware: [`firmware/v1/`](../firmware/v1/mainboard/README.md).
+
+- [v1/architecture/SYSTEM_ARCHITECTURE.md](v1/architecture/SYSTEM_ARCHITECTURE.md)
+- [v1/architecture/HARDWARE_AND_MECHANICS.md](v1/architecture/HARDWARE_AND_MECHANICS.md)
+- [v1/development/README.md](v1/development/README.md)
+- [v1/plans/KPP_IMPLEMENTATION_PLAN.md](v1/plans/KPP_IMPLEMENTATION_PLAN.md)
+
+---
+
+## V2
+
+RS485 distributed architecture: ESP32 mainboard + RP2040 leg controllers.
+Hardware: [`hardware/v2/`](../hardware/v2/README.md).
+Firmware: [`firmware/v2/`](../firmware/v2/leg/).
+
+- [v2/architecture/SYSTEM_ARCHITECTURE.md](v2/architecture/SYSTEM_ARCHITECTURE.md)
+- [v2/architecture/HARDWARE_AND_MECHANICS.md](v2/architecture/HARDWARE_AND_MECHANICS.md)
+- [v2/interfaces/RS485_PROTOCOL.md](v2/interfaces/RS485_PROTOCOL.md)
+- [v2/development/README.md](v2/development/README.md)
+
+---
+
+## Plans
+
+- [plans/TODO.md](plans/TODO.md) — project-wide feature backlog and research items
