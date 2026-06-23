@@ -211,7 +211,7 @@ pending entry. A timeout leaves it pending for the next pull.
 |----|-----------|------|---------|-------------|
 | `01` | `MOVE_DURATION` | uint16 (ms) | `10` | Interpolation window. Not sent per pull; updated only on change. |
 | `02` | `WATCHDOG_TIMEOUT` | uint16 (ms) | `500` | Hold-last-position timeout on bus silence |
-| `03` | `INTERP_MODE` | uint8 | `01` | `00` = LINEAR (bring-up), `01` = CUBIC (default) |
+| `03` | `INTERP_MODE` | uint8 | `00` | `00` = LINEAR, `01` = CUBIC. The leg boots LINEAR for bring-up; CUBIC is opt-in via this parameter. |
 | `04` | `COXA_LIMIT_MIN` | int16 (0.1°) | TBD | Coxa minimum angle hard limit |
 | `05` | `COXA_LIMIT_MAX` | int16 (0.1°) | TBD | Coxa maximum angle hard limit |
 | `06` | `FEMUR_LIMIT_MIN` | int16 (0.1°) | TBD | Femur minimum angle hard limit |
