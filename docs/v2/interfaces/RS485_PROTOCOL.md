@@ -88,23 +88,27 @@ Parameter *values* are decimal.
 
 Normal pull, no options:
 ```
->1,00,-45.5,-30.2,60.0*A3\n
+>1,00,-45.5,-30.2,60.0*F5\n
 ```
 
 Pull requesting joint positions in response:
 ```
->1,01,-45.5,-30.2,60.0*C2\n
+>1,01,-45.5,-30.2,60.0*DF\n
 ```
 
 Pull with a pending config update (move duration = 10 ms):
 ```
->1,00,-45.5,-30.2,60.0,P01=10*B7\n
+>1,00,-45.5,-30.2,60.0,P01=10*24\n
 ```
 
 Pull with joint positions requested and two config entries:
 ```
->1,01,-45.5,-30.2,60.0,P01=10,P02=500*E1\n
+>1,01,-45.5,-30.2,60.0,P01=10,P02=500*3A\n
 ```
+
+> The `*XX` values above are real CRC-8/SMBus checksums over the frame content
+> (from `>`/`<` up to but not including `*`). They double as test vectors for
+> the master and leg CRC implementations.
 
 ---
 
@@ -140,17 +144,17 @@ Pull with joint positions requested and two config entries:
 
 Normal response, no flags:
 ```
-<1,00,1250,450,380,420*D4\n
+<1,00,1250,450,380,420*71\n
 ```
 
 Response acknowledging a config update:
 ```
-<1,01,1250,450,380,420*F1\n
+<1,01,1250,450,380,420*5B\n
 ```
 
 Response with joint positions (when `JOINT_POS` was set in pull):
 ```
-<1,00,1250,450,380,420,-44.8,-29.5,59.2*E9\n
+<1,00,1250,450,380,420,-44.8,-29.5,59.2*77\n
 ```
 
 ---
@@ -207,7 +211,7 @@ pending entry. A timeout leaves it pending for the next pull.
 |----|-----------|------|---------|-------------|
 | `01` | `MOVE_DURATION` | uint16 (ms) | `10` | Interpolation window. Not sent per pull; updated only on change. |
 | `02` | `WATCHDOG_TIMEOUT` | uint16 (ms) | `500` | Hold-last-position timeout on bus silence |
-| `03` | `INTERP_MODE` | uint8 | `01` | `00` = LINEAR (bring-up), `01` = CUBIC (default) |
+| `03` | `INTERP_MODE` | uint8 | `00` | `00` = LINEAR, `01` = CUBIC. The leg boots LINEAR for bring-up; CUBIC is opt-in via this parameter. |
 | `04` | `COXA_LIMIT_MIN` | int16 (0.1°) | TBD | Coxa minimum angle hard limit |
 | `05` | `COXA_LIMIT_MAX` | int16 (0.1°) | TBD | Coxa maximum angle hard limit |
 | `06` | `FEMUR_LIMIT_MIN` | int16 (0.1°) | TBD | Femur minimum angle hard limit |
