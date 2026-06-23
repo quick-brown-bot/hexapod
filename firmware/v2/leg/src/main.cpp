@@ -72,6 +72,11 @@ static void handle_pull(const proto_pull_t *pull, uint32_t now_us)
         interp_set_target(j, limited, now_us);
     }
 
+    // If we were in watchdog hold, report it once on this recovery response so
+    // the master learns the leg held position during the silence. While
+    // watchdog is active the leg sends nothing, so this is the only chance to
+    // surface the bit.
+    if (s_watchdog_active) status |= PROTO_STATUS_WATCHDOG_ACTIVE;
     s_last_rx_us = now_us;
     s_watchdog_active = false;
 
@@ -80,7 +85,7 @@ static void handle_pull(const proto_pull_t *pull, uint32_t now_us)
 
     proto_response_t resp = {0};
     resp.addr = s_addr;
-    resp.status = status; // watchdog bit is clear: we just received a frame
+    resp.status = status;
     resp.current_total_ma = cur.total_ma;
     resp.current_coxa_ma  = cur.coxa_ma;
     resp.current_femur_ma = cur.femur_ma;
