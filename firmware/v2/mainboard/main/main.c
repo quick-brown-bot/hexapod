@@ -29,6 +29,7 @@
 #include "config_ns_wifi_api.h"
 #include "config_ns_gait_api.h"
 #include "rpc_commands.h"
+#include "rs485_master.h"
 
 static const char *TAG = "main";
 
@@ -160,6 +161,15 @@ void app_main(void)
     err = robot_config_init_default();
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to initialize robot configuration: %s", esp_err_to_name(err));
+        return;
+    }
+
+    // V2: start the RS485 bus master. It owns UART2 and polls the six LegBoards
+    // in its own task, independent of the 100 Hz motion loop. Actuation writes
+    // desired joint angles into its command buffer (non-blocking).
+    err = rs485_master_init();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize RS485 master: %s", esp_err_to_name(err));
         return;
     }
     

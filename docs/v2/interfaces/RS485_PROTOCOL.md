@@ -50,6 +50,15 @@ All frames are ASCII text terminated with `\n`. A `*XX` suffix carries a
 CRC8 checksum as two uppercase hex digits, covering all bytes from (and
 including) the leading `>` or `<` up to (not including) the `*`.
 
+**CRC8 algorithm**: CRC-8/SMBus — polynomial `0x07`, initial value `0x00`,
+no input/output reflection, no final XOR. Both the ESP32 master and the RP2040
+leg firmware must use this identical algorithm. Reference implementation:
+`firmware/v2/mainboard/components/hex_rs485_master/rs485_master.c` (`crc8()`).
+
+Config parameter IDs in `Pii=` entries are written as two **hex** digits
+(e.g. `P01`, `P0A`), matching the parameter IDs in the Stored Parameters table.
+Parameter *values* are decimal.
+
 ### Pull Frame (ESP32 → LegBoard)
 
 ```

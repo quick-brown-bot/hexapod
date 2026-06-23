@@ -6,6 +6,11 @@
 /*.hex
 /*.log
 
+# PlatformIO build output and generated config
+# (sdkconfig.defaults is the committed seed; sdkconfig.<env> is generated)
+.pio/
+sdkconfig.esp32dev
+
 # CMake generated files
 CMakeFiles/
 CMakeCache.txt

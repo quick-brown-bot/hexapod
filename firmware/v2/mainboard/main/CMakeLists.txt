@@ -13,6 +13,7 @@ idf_component_register(
     hex_locomotion
     hex_motion_limits
     hex_actuation
+    hex_rs485_master
     hex_robot_config
     hex_kinematics
     hex_config_manager
