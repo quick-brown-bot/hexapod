@@ -43,8 +43,34 @@ src/
   calib.h/.cpp   Minimal USB-serial bring-up interface (set leg address)
   main.cpp       Wiring: RS485 request/response + fixed-rate control loop
 test/
-  host/          Host unit test for the protocol module (run where gcc exists)
+  test_protocol/ Unity host test for the protocol module (pio test -e native)
 ```
+
+## Testing
+
+The protocol module is hardware-independent and unit-tested on the host.
+
+```bash
+pio test -e native
+```
+
+The `native` environment compiles only `protocol.c` (the rest of `src/` needs
+the Pico SDK) plus the Unity test and runs it on the desktop. It needs a host
+toolchain that PlatformIO's native platform understands (`gcc`/`clang`). This is
+the command that will run in CI.
+
+If only MSVC is available (no gcc/clang on PATH), the same test can be compiled
+and run directly — e.g. from a Visual Studio Developer prompt:
+
+```bat
+cl /MT /D_CRT_SECURE_NO_WARNINGS /DUNITY_INCLUDE_DOUBLE ^
+   /I src /I .pio\libdeps\native\Unity\src ^
+   test\test_protocol\test_protocol.c src\protocol.c ^
+   .pio\libdeps\native\Unity\src\unity.c /Fe:test.exe && test.exe
+```
+
+Coverage: CRC vectors, the pull-frame parse path (the leg's entire input path),
+and response building — all checked against the vectors in `RS485_PROTOCOL.md`.
 
 ## Design Notes
 
