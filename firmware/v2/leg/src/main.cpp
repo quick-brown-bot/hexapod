@@ -1,165 +1,157 @@
+// Hexapod V2 LegBoard firmware (RP2040 / arduino-pico).
+//
+// Role: RS485 slave that drives three servos for one leg. Receives sparse
+// joint-angle targets from the ESP32 master, interpolates locally for smooth
+// motion, samples per-servo current, and answers every pull with a telemetry
+// response. Holds position if the bus goes silent (watchdog).
+//
+// See:
+//   docs/v2/architecture/HARDWARE_AND_MECHANICS.md
+//   docs/v2/interfaces/RS485_PROTOCOL.md
+//   docs/v2/architecture/SYSTEM_ARCHITECTURE.md
+
 #include <Arduino.h>
-#include <Servo.h>
 
-// XIAO RP2040 onboard RGB — active LOW
-static constexpr int LED_R = 17;
-static constexpr int LED_G = 16;
-static constexpr int LED_B = 25;
+#include "config.h"
+#include "protocol.h"
+#include "rs485.h"
+#include "servo.h"
+#include "current.h"
+#include "interp.h"
+#include "persist.h"
+#include "calib.h"
 
-// PWM pins (GPIO = D8/D9/D10 on XIAO RP2040)
-static constexpr int COXA_PWM_PIN  = 3;   // D10/GPIO3
-static constexpr int FEMUR_PWM_PIN = 4;   // D9/GPIO4
-static constexpr int TIBIA_PWM_PIN = 2;   // D8/GPIO2
+// --- Runtime state -------------------------------------------------------
+static uint8_t  s_addr = DEFAULT_LEG_ADDR;
+static uint16_t s_watchdog_timeout_ms = DEFAULT_WATCHDOG_TIMEOUT_MS;
+static bool     s_watchdog_active = false;
 
-// ADC — new board layout: A0=total, A1=femur, A2=tibia, A3=coxa
-static constexpr int   I_TOTAL_PIN = 26;
-static constexpr int   I_FEMUR_PIN = 27;
-static constexpr int   I_TIBIA_PIN = 28;
-static constexpr int   I_COXA_PIN  = 29;
+// Joint hard limits (degrees). Updated via params P04..P09.
+static float s_jmin[NUM_JOINTS] = { DEFAULT_JOINT_MIN_DEG, DEFAULT_JOINT_MIN_DEG, DEFAULT_JOINT_MIN_DEG };
+static float s_jmax[NUM_JOINTS] = { DEFAULT_JOINT_MAX_DEG, DEFAULT_JOINT_MAX_DEG, DEFAULT_JOINT_MAX_DEG };
 
-// INA4181A3IPWR gain=100, shunt=10mΩ → 1 A/V
-static constexpr float ADC_TO_V   = 3.3f / 4095.0f;
-static constexpr float V_TO_A     = 1.0f / (100.0f * 0.010f);
+static uint32_t s_last_rx_us = 0;
+static uint32_t s_last_control_us = 0;
 
-// Safety limits
-static constexpr float BRANCH_TRIP_A = 3.0f;   // per servo — detach on trip
-static constexpr float TOTAL_TRIP_A  = 9.0f;   // whole leg — cut all on trip
-static constexpr int   COOLDOWN_MS   = 2000;
-
-static constexpr int HOLD_MS    = 3000;
-static constexpr int SAMPLE_MS  = 50;
-static constexpr int BASELINE_N = 64;
-
-static float b_total = 0.0f, b_femur = 0.0f, b_tibia = 0.0f, b_coxa = 0.0f;
-
-Servo coxa, femur, tibia;
-
-struct Currents { float total, femur, tibia, coxa; };
-
-Currents readCurrents() {
-    return {
-        analogRead(I_TOTAL_PIN) * ADC_TO_V * V_TO_A - b_total,
-        analogRead(I_FEMUR_PIN) * ADC_TO_V * V_TO_A - b_femur,
-        analogRead(I_TIBIA_PIN) * ADC_TO_V * V_TO_A - b_tibia,
-        analogRead(I_COXA_PIN)  * ADC_TO_V * V_TO_A - b_coxa,
-    };
+static inline float clampf(float v, float lo, float hi) {
+    return v < lo ? lo : (v > hi ? hi : v);
 }
 
-// Returns true if any trip fired. Detaches the offending servo(s).
-bool checkSafety(const Currents& c) {
-    bool tripped = false;
-
-    if (c.total > TOTAL_TRIP_A) {
-        Serial.printf("!TRIP total=%.2fA > %.1fA — cutting all servos\n",
-                      c.total, TOTAL_TRIP_A);
-        coxa.detach(); femur.detach(); tibia.detach();
-        digitalWrite(LED_R, LOW); digitalWrite(LED_B, LOW);
-        return true;
+// Apply one config parameter carried in a pull frame.
+static void apply_param(const proto_param_t *p)
+{
+    switch (p->id) {
+        case RS485_PARAM_MOVE_DURATION_ID:    interp_set_duration_ms((uint16_t)p->value); break;
+        case RS485_PARAM_WATCHDOG_TIMEOUT_ID: s_watchdog_timeout_ms = (uint16_t)p->value; break;
+        case RS485_PARAM_INTERP_MODE_ID:      interp_set_mode((int)p->value); break;
+        case RS485_PARAM_COXA_MIN_ID:  s_jmin[JOINT_COXA]  = p->value / 10.0f; break;
+        case RS485_PARAM_COXA_MAX_ID:  s_jmax[JOINT_COXA]  = p->value / 10.0f; break;
+        case RS485_PARAM_FEMUR_MIN_ID: s_jmin[JOINT_FEMUR] = p->value / 10.0f; break;
+        case RS485_PARAM_FEMUR_MAX_ID: s_jmax[JOINT_FEMUR] = p->value / 10.0f; break;
+        case RS485_PARAM_TIBIA_MIN_ID: s_jmin[JOINT_TIBIA] = p->value / 10.0f; break;
+        case RS485_PARAM_TIBIA_MAX_ID: s_jmax[JOINT_TIBIA] = p->value / 10.0f; break;
+        default: break; // unknown id: ignore
     }
-    if (c.coxa > BRANCH_TRIP_A) {
-        Serial.printf("!TRIP coxa=%.2fA > %.1fA — releasing coxa\n",
-                      c.coxa, BRANCH_TRIP_A);
-        coxa.detach();
-        tripped = true;
-    }
-    if (c.femur > BRANCH_TRIP_A) {
-        Serial.printf("!TRIP femur=%.2fA > %.1fA — releasing femur\n",
-                      c.femur, BRANCH_TRIP_A);
-        femur.detach();
-        tripped = true;
-    }
-    if (c.tibia > BRANCH_TRIP_A) {
-        Serial.printf("!TRIP tibia=%.2fA > %.1fA — releasing tibia\n",
-                      c.tibia, BRANCH_TRIP_A);
-        tibia.detach();
-        tripped = true;
-    }
-    return tripped;
 }
 
-void reattach() {
-    delay(COOLDOWN_MS);
-    coxa.attach(COXA_PWM_PIN,  500, 2500);
-    femur.attach(FEMUR_PWM_PIN, 500, 2500);
-    tibia.attach(TIBIA_PWM_PIN, 500, 2500);
-    coxa.write(90); femur.write(90); tibia.write(90);
-    digitalWrite(LED_R, HIGH); digitalWrite(LED_B, HIGH);
-    Serial.println("re-attached — resuming");
-    delay(500);
-}
+// Handle one validated pull frame addressed to this leg: apply targets/config,
+// then send the telemetry response (the response implicitly ACKs config).
+static void handle_pull(const proto_pull_t *pull, uint32_t now_us)
+{
+    uint8_t status = 0;
 
-void sampleBaseline() {
-    float st = 0, sf = 0, sb = 0, sc = 0;
-    for (int i = 0; i < BASELINE_N; i++) {
-        st += analogRead(I_TOTAL_PIN) * ADC_TO_V * V_TO_A;
-        sf += analogRead(I_FEMUR_PIN) * ADC_TO_V * V_TO_A;
-        sb += analogRead(I_TIBIA_PIN) * ADC_TO_V * V_TO_A;
-        sc += analogRead(I_COXA_PIN)  * ADC_TO_V * V_TO_A;
-        delay(5);
+    if (pull->n_params > 0) {
+        for (int i = 0; i < pull->n_params; ++i) apply_param(&pull->params[i]);
+        status |= PROTO_STATUS_CONFIG_APPLIED;
     }
-    b_total = st / BASELINE_N;
-    b_femur = sf / BASELINE_N;
-    b_tibia = sb / BASELINE_N;
-    b_coxa  = sc / BASELINE_N;
+
+    const float raw[NUM_JOINTS] = { pull->coxa_deg, pull->femur_deg, pull->tibia_deg };
+    for (int j = 0; j < NUM_JOINTS; ++j) {
+        float limited = clampf(raw[j], s_jmin[j], s_jmax[j]);
+        if (limited != raw[j]) status |= PROTO_STATUS_LIMIT_CLAMP;
+        interp_set_target(j, limited, now_us);
+    }
+
+    // If we were in watchdog hold, report it once on this recovery response so
+    // the master learns the leg held position during the silence. While
+    // watchdog is active the leg sends nothing, so this is the only chance to
+    // surface the bit.
+    if (s_watchdog_active) status |= PROTO_STATUS_WATCHDOG_ACTIVE;
+    s_last_rx_us = now_us;
+    s_watchdog_active = false;
+
+    current_reading_t cur;
+    current_get(&cur);
+
+    proto_response_t resp = {0};
+    resp.addr = s_addr;
+    resp.status = status;
+    resp.current_total_ma = cur.total_ma;
+    resp.current_coxa_ma  = cur.coxa_ma;
+    resp.current_femur_ma = cur.femur_ma;
+    resp.current_tibia_ma = cur.tibia_ma;
+
+    if (pull->flags & PROTO_FLAG_JOINT_POS) {
+        resp.include_positions = true;
+        resp.pos_coxa_deg  = interp_get_pos(JOINT_COXA);
+        resp.pos_femur_deg = interp_get_pos(JOINT_FEMUR);
+        resp.pos_tibia_deg = interp_get_pos(JOINT_TIBIA);
+    }
+
+    char out[160];
+    int n = proto_build_response(&resp, out, sizeof(out));
+    if (n > 0) rs485_send(out, (size_t)n);
 }
 
-void holdAndSample(int ms) {
-    for (int elapsed = 0; elapsed < ms; elapsed += SAMPLE_MS) {
-        Currents c = readCurrents();
-        Serial.printf("total=%.3fA  coxa=%.3fA  femur=%.3fA  tibia=%.3fA\n",
-                      c.total, c.coxa, c.femur, c.tibia);
-        if (checkSafety(c)) {
-            reattach();
-            return;
+void setup()
+{
+    calib_init();        // USB serial (independent of RS485)
+    persist_init();
+    s_addr = persist_get_address();
+
+    rs485_init();
+    servo_init();
+    current_init();
+    interp_init(0.0f);   // start at neutral (0 deg)
+
+    uint32_t now = micros();
+    s_last_rx_us = now;
+    s_last_control_us = now;
+}
+
+void loop()
+{
+    // 1) USB calibration commands (non-blocking).
+    calib_poll();
+
+    // 2) RS485: respond immediately to a valid pull for this leg. Frames that
+    //    fail CRC or address-match produce no response (the master treats
+    //    silence as a timeout — never NAK).
+    char *line = rs485_poll_line();
+    if (line) {
+        proto_pull_t pull;
+        if (proto_parse_pull(line, &pull) && pull.addr == s_addr) {
+            handle_pull(&pull, micros());
         }
-        delay(SAMPLE_MS);
     }
-}
 
-void setup() {
-    Serial.begin(115200);
+    // 3) Fixed-rate control step: interpolate, drive servos, sample current,
+    //    enforce watchdog.
+    uint32_t now = micros();
+    if ((uint32_t)(now - s_last_control_us) >= CONTROL_PERIOD_US) {
+        s_last_control_us = now;
 
-    pinMode(LED_R, OUTPUT); digitalWrite(LED_R, HIGH);
-    pinMode(LED_G, OUTPUT); digitalWrite(LED_G, HIGH);
-    pinMode(LED_B, OUTPUT); digitalWrite(LED_B, HIGH);
+        if ((uint32_t)(now - s_last_rx_us) > (uint32_t)s_watchdog_timeout_ms * 1000U) {
+            if (!s_watchdog_active) {
+                s_watchdog_active = true;
+                interp_hold(now); // freeze at last commanded position
+            }
+        }
 
-    analogReadResolution(12);
-
-    coxa.attach(COXA_PWM_PIN,  500, 2500);
-    femur.attach(FEMUR_PWM_PIN, 500, 2500);
-    tibia.attach(TIBIA_PWM_PIN, 500, 2500);
-    coxa.write(90); femur.write(90); tibia.write(90);
-    delay(1000);
-
-    Serial.println("=== zeroing baseline ===");
-    sampleBaseline();
-    Serial.printf("baseline  total=%.4fA  coxa=%.4fA  femur=%.4fA  tibia=%.4fA\n",
-                  b_total, b_coxa, b_femur, b_tibia);
-    Serial.printf("limits    branch=%.1fA  total=%.1fA\n",
-                  BRANCH_TRIP_A, TOTAL_TRIP_A);
-
-    Serial.println("=== leg stall test ===");
-    Serial.println("idle:");
-    holdAndSample(500);
-}
-
-void loop() {
-    Serial.println("--- stall @ 0 deg ---");
-    coxa.write(0); femur.write(0); tibia.write(0);
-    digitalWrite(LED_R, LOW);
-    holdAndSample(HOLD_MS);
-    digitalWrite(LED_R, HIGH);
-
-    coxa.write(90); femur.write(90); tibia.write(90);
-    delay(500);
-
-    Serial.println("--- stall @ 180 deg ---");
-    coxa.write(180); femur.write(180); tibia.write(180);
-    digitalWrite(LED_B, LOW);
-    holdAndSample(HOLD_MS);
-    digitalWrite(LED_B, HIGH);
-
-    coxa.write(90); femur.write(90); tibia.write(90);
-    Serial.println("--- centre ---");
-    holdAndSample(1000);
+        interp_update(now);
+        for (int j = 0; j < NUM_JOINTS; ++j) {
+            servo_write_angle(j, interp_get_pos(j));
+        }
+        current_sample();
+    }
 }

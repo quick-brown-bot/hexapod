@@ -1,0 +1,2 @@
+pytest==9.0.3
+winwifi==1.0.5

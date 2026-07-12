@@ -1,0 +1,8 @@
+# PlatformIO seeds the generated sdkconfig.<env> from this file.
+# Keep only deliberate non-defaults here. The partition table is owned by
+# platformio.ini (board_build.partitions), so it is intentionally NOT set here.
+
+# Bluetooth Classic transport (shared V1 controller transport, inherited by V2).
+CONFIG_BT_ENABLED=y
+CONFIG_BT_CLASSIC_ENABLED=y
+CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY=y
