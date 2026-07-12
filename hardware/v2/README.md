@@ -96,19 +96,19 @@ SOIC-8 SP3485 footprint, and the ordinary small R/C parts default to 0805.
 | `+6V` | post-total-shunt servo bus; high-side **force** node feeding the three per-servo branch shunts and bulk cap C2 |
 | `+6V_IN` | raw servo-power input (J5) ahead of the total shunt |
 | `+6V_COXA` / `+6V_FEMUR` / `+6V_TIBIA` | post-branch-shunt servo supply rails (force) for J2 / J3 / J4 |
-| `ITOT_SP` / `ITOT_SN` | Kelvin **sense** taps of total shunt R2 → INA IN+1 / IN-1 |
-| `COXA_SP` / `COXA_SN` | Kelvin sense taps of coxa shunt R3 → INA IN+2 / IN-2 |
-| `FEMUR_SP` / `FEMUR_SN` | Kelvin sense taps of femur shunt R4 → INA IN+3 / IN-3 |
-| `TIBIA_SP` / `TIBIA_SN` | Kelvin sense taps of tibia shunt R5 → INA IN+4 / IN-4 |
+| `ITOT_SP` / `ITOT_SN` | Kelvin **sense** taps of total shunt R4 → INA IN+1 / IN-1 |
+| `COXA_SP` / `COXA_SN` | Kelvin sense taps of coxa shunt R5 → INA IN+4 / IN-4 |
+| `FEMUR_SP` / `FEMUR_SN` | Kelvin sense taps of femur shunt R3 → INA IN+2 / IN-2 |
+| `TIBIA_SP` / `TIBIA_SN` | Kelvin sense taps of tibia shunt R2 → INA IN+3 / IN-3 |
 | `GND` | global ground |
 | `RP_TXD` / `RP_RXD` | XIAO P0/P1 (UART) ↔ SP3485 DI/RO |
 | `RS485_DE` | XIAO P6/D4 → SP3485 DE + ~RE |
 | `RS485_A` / `RS485_B` | SP3485 ↔ RJ11, 120 Ω term R1 (DNP except bus ends) |
 | `COXA_PWM` / `FEMUR_PWM` / `TIBIA_PWM` | XIAO P3/P4/P2 → servo connectors J2/J3/J4 |
 | `I_TOTAL_SENSE` | INA4181 channel 1 output → XIAO A0 |
-| `I_COXA_SENSE` | INA4181 channel 2 output → XIAO A1 |
-| `I_FEMUR_SENSE` | INA4181 channel 3 output → XIAO A2 |
-| `I_TIBIA_SENSE` | INA4181 channel 4 output → XIAO A3 |
+| `I_FEMUR_SENSE` | INA4181 channel 2 output → XIAO A1 |
+| `I_TIBIA_SENSE` | INA4181 channel 3 output → XIAO A2 |
+| `I_COXA_SENSE` | INA4181 channel 4 output → XIAO A3 |
 
 Servo connectors J2/J3/J4 (`Conn_01x03`): 1 = signal, 2 = branch +6V, 3 = GND.
 J5 is a 2-pin screw terminal for servo power input. The four current shunts
@@ -116,10 +116,10 @@ J5 is a 2-pin screw terminal for servo power input. The four current shunts
 1/4 carry current, pins 2/3 are the sense taps. Each INA input reaches the shunt
 over its own unique two-node `*_SP`/`*_SN` net, so the autorouter cannot merge
 the three high-side taps (INA pins 6/15/17) through the shared `+6V` copper or
-assign them current-rail trace widths. U3 (`INA4181A3IPWR`) measures channel 1
-across the total-leg shunt `R2` (`+6V_IN`→`+6V`), channel 2 across coxa `R3`,
-channel 3 across femur `R4`, channel 4 across tibia `R5`; IN+ is always on the
-higher-potential (source) side. The generated sheet layout keeps the XIAO and INA
+assign them current-rail trace widths. U3 (`INA4181A3IPWR`, gain 100) measures channel 1 across the total-leg shunt
+`R4` (`+6V_IN`→`+6V`), channel 2 across femur `R3`, channel 3 across tibia
+`R2`, channel 4 across coxa `R5`; IN+ is always on the higher-potential
+(source) side. The generated sheet layout keeps the XIAO and INA
 blocks as top-level anchors with the connector and power groups below for
 readability.
 
@@ -176,6 +176,28 @@ Pre-prototype hardening now added in-code:
 - `R8=100k` from `NPN_BASE` to `GND` (base pull-down; avoids floating base when SW1 is open).
 - `D6=15V` Zener between `PMOS_GATE` and `BATT_FUSED` (Vgs transient clamp).
 - Optional `C5=100nF` from `PMOS_GATE_DRV` to `GND` (slows turn-on edge to soften inrush into ~7600 uF total bulk capacitance).
+
+## PCB order tagging
+
+Each board order placed with JLCPCB is tagged in git at the exact commit that
+was sent to manufacture:
+
+```
+git tag pcb_order_<JLCPCB-order-ID> <commit>
+```
+
+Example: `pcb_order_W2026062121528170` points to the first legboard/mainboard
+order. To inspect or check out any ordered revision:
+
+```bash
+git show pcb_order_W2026062121528170          # view commit
+git checkout pcb_order_W2026062121528170      # restore that state
+```
+
+This makes it possible to diff the current schematic against what was actually
+fabricated, or to flash firmware that matches the physical board on hand.
+
+---
 
 ## Status / known limitations (first pass)
 
