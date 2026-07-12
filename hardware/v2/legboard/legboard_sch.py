@@ -90,9 +90,9 @@ def build() -> Schematic:
     sch.net("FEMUR_PWM", [u1.pin("10")])  # P4/D9
     sch.net("TIBIA_PWM", [u1.pin("9")])  # P2/D8
     sch.net("I_TOTAL_SENSE", [u1.pin("1")], rotation=180)    # P26/A0 (ADC)
-    sch.net("I_COXA_SENSE", [u1.pin("2")], rotation=180)     # P27/A1 (ADC)
-    sch.net("I_FEMUR_SENSE", [u1.pin("3")], rotation=180)    # P28/A2 (ADC)
-    sch.net("I_TIBIA_SENSE", [u1.pin("4")], rotation=180)    # P29/A3 (ADC)
+    sch.net("I_FEMUR_SENSE", [u1.pin("2")], rotation=180)    # P27/A1 (ADC)
+    sch.net("I_TIBIA_SENSE", [u1.pin("3")], rotation=180)    # P28/A2 (ADC)
+    sch.net("I_COXA_SENSE", [u1.pin("4")], rotation=180)     # P29/A3 (ADC)
 
     # --- RS485 slave ------------------------------------------------------ #
     u2 = sch.place("Hexapod_V2:SP3485CN", "U2", at=(145, 72), value="SP3485CN",
@@ -142,10 +142,10 @@ def build() -> Schematic:
     # the router never bridges the three high-side taps (U3 pins 6/15/17) through
     # the shared +6V copper or assigns them current-rail trace widths.
     #
-    # Total shunt R2: current +6V_IN (term 1) -> +6V (term 4).
+    # Total shunt R4: current +6V_IN (term 1) -> +6V (term 4).
     # NB: rotation MUST stay 0. The DSL's off-axis pin transform mismatches KiCad
     # at 90/270 (sense pads land off-pin, force pads swap) — verified by netlist.
-    r_total = sch.place("Device:R_Shunt", "R2", at=(70, 140), value="0.01",
+    r_total = sch.place("Device:R_Shunt", "R4", at=(70, 140), value="0.01",
                         footprint=SHUNT_R010_KELVIN_FOOTPRINT)
     sch.net("+6V_IN", [r_total.pin("1")])    # force, high side
     sch.net("+6V", [r_total.pin("4")])       # force, low side
@@ -155,11 +155,11 @@ def build() -> Schematic:
     # Branch shunts: current +6V (term 1) -> branch rail (term 4). The high-side
     # force pad stays on the shared +6V bulk; only the sense pads are per-branch.
     for ref, x, branch, sp, sn in (
-            ("R3", 120, "+6V_COXA", "COXA_SP", "COXA_SN"),
-            ("R4", 155, "+6V_FEMUR", "FEMUR_SP", "FEMUR_SN"),
-            ("R5", 190, "+6V_TIBIA", "TIBIA_SP", "TIBIA_SN")):
+            ("R5", 120, "+6V_COXA", "COXA_SP", "COXA_SN"),
+            ("R3", 155, "+6V_FEMUR", "FEMUR_SP", "FEMUR_SN"),
+            ("R2", 190, "+6V_TIBIA", "TIBIA_SP", "TIBIA_SN")):
         shunt = sch.place("Device:R_Shunt", ref, at=(x, 128), value="0.01",
-                          footprint=SHUNT_R010_KELVIN_FOOTPRINT)  # rotation 0 — see R2
+                          footprint=SHUNT_R010_KELVIN_FOOTPRINT)  # rotation 0 — see R4
         sch.net("+6V", [shunt.pin("1")])     # force, high side (shared bulk)
         sch.net(branch, [shunt.pin("4")])    # force, low side (to servo conn)
         sch.net(sp, [shunt.pin("2")])        # sense, high side -> IN+
@@ -174,18 +174,18 @@ def build() -> Schematic:
     stub_label("ITOT_SN", u3.pin("3"), -15)        # IN-1
     stub_label("ITOT_SP", u3.pin("4"), -15)        # IN+1
     stub_label("+3.3V", u3.pin("5"), -15)          # VS
-    stub_label("COXA_SP", u3.pin("6"), -15)        # IN+2
-    stub_label("COXA_SN", u3.pin("7"), -15)        # IN-2
-    stub_label("I_COXA_SENSE", u3.pin("8"), -15)   # OUT2
-    stub_label("GND", u3.pin("9"), -15)            # REF2
-    stub_label("GND", u3.pin("12"), 8)             # REF3
-    stub_label("I_FEMUR_SENSE", u3.pin("13"), 8)   # OUT3
-    stub_label("FEMUR_SN", u3.pin("14"), 8)        # IN-3
-    stub_label("FEMUR_SP", u3.pin("15"), 8)        # IN+3
-    stub_label("GND", u3.pin("16"), 8)             # GND
-    stub_label("TIBIA_SP", u3.pin("17"), 8)        # IN+4
-    stub_label("TIBIA_SN", u3.pin("18"), 8)        # IN-4
-    stub_label("I_TIBIA_SENSE", u3.pin("19"), 8)   # OUT4
+    stub_label("FEMUR_SP", u3.pin("6"), -15)        # IN+2
+    stub_label("FEMUR_SN", u3.pin("7"), -15)        # IN-2
+    stub_label("I_FEMUR_SENSE", u3.pin("8"), -15)   # OUT2
+    stub_label("GND", u3.pin("9"), -15)             # REF2
+    stub_label("GND", u3.pin("12"), 8)              # REF3
+    stub_label("I_TIBIA_SENSE", u3.pin("13"), 8)    # OUT3
+    stub_label("TIBIA_SN", u3.pin("14"), 8)         # IN-3
+    stub_label("TIBIA_SP", u3.pin("15"), 8)         # IN+3
+    stub_label("GND", u3.pin("16"), 8)              # GND
+    stub_label("COXA_SP", u3.pin("17"), 8)          # IN+4
+    stub_label("COXA_SN", u3.pin("18"), 8)          # IN-4
+    stub_label("I_COXA_SENSE", u3.pin("19"), 8)     # OUT4
     stub_label("GND", u3.pin("20"), 8)             # REF4
 
     # --- decoupling / bulk ------------------------------------------------ #

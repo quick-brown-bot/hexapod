@@ -2798,21 +2798,9 @@
 		)
 		(uuid "7265a3eb-e918-405d-8866-bb6b1d642581")
 	)
-	(global_label "I_COXA_SENSE"
-		(shape passive)
-		(at 54.76 52.7 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "17a94e3b-be32-4328-b524-8b56d8ad52c7")
-	)
 	(global_label "I_FEMUR_SENSE"
 		(shape passive)
-		(at 54.76 56.51 180)
+		(at 54.76 52.7 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -2824,7 +2812,7 @@
 	)
 	(global_label "I_TIBIA_SENSE"
 		(shape passive)
-		(at 54.76 60.32 180)
+		(at 54.76 56.51 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -2833,6 +2821,18 @@
 			(justify right)
 		)
 		(uuid "c2fb0c5a-f207-47bb-be6d-e97b78e77981")
+	)
+	(global_label "I_COXA_SENSE"
+		(shape passive)
+		(at 54.76 60.32 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "17a94e3b-be32-4328-b524-8b56d8ad52c7")
 	)
 	(symbol
 		(lib_id "Hexapod_V2:SP3485CN")
@@ -3514,8 +3514,8 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "9f952c74-f615-4b18-8053-39dc2be00a42")
-		(property "Reference" "R2"
+		(uuid "be43baec-fa6f-4e1b-b984-03c833127767")
+		(property "Reference" "R4"
 			(at 70 136.19 0)
 			(effects
 				(font
@@ -3552,7 +3552,7 @@
 		(instances
 			(project ""
 				(path "/827e3d72-296e-44e9-9b03-ee6ced1947aa"
-					(reference "R2")
+					(reference "R4")
 					(unit 1)
 				)
 			)
@@ -3615,8 +3615,8 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "c88972e5-c46b-40fb-89e6-26e1102802db")
-		(property "Reference" "R3"
+		(uuid "fdb36934-f095-41f9-aab8-ea8ff7b9c89d")
+		(property "Reference" "R5"
 			(at 120 124.19 0)
 			(effects
 				(font
@@ -3653,7 +3653,7 @@
 		(instances
 			(project ""
 				(path "/827e3d72-296e-44e9-9b03-ee6ced1947aa"
-					(reference "R3")
+					(reference "R5")
 					(unit 1)
 				)
 			)
@@ -3716,8 +3716,8 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "be43baec-fa6f-4e1b-b984-03c833127767")
-		(property "Reference" "R4"
+		(uuid "c88972e5-c46b-40fb-89e6-26e1102802db")
+		(property "Reference" "R3"
 			(at 155 124.19 0)
 			(effects
 				(font
@@ -3754,7 +3754,7 @@
 		(instances
 			(project ""
 				(path "/827e3d72-296e-44e9-9b03-ee6ced1947aa"
-					(reference "R4")
+					(reference "R3")
 					(unit 1)
 				)
 			)
@@ -3817,8 +3817,8 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "fdb36934-f095-41f9-aab8-ea8ff7b9c89d")
-		(property "Reference" "R5"
+		(uuid "9f952c74-f615-4b18-8053-39dc2be00a42")
+		(property "Reference" "R2"
 			(at 190 124.19 0)
 			(effects
 				(font
@@ -3855,7 +3855,7 @@
 		(instances
 			(project ""
 				(path "/827e3d72-296e-44e9-9b03-ee6ced1947aa"
-					(reference "R5")
+					(reference "R2")
 					(unit 1)
 				)
 			)
@@ -4082,7 +4082,7 @@
 		)
 		(uuid "d3268def-1dd2-4f72-b455-9f3b735b06af")
 	)
-	(global_label "COXA_SP"
+	(global_label "FEMUR_SP"
 		(shape passive)
 		(at 210 52.7 0)
 		(fields_autoplaced yes)
@@ -4092,7 +4092,7 @@
 			)
 			(justify left)
 		)
-		(uuid "757fd7b1-a35b-4729-9fe0-a83b82fb4383")
+		(uuid "f3c7748a-bf8e-47ae-81de-ce18bb419bdf")
 	)
 	(wire
 		(pts
@@ -4104,7 +4104,7 @@
 		)
 		(uuid "9016993d-eeb7-4c77-a6e1-be7e55f2918e")
 	)
-	(global_label "COXA_SN"
+	(global_label "FEMUR_SN"
 		(shape passive)
 		(at 210 55.24 0)
 		(fields_autoplaced yes)
@@ -4114,7 +4114,7 @@
 			)
 			(justify left)
 		)
-		(uuid "f756fb71-7a26-4f16-915f-5583d923639b")
+		(uuid "a86f26bc-0f07-4dd6-a9c6-687074c2bfc4")
 	)
 	(wire
 		(pts
@@ -4126,7 +4126,7 @@
 		)
 		(uuid "d75f988a-e6d9-4727-a869-e82595050710")
 	)
-	(global_label "I_COXA_SENSE"
+	(global_label "I_FEMUR_SENSE"
 		(shape passive)
 		(at 210 57.78 0)
 		(fields_autoplaced yes)
@@ -4136,7 +4136,7 @@
 			)
 			(justify left)
 		)
-		(uuid "a770978c-94a4-4575-b5f8-fc3669262779")
+		(uuid "60266025-7bc0-4c7b-a188-8eca60c2a1f0")
 	)
 	(wire
 		(pts
@@ -4192,7 +4192,7 @@
 		)
 		(uuid "48b8aef4-80ab-46c3-962f-3ee48c646461")
 	)
-	(global_label "I_FEMUR_SENSE"
+	(global_label "I_TIBIA_SENSE"
 		(shape passive)
 		(at 273.64 57.78 0)
 		(fields_autoplaced yes)
@@ -4202,7 +4202,7 @@
 			)
 			(justify left)
 		)
-		(uuid "40d32b4d-e982-4ad9-a62d-c9ed5d686b65")
+		(uuid "db0e70bb-b122-47cb-8507-9c0f8b3fffc2")
 	)
 	(wire
 		(pts
@@ -4214,7 +4214,7 @@
 		)
 		(uuid "c7f5e969-14e5-4db6-bc21-b96be7891a2a")
 	)
-	(global_label "FEMUR_SN"
+	(global_label "TIBIA_SN"
 		(shape passive)
 		(at 273.64 55.24 0)
 		(fields_autoplaced yes)
@@ -4224,7 +4224,7 @@
 			)
 			(justify left)
 		)
-		(uuid "737959a2-26f4-4241-98ad-c7b4462055c2")
+		(uuid "f3b8b902-8d86-40ee-bbf4-849df45ec9b3")
 	)
 	(wire
 		(pts
@@ -4236,7 +4236,7 @@
 		)
 		(uuid "4cd6e47a-71e7-496c-a568-167e1de6b66e")
 	)
-	(global_label "FEMUR_SP"
+	(global_label "TIBIA_SP"
 		(shape passive)
 		(at 273.64 52.7 0)
 		(fields_autoplaced yes)
@@ -4246,7 +4246,7 @@
 			)
 			(justify left)
 		)
-		(uuid "76f3813b-328f-4305-87a4-bf200fc4b47f")
+		(uuid "21fa2667-136c-4fda-bf07-a249ce1e8f54")
 	)
 	(wire
 		(pts
@@ -4280,7 +4280,7 @@
 		)
 		(uuid "379525ca-036c-4b69-8905-db2df717df03")
 	)
-	(global_label "TIBIA_SP"
+	(global_label "COXA_SP"
 		(shape passive)
 		(at 273.64 47.62 0)
 		(fields_autoplaced yes)
@@ -4290,7 +4290,7 @@
 			)
 			(justify left)
 		)
-		(uuid "4cda5267-3500-419e-8411-6a753290d5db")
+		(uuid "f1c81a89-10db-4670-aecc-c6ccebf2e915")
 	)
 	(wire
 		(pts
@@ -4302,7 +4302,7 @@
 		)
 		(uuid "d4fbd081-a94f-4f63-a543-c1794036c39a")
 	)
-	(global_label "TIBIA_SN"
+	(global_label "COXA_SN"
 		(shape passive)
 		(at 273.64 45.08 0)
 		(fields_autoplaced yes)
@@ -4312,7 +4312,7 @@
 			)
 			(justify left)
 		)
-		(uuid "159d69e0-1f0e-4517-b6d8-982a36d515bf")
+		(uuid "02b8d25d-c27f-4785-9fe6-09ef1dbfb467")
 	)
 	(wire
 		(pts
@@ -4324,7 +4324,7 @@
 		)
 		(uuid "87913319-6ada-4d8b-a15d-fc5b4ef5bd2f")
 	)
-	(global_label "I_TIBIA_SENSE"
+	(global_label "I_COXA_SENSE"
 		(shape passive)
 		(at 273.64 42.54 0)
 		(fields_autoplaced yes)
@@ -4334,7 +4334,7 @@
 			)
 			(justify left)
 		)
-		(uuid "4d7ef450-4e34-41a3-8b4e-58713c13bbbe")
+		(uuid "d1f02ece-16fb-4c7e-aa97-e4ed3d4eddda")
 	)
 	(wire
 		(pts
