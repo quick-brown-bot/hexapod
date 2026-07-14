@@ -64,4 +64,13 @@ void rs485_send(const char *buf, size_t len)
         tight_loop_contents();
     }
     gpio_put(PIN_RS485_DE, 0);           // back to receive
+
+    // The DE/RE turnaround glitch can leave a spurious byte (e.g. a stray echo
+    // of our own trailing stop bit) in the RX FIFO right as the receiver
+    // re-enables. Left alone, that byte is picked up as a bogus empty line by
+    // rs485_poll_line() on the next call, eating one real pull frame's framing
+    // and causing the master to see an every-other-request timeout. Drain it.
+    while (uart_is_readable(s_uart)) {
+        (void)uart_getc(s_uart);
+    }
 }

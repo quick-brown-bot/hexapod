@@ -261,6 +261,58 @@ Worst-case frame sizes:
 > faster gait requirements), switching to a binary frame format would reduce
 > per-leg transaction time by roughly 3×.
 
+### Measured Timing (Hardware Bring-Up, single leg)
+
+First real hardware measurement, MainBoard ESP32 talking to one physically
+wired LegBoard (address 1) over the actual RS485 link — not simulated. Bench
+tool: `firmware/v2/mainboard_rs485_test` (standalone ESP-IDF app, not part of
+the production `hex_rs485_master` build). Round-trip time (RTT) measured from
+the start of the pull-frame transmission to the fully received `\n`-terminated
+response.
+
+| Scenario | n | Result |
+|---|---|---|
+| Back-to-back, 20 ms timeout, `JOINT_POS` requested | 500 | 499/500 ok, RTT min=1614 avg=1685 max=1893 µs, stddev=25 µs |
+| Back-to-back, 3 ms timeout (production value), `JOINT_POS` requested | 500 | 500/500 ok, RTT min=1376 avg=1432 max=1578 µs |
+| Back-to-back, 2 ms timeout, `JOINT_POS` requested | 500 | 500/500 ok — zero loss |
+| Back-to-back, 1 ms timeout, `JOINT_POS` requested | 300 | 0/300 ok — below the physical floor |
+| Sustained burst, 20 ms timeout, `JOINT_POS` requested | 2000 | 2000/2000 ok, RTT min=1380 avg=1431 max=1527 µs, stddev=12 µs |
+| Sustained burst, 20 ms timeout, no `JOINT_POS` (shorter response) | 2000 | 2000/2000 ok, RTT min=975 avg=1032 max=1157 µs, stddev=10 µs |
+
+**Findings:**
+
+- Real single-leg RTT (~1.0–1.4 ms typical) is noticeably higher than the
+  theoretical ~710 µs/leg estimate in the table above — DE turnaround and
+  RP2040 processing cost more in practice than the flat 150 µs/40 µs budgeted.
+  Requesting `JOINT_POS` adds ~400 µs (longer response frame), matching the
+  extra ~15 bytes on the wire.
+- Extrapolated 6-leg sweep (sequential polling, as `hex_rs485_master` does):
+  **~6.2 ms** without joint positions, **~8.6 ms** if every leg's poll
+  requests positions every cycle — both inside the 10 ms / 100 Hz budget, but
+  the all-positions case leaves only ~1.4 ms of slack. Since production only
+  requests positions one-shot (not every cycle), realistic sustained sweep
+  time is close to the faster figure.
+- The production 3 ms per-leg response timeout has real margin: observed
+  worst-case RTT topped out at ~1.9 ms even under continuous back-to-back
+  load, no artificial gaps.
+- ~1.0–1.3 ms is a hard physical floor (wire time + DE turnaround + RP2040
+  processing) — sub-millisecond timeouts fail 100% of the time, not a
+  software limitation.
+- Bus jitter is tight (stddev 10–25 µs) once the link is healthy — see the
+  firmware note below.
+- Because the RS485 master task runs independently of the 100 Hz motion loop
+  (non-blocking `rs485_master_get_telemetry()`), the motion loop can see leg
+  telemetry up to one full sweep old in the worst case (~one loop late, not
+  multiple) — an accepted trade-off for the non-blocking design.
+
+**Firmware bug found and fixed during this bring-up**: the LegBoard's
+`rs485_send()` (`firmware/v2/leg/src/rs485.cpp`) released the RS485 driver
+pin (`RS485_DE`) without draining the UART RX FIFO afterward. A turnaround
+glitch left a stray byte in the buffer, which `rs485_poll_line()` on the next
+call consumed as a bogus empty line — eating that cycle's real pull frame and
+causing a clean, deterministic ~50% response loss (every other poll timed
+out). Fixed by draining the RX FIFO immediately after releasing DE.
+
 ---
 
 ## Related Docs
