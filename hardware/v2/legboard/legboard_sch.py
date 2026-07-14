@@ -170,18 +170,18 @@ def build() -> Schematic:
     # All four REF pins to GND (unidirectional, zero referenced to GND). Each IN+
     # is on the higher-potential (source) side of its shunt.
     stub_label("GND", u3.pin("1"), -15)            # REF1
-    stub_label("I_TOTAL_SENSE", u3.pin("2"), -15)  # OUT1
-    stub_label("ITOT_SN", u3.pin("3"), -15)        # IN-1
-    stub_label("ITOT_SP", u3.pin("4"), -15)        # IN+1
+    stub_label("I_TIBIA_SENSE", u3.pin("2"), -15)  # OUT1
+    stub_label("TIBIA_SN", u3.pin("3"), -15)        # IN-1
+    stub_label("TIBIA_SP", u3.pin("4"), -15)        # IN+1
     stub_label("+3.3V", u3.pin("5"), -15)          # VS
     stub_label("FEMUR_SP", u3.pin("6"), -15)        # IN+2
     stub_label("FEMUR_SN", u3.pin("7"), -15)        # IN-2
     stub_label("I_FEMUR_SENSE", u3.pin("8"), -15)   # OUT2
     stub_label("GND", u3.pin("9"), -15)             # REF2
     stub_label("GND", u3.pin("12"), 8)              # REF3
-    stub_label("I_TIBIA_SENSE", u3.pin("13"), 8)    # OUT3
-    stub_label("TIBIA_SN", u3.pin("14"), 8)         # IN-3
-    stub_label("TIBIA_SP", u3.pin("15"), 8)         # IN+3
+    stub_label("I_TOTAL_SENSE", u3.pin("13"), 8)    # OUT3
+    stub_label("ITOT_SN", u3.pin("14"), 8)         # IN-3
+    stub_label("ITOT_SP", u3.pin("15"), 8)         # IN+3
     stub_label("GND", u3.pin("16"), 8)              # GND
     stub_label("COXA_SP", u3.pin("17"), 8)          # IN+4
     stub_label("COXA_SN", u3.pin("18"), 8)          # IN-4

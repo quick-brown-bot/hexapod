@@ -15,11 +15,11 @@ Contents:
 * C5  optional soft-start capacitor on `PMOS_GATE_DRV`.
 * D2..D5  power-present status LEDs (UBEC1/2/3 + SBEC).
 * D6  15V Zener between PMOS gate and source rails (Vgs clamp).
-* Q1/Q2  parallel FQP47P06 PMOS reverse-polarity stage (shared gate/rail nodes).
+* Q1/Q2  parallel IRF9540NPBF PMOS reverse-polarity stage (shared gate/rail nodes).
 * Q3 + R5/R6/R7/R8  low-current gate driver for Q1/Q2 (NPN + gate network).
 * J_MON   monitoring header: battery + per-UBEC voltages to MainBoard telemetry.
 
-Protection path: F1 main fuse, then two parallel FQP47P06 PMOS devices (Q1/Q2)
+Protection path: F1 main fuse, then two parallel IRF9540NPBF PMOS devices (Q1/Q2)
 as high-side reverse-polarity protection from `BATT_FUSED` to `+VMAIN`.
 SW1 is a low-current control switch driving Q1/Q2 gates through Q3 + R5/R6/R7.
 R8 fixes Q3 base state when SW1 is open; D6 clamps Vgs transients.
@@ -122,9 +122,9 @@ def build() -> Schematic:
 
     # Parallel PMOS reverse-polarity stage (shared source/drain/gate nets).
     # Gate drive is low-current: SW1 -> R7 -> Q3, plus R6 pull-up and R5 gate resistor.
-    q1 = sch.place("Transistor_FET:Q_PMOS_GDS", "Q1", at=(x1, y3), value="FQP47P06",
+    q1 = sch.place("Transistor_FET:Q_PMOS_GDS", "Q1", at=(x1, y3), value="IRF9540NPBF",
                    footprint=PMOS_TO220_FOOTPRINT)
-    q2 = sch.place("Transistor_FET:Q_PMOS_GDS", "Q2", at=(x1, y4), value="FQP47P06",
+    q2 = sch.place("Transistor_FET:Q_PMOS_GDS", "Q2", at=(x1, y4), value="IRF9540NPBF",
                    footprint=PMOS_TO220_FOOTPRINT)
     sch.net("BATT_FUSED", [q1.pin("S"), q2.pin("S")])
     sch.net("+VMAIN", [q1.pin("D"), q2.pin("D")])

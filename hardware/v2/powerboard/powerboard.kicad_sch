@@ -2826,7 +2826,7 @@
 				)
 			)
 		)
-		(property "Value" "FQP47P06"
+		(property "Value" "IRF9540NPBF"
 			(at 35 83.81 0)
 			(effects
 				(font
@@ -2879,7 +2879,7 @@
 				)
 			)
 		)
-		(property "Value" "FQP47P06"
+		(property "Value" "IRF9540NPBF"
 			(at 35 98.81 0)
 			(effects
 				(font
