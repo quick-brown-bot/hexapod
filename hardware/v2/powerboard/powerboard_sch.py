@@ -111,7 +111,8 @@ def build() -> Schematic:
     sch.net("BATT_RAW", [j_bat.pin("1")], rotation=180)
     sch.net("GND", [j_bat.pin("2")], rotation=180)
 
-    f1 = sch.place("Device:Fuse", "F1", at=(x1, y1), value="20A", footprint=FUSE_20A_FOOTPRINT)
+    f1 = sch.place("Device:Fuse", "F1", at=(x1, y1), value="3413.0331.22 20A",
+                   footprint=FUSE_20A_FOOTPRINT)
     sch.net("BATT_RAW", [f1.pin("1")])
     sch.net("BATT_FUSED", [f1.pin("2")])
 
@@ -129,8 +130,10 @@ def build() -> Schematic:
     sch.net("BATT_FUSED", [q1.pin("S"), q2.pin("S")])
     sch.net("+VMAIN", [q1.pin("D"), q2.pin("D")])
 
-    # PMOS gate network: 100k pull-up to source rail and 100R series to gate bus.
-    r5 = sch.place("Device:R_Small", "R5", at=(x1, y5), value="100",
+    # PMOS gate network: 100k pull-up to source rail and 470R series to gate bus.
+    # 470R (not lower) keeps D6's continuous zener current low at full 4S charge --
+    # see D6 comment below.
+    r5 = sch.place("Device:R_Small", "R5", at=(x1, y5), value="470",
                    footprint=RES_0805_FOOTPRINT)
     r6 = sch.place("Device:R_Small", "R6", at=(x1, y6), value="100k",
                    footprint=RES_0805_FOOTPRINT)

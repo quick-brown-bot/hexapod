@@ -76,7 +76,8 @@ PMOS_TO220_FOOTPRINT = "Package_TO_SOT_THT:TO-220-3_Vertical"
 NPN_SOT23_FOOTPRINT = "Package_TO_SOT_SMD:SOT-23"
 LED_0805_FOOTPRINT = "LED_SMD:LED_0805_2012Metric"
 DIODE_0805_FOOTPRINT = "Diode_SMD:D_0805_2012Metric"
-FUSE_20A_FOOTPRINT = "Custom:Fuse Holder Mini"
+# Schurter 3413.0331.22 (1206 SMD, 20A, time-lag) -- soldered directly, no holder.
+FUSE_20A_FOOTPRINT = "Fuse:Fuse_1206_3216Metric"
 SOLDER_PADS_4P_FOOTPRINT = "Connector_Wire:SolderWire-0.25sqmm_1x04_P4.2mm_D0.65mm_OD1.7mm"
 MASTER_SWITCH_FOOTPRINT = "Custom:SW_Slide_SPDT_Straight"
 

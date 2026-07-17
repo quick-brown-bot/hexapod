@@ -2672,7 +2672,7 @@
 				)
 			)
 		)
-		(property "Value" "20A"
+		(property "Value" "3413.0331.22 20A"
 			(at 35 53.81 0)
 			(effects
 				(font
@@ -2680,7 +2680,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Custom:Fuse Holder Mini"
+		(property "Footprint" "Fuse:Fuse_1206_3216Metric"
 			(at 35 50 0)
 			(effects
 				(font
@@ -2980,7 +2980,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "470"
 			(at 35 113.81 0)
 			(effects
 				(font

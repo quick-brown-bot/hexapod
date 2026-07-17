@@ -157,6 +157,12 @@ UBEC/SBEC module headers (`Conn_01x04`): 1 = +VMAIN in, 2 = GND, 3 = regulated
 out, 4 = GND. Monitor header J13 (`Conn_01x05`): +VMAIN, VSERVO1, VSERVO2,
 VSERVO3, GND.
 
+`F1` is a soldered-in (non-replaceable) SMD fuse, Schurter 3413.0331.22
+(20A, time-lag, 1206/`Fuse:Fuse_1206_3216Metric`) — chosen over an automotive
+mini-blade holder because TME stocks no SMD blade-fuse holder; the previous
+`Custom:Fuse Holder Mini` THT holder footprint is unused now but left in the
+library.
+
 Footprints currently driven from the generator: `J7` (battery input) uses
 `Connector_Wire:SolderWire-1.5sqmm_1x02_P7.8mm_D1.7mm_OD3.9mm` solder pads,
 `J1..J6` use
