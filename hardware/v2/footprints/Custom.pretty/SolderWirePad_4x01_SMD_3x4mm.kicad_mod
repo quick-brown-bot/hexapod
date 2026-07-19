@@ -1,0 +1,183 @@
+(footprint "SolderWirePad_4x01_SMD_3x4mm"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "Wire Pad, Square, SMD Pad,  4mm x 8mm")
+	(tags "MeasurementPoint Square SMDPad 4mmx8mm ")
+	(property "Reference" "REF**"
+		(at 0 -2.921 0)
+		(layer "F.SilkS")
+		(uuid "c513d75c-f6ed-495d-806e-bd1e447b8baa")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "SolderWirePad_1x04_SMD_3x4mm"
+		(at 0 3.175 0)
+		(layer "F.Fab")
+		(uuid "d5554df8-8ad7-42a8-b421-37915f92965e")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "872e5f8b-e7f1-4690-8192-e46e7d73f65c")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "59756438-0ccf-4062-94a7-3454a6ea0926")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr exclude_from_pos_files exclude_from_bom)
+	(fp_rect
+		(start -7.211 -2.114)
+		(end -3.711 2.386)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "363e1ee8-47db-4be6-ae6c-db3bb7b5d1b8")
+	)
+	(fp_rect
+		(start -3.529 -2.114)
+		(end -0.029 2.386)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "78e11df4-e192-45cc-a091-fc9bfb583c45")
+	)
+	(fp_rect
+		(start 0.154 -2.105)
+		(end 3.654 2.395)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "0bc22515-5657-4686-8f63-defe875fc25c")
+	)
+	(fp_rect
+		(start 3.837 -2.105)
+		(end 7.337 2.395)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "4c90922d-df3e-43c1-ba67-fe64d4165454")
+	)
+	(fp_rect
+		(start -7.111 -2.014)
+		(end -3.811 2.286)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "abb8f1ed-0efc-40ab-b16d-44e053753c99")
+	)
+	(fp_rect
+		(start -3.429 -2.014)
+		(end -0.129 2.286)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "3fa6598a-df38-4ec8-a11e-a5593d005237")
+	)
+	(fp_rect
+		(start 0.254 -2.005)
+		(end 3.554 2.295)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "b1d061cd-d8a5-4b93-9214-eec6be580d1d")
+	)
+	(fp_rect
+		(start 3.937 -2.005)
+		(end 7.237 2.295)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "41ffd1d8-c731-471a-9b1e-64d83afba24e")
+	)
+	(fp_text user "${REFERENCE}"
+		(at -5.462 0.136 0)
+		(layer "F.Fab")
+		(uuid "81017862-5d6d-4bbb-a792-b664ab664d9b")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" smd roundrect
+		(at -5.462 0.136)
+		(size 3 4)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.25)
+		(uuid "9b1c97f7-ae17-44f3-9424-a07cf2ecd34d")
+	)
+	(pad "2" smd roundrect
+		(at -1.779 0.136)
+		(size 3 4)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.25)
+		(uuid "cd98c226-748c-472f-a7dd-69eb04c0a09d")
+	)
+	(pad "3" smd roundrect
+		(at 1.903 0.154)
+		(size 3 4)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.25)
+		(uuid "63189ab6-8ff2-4c89-8671-cb99a6bad636")
+	)
+	(pad "4" smd roundrect
+		(at 5.586 0.154)
+		(size 3 4)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.25)
+		(uuid "a09db5af-099e-45e5-93da-9252c47435a9")
+	)
+	(embedded_fonts no)
+)
