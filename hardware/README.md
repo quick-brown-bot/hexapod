@@ -1,11 +1,9 @@
-# Hexapod V1 boards
+# Hexapod boards
 
-The original (Version 1) electrical design: a centralized controller that drives
-the servos directly, before the V2 split into distributed leg controllers and a
-separate power-distribution board. Kept as-is for reference and continued use.
+The electrical design: a centralized controller that drives the servos directly.
 
 This folder is self-contained — its own copy of the symbol libraries and
-footprints lives alongside the designs, so the V1 boards do not depend on any
+footprints lives alongside the designs, so the boards do not depend on any
 shared top-level libraries.
 
 | Board | Files | Role |
@@ -17,7 +15,7 @@ shared top-level libraries.
 ## Layout
 
 ```
-hardware/v1/
+hardware/
 ├── symbols/      ← Seeed XIAO + SymbolsLib (ESP32) symbol libraries
 ├── footprints/   ← Seeed XIAO footprints
 ├── models/       ← hexapod_v1.FCStd (mechanical model)
@@ -31,6 +29,4 @@ these local copies via `${KIPRJMOD}`-relative paths. Stock KiCad symbols
 (`Device:*`, `Connector:*`, `RF_Module:*`, `power:*`) resolve from the KiCad
 install's global library table.
 
-> V1 schematics are KiCad-native and edited in Eeschema. The schematic-as-code
-> toolchain (`hardware/schematic/`) and the as-code workflow apply to the
-> [V2 boards](../v2/README.md).
+These schematics are KiCad-native and edited in Eeschema.

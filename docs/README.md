@@ -1,14 +1,12 @@
 # Hexapod Documentation
 
-Documentation is organized by version and shared scope.
-
 ## Structure
 
 ```
 docs/
-  common/          — applies to both V1 and V2 (ESP32 input drivers, RPC, WiFi, config platform)
-  v1/              — V1-specific: direct-PWM ESP32-only firmware
-  v2/              — V2-specific: RS485 distributed architecture with RP2040 leg controllers
+  common/          — controller input drivers, RPC, WiFi, config platform
+  architecture/    — system and hardware architecture
+  development/     — development setup and workflow
   plans/           — project-wide TODO and forward-looking plans
 ```
 
@@ -16,7 +14,7 @@ docs/
 
 ## Common
 
-These docs describe subsystems that are shared across firmware versions: controller
+These docs describe subsystems that are shared across firmware: controller
 input drivers, the RPC system, WiFi and Bluetooth transports, and the configuration
 platform.
 
@@ -36,31 +34,17 @@ platform.
 
 ---
 
-## V1
+## Architecture & Development
 
-Direct-PWM ESP32-only firmware. Hardware: [`hardware/v1/`](../hardware/v1/README.md).
-Firmware: [`firmware/v1/`](../firmware/v1/mainboard/README.md).
+Direct-PWM ESP32-only firmware. Hardware: [`hardware/`](../hardware/README.md).
+Firmware: [`firmware/mainboard/`](../firmware/mainboard/README.md).
 
-- [v1/architecture/SYSTEM_ARCHITECTURE.md](v1/architecture/SYSTEM_ARCHITECTURE.md)
-- [v1/architecture/HARDWARE_AND_MECHANICS.md](v1/architecture/HARDWARE_AND_MECHANICS.md)
-- [v1/development/README.md](v1/development/README.md)
-- [v1/plans/KPP_IMPLEMENTATION_PLAN.md](v1/plans/KPP_IMPLEMENTATION_PLAN.md)
-
----
-
-## V2
-
-RS485 distributed architecture: ESP32 mainboard + RP2040 leg controllers.
-Hardware: [`hardware/v2/`](../hardware/v2/README.md).
-Firmware: [`firmware/v2/`](../firmware/v2/leg/).
-
-- [v2/architecture/SYSTEM_ARCHITECTURE.md](v2/architecture/SYSTEM_ARCHITECTURE.md)
-- [v2/architecture/HARDWARE_AND_MECHANICS.md](v2/architecture/HARDWARE_AND_MECHANICS.md)
-- [v2/interfaces/RS485_PROTOCOL.md](v2/interfaces/RS485_PROTOCOL.md)
-- [v2/development/README.md](v2/development/README.md)
+- [architecture/SYSTEM_ARCHITECTURE.md](architecture/SYSTEM_ARCHITECTURE.md)
+- [architecture/HARDWARE_AND_MECHANICS.md](architecture/HARDWARE_AND_MECHANICS.md)
+- [development/README.md](development/README.md)
 
 ---
 
 ## Plans
 
-- [plans/TODO.md](plans/TODO.md) — project-wide feature backlog and research items
+- [plans/KPP_IMPLEMENTATION_PLAN.md](plans/KPP_IMPLEMENTATION_PLAN.md)
